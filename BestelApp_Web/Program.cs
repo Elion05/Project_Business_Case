@@ -1,6 +1,4 @@
 using BestelApp_Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using System.Text;

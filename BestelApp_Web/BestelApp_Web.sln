@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36811.4 d17.14
+VisualStudioVersion = 17.14.36811.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestelApp_Web", "BestelApp_Web.csproj", "{F9E4E930-D770-4187-876E-620F87E77FD8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestelApp_Models", "..\BestelApp_Models\BestelApp_Models.csproj", "{9C1E856A-201C-4637-8860-471997803EFA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestelApp_Cons", "..\BestelApp_Cons\BestelApp_Cons.csproj", "{375B4CE2-2BBA-442E-AE66-ECA83BA46C83}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{9C1E856A-201C-4637-8860-471997803EFA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9C1E856A-201C-4637-8860-471997803EFA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9C1E856A-201C-4637-8860-471997803EFA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{375B4CE2-2BBA-442E-AE66-ECA83BA46C83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{375B4CE2-2BBA-442E-AE66-ECA83BA46C83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{375B4CE2-2BBA-442E-AE66-ECA83BA46C83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{375B4CE2-2BBA-442E-AE66-ECA83BA46C83}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
