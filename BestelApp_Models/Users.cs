@@ -8,6 +8,7 @@ namespace BestelApp_Models
     public class Users : IdentityUser
     {
 
+
         [Required]
         [MaxLength(30)]
         public string FirstName { get; set; } = string.Empty;
@@ -38,8 +39,10 @@ namespace BestelApp_Models
         }
 
 
-        public static async Task Seeder(DbContext context)
+        public static async Task Seeder()
         {
+            DbContext context = new DbContext();
+
             if (!context.Roles.Any())
             {
                 context.Roles.AddRange(new List<IdentityRole>
