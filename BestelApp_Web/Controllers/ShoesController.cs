@@ -7,12 +7,15 @@ namespace BestelApp_Web.Controllers
     public class ShoesController : Controller
     {
         private readonly AppDbContext _context;
+        private readonly BestelApp_Web.Services.RabbitMQService _rabbitMQService;
 
-        public ShoesController(AppDbContext context)
+
+        public ShoesController(AppDbContext context, BestelApp_Web.Services.RabbitMQService rabbitMQService)
         {
             _context = context;
-        }
-
+            _rabbitMQService = rabbitMQService;
+        
+        //dit is een property voor de Shoes 
         private DbSet<Shoe> Shoes => _context.Set<Shoe>();
 
         // GET: Shoes
@@ -148,6 +151,25 @@ namespace BestelApp_Web.Controllers
         private bool ShoeExists(long id)
         {
             return Shoes.Any(e => e.Id == id);
+        }
+
+        
+        // POST: Shoes/Order/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Order(long id)
+        {
+            var shoe = await Shoes.FindAsync(id);
+            if (shoe == null)
+            {
+                return NotFound();
+            }
+
+            await _rabbitMQService.SendOrderMessageAsync(shoe);
+
+            //dit krijg je te zien in de Terminal van de .Web
+            TempData["SuccessMessage"] = $"Bestelling voor {shoe.Name} is verzonden!";
+            return RedirectToAction(nameof(Index));
         }
 
         

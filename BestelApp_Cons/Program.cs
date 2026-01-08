@@ -24,18 +24,21 @@ await channel.QueueDeclareAsync(
     arguments: null);
 
 
-Console.WriteLine("Waiting for messages...");
+
+Console.WriteLine("Wachten op bestellingen...");
 
 var consumer = new AsyncEventingBasicConsumer(channel);
 //messages krijgen van de queue
 consumer.ReceivedAsync += async (sender, eventArgs) =>
 {
+    //byte array van de message in de queue om daarna naar UTF8 te omzetten 
     byte[] body = eventArgs.Body.ToArray();
     //omzetten van byte array naar string
     string message = Encoding.UTF8.GetString(body);
 
-    Console.WriteLine($"Received: {message}");
+    Console.WriteLine($"Ontvangen: {message}");
 
+    //bevestigen dat de message is ontvangen
     await ((AsyncEventingBasicConsumer)sender).Channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
 };
 
@@ -44,6 +47,5 @@ await channel.BasicConsumeAsync(
     //manueel de berichten bevestigen
     autoAck: false,
     consumer);
-
 
 Console.ReadLine();
