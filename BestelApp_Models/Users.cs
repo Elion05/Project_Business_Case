@@ -39,9 +39,9 @@ namespace BestelApp_Models
         }
 
 
-        public static async Task Seeder()
+        public static async Task Seeder(AppDbContext context)
         {
-            DbContext context = new DbContext();
+            // Gebruik de meegegeven context in plaats van een nieuwe aan te maken
 
             if (!context.Roles.Any())
             {
@@ -106,7 +106,7 @@ namespace BestelApp_Models
                     Console.WriteLine($"Error creating users: {ex.Message}");
                 }
 
-                while(context.Users.Count() < 3)
+                while (context.Users.Count() < 3)
                 {
                     await Task.Delay(500);
                 }
