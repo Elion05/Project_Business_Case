@@ -15,7 +15,7 @@ using var channel = await connection.CreateChannelAsync();
 
 await channel.QueueDeclareAsync(
     //de naam van de queue
-    queue: "message",
+    queue: "BestelAppQueue",
     //messages blijven bewaard ook als de broker opnieuw opstart, als het False is en de app crasht zijn de messages weg
     durable: true,
     //als de subscriber weg is, wordt de queue verwijderd
@@ -40,7 +40,7 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
 };
 
 await channel.BasicConsumeAsync(
-    "message",
+    "BestelAppQueue",
     //manueel de berichten bevestigen
     autoAck: false,
     consumer);
