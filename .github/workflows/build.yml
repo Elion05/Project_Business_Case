@@ -24,11 +24,43 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x
+        dotnet-version: 9.0.x
 
     #dotnet restore BestelApp_Web/BestelApp_Web.sln gaat de dependencies restoren
     - name: Restore dependencies
       run: dotnet restore BestelApp_Web/BestelApp_Web.sln
+
+    #dit is om de nuget packages te cache en niet terug te downloaden
+    - name: Cache NuGet packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.nuget/packages
+        key: ${{runner.os}}-nuget-${{hashFiles('**/*.csproj')}}
+        restore-keys: |
+          ${{runner.os}}-nuget-
+
+    #gecompileerde bestanden opslaan zodat je ze na de build kunt downloaden
+    - name: Publish
+      run: dotnet publish BestelApp_Web/BestelApp_Web.sln -c Release -o ./publish
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: publish
+        path: ./publish
+
+    #Code qualiteit checken
+    - name: Check Formatting
+      run: dotnet format BestelApp_Web/BestelApp_Web.sln --verify-no-changes    
+
+    #rapportage en code coverage genereren
+    - name: Test with Coverage
+      run: dotnet test BestelApp_Web/BestelApp_Web.sln --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover
+
+
+
+    - name: Security scan
+      run: dotnet list BestelApp_Web/BestelApp_Web.sln package --vulnerable
 
     #dotnet build BestelApp_Web/BestelApp_Web.sln gaat de projecten builden
     - name: Build
