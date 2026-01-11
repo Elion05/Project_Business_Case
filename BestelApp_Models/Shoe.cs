@@ -23,8 +23,7 @@ namespace BestelApp_Models
         [MaxLength(100)]
         public string Color { get; set; } = string.Empty;
 
-
-
+        
         public override string ToString()
         {
             return $"{Brand} {Name} (Size {Size}) - €{Price}";

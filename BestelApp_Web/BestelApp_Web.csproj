@@ -7,6 +7,10 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.11" />
+	  <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.11" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.11" />
+	  <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.11" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.11">
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -18,6 +22,11 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="..\BestelApp_Models\BestelApp_Models.csproj" />
+	</ItemGroup>
+	
+	
+	<ItemGroup>
+	  <Folder Include="Areas\Identity\Data\" />
 	</ItemGroup>
 
 </Project>

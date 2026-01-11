@@ -41,6 +41,7 @@ namespace BestelApp_Web.Services
 
             //Dit is de message die wordt gestuurd naar de queue  
             await channel.BasicPublishAsync(
+                //exchange is default
                 exchange: string.Empty,
                 routingKey: "BestelAppQueue", //Gebruik de queue naam als routing key bij default exchange
                 mandatory: true,
