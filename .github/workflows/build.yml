@@ -1,4 +1,7 @@
+#Deze workflow zorgt ervoor dat je een build kunt doen van deze .Net projecten 
+
 name: .NET Build
+
 
 on:
   push:
@@ -7,23 +10,30 @@ on:
     branches: ["Elion"]
   workflow_dispatch:
 
+
+    #dit is gaat zorgen dat de build wordt uitgevoerd
 jobs:
   build:
     runs-on: ubuntu-latest
 
+    #actions/checkout@v4 gaat de code uit de repository halen
     steps:
     - uses: actions/checkout@v4
     
+    #actions/setup-dotnet@v4 gaat de .NET SDK installeren
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.x
 
+    #dotnet restore BestelApp_Web/BestelApp_Web.sln gaat de dependencies restoren
     - name: Restore dependencies
       run: dotnet restore BestelApp_Web/BestelApp_Web.sln
 
+    #dotnet build BestelApp_Web/BestelApp_Web.sln gaat de projecten builden
     - name: Build
       run: dotnet build BestelApp_Web/BestelApp_Web.sln --no-restore
 
+    #dotnet test BestelApp_Web/BestelApp_Web.sln gaat de projecten testen
     - name: Test
       run: dotnet test BestelApp_Web/BestelApp_Web.sln --no-build --verbosity normal
