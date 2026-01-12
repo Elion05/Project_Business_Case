@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using BestelApp_Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BestelApp_Web.Controllers
 {
@@ -9,13 +9,12 @@ namespace BestelApp_Web.Controllers
         private readonly AppDbContext _context;
         private readonly BestelApp_Web.Services.RabbitMQService _rabbitMQService;
 
-
         public ShoesController(AppDbContext context, BestelApp_Web.Services.RabbitMQService rabbitMQService)
         {
             _context = context;
             _rabbitMQService = rabbitMQService;
         }
-        
+
         //dit is een property voor de Shoes 
         private DbSet<Shoe> Shoes => _context.Set<Shoe>();
 
@@ -154,7 +153,7 @@ namespace BestelApp_Web.Controllers
             return Shoes.Any(e => e.Id == id);
         }
 
-        
+
         // POST: Shoes/Order/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -168,11 +167,11 @@ namespace BestelApp_Web.Controllers
 
             await _rabbitMQService.SendOrderMessageAsync(shoe);
 
-            //dit krijg je te zien in de Terminal van de .Web
+            //Dit is een kleine message dat je op de schoenen Index te zien krijgt
             TempData["SuccessMessage"] = $"Bestelling voor {shoe.Name} is verzonden!";
             return RedirectToAction(nameof(Index));
         }
 
-        
+
     }
 }

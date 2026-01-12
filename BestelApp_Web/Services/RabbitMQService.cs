@@ -1,6 +1,6 @@
-using RabbitMQ.Client;
 using System.Text;
 using BestelApp_Models;
+using RabbitMQ.Client;
 
 namespace BestelApp_Web.Services
 {
@@ -61,8 +61,9 @@ namespace BestelApp_Web.Services
                 Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds())
             };
 
-            //Dit is de message die wordt gestuurd naar de queue  
+            //Dit is de message die wordt gestuurd naar de queue
             await channel.BasicPublishAsync(
+                //exchange is default
                 exchange: string.Empty,
                 routingKey: "BestelAppQueue",
                 mandatory: true,

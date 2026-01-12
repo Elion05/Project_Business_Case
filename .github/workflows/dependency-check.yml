@@ -1,19 +1,23 @@
-name: .NET Build
+#Wat doet dit?
+#Dit gaat jouw NuGet packages scannen voor kwetsbaarheden
+name: Dependency Check
 
 on:
   push:
     branches: ["Elion"]
   pull_request:
     branches: ["Elion"]
+  schedule:
+    - cron: '0 0 * * 1' 
   workflow_dispatch:
 
 jobs:
-  build:
+  check-vulnerabilities:
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
-    
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -22,8 +26,5 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore BestelApp_Web/BestelApp_Web.sln
 
-    - name: Build
-      run: dotnet build BestelApp_Web/BestelApp_Web.sln --no-restore
-
-    - name: Test
-      run: dotnet test BestelApp_Web/BestelApp_Web.sln --no-build --verbosity normal
+    - name: List vulnerable packages
+      run: dotnet list BestelApp_Web/BestelApp_Web.sln package --vulnerable --include-transitive

@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 
 namespace BestelApp_Models
 {
+    // AppDbContext erft over van IdentityDbContext om Identity te ondersteunen
     public class AppDbContext : IdentityDbContext<Users>
     {
         public DbSet<Users> AppUsers { get; set; }
@@ -11,6 +12,7 @@ namespace BestelApp_Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            // De connectiestring is hier hardcoded ingesteld volgens de GitHub repo
             if (!optionsBuilder.IsConfigured)
             {
                 optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=BestelAppDb;Trusted_Connection=true;MultipleActiveResultSets=true");
@@ -18,6 +20,7 @@ namespace BestelApp_Models
         }
 
 
+        // Seeder methode om de database te vullen met beginwaarden
         public static async Task Seeder(AppDbContext context)
         {
             await BestelApp_Models.Users.Seeder(context);

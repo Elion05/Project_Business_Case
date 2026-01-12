@@ -1,0 +1,30 @@
+@model UserRolesViewModel
+@using BestelApp_Web.Controllers;
+
+
+
+<h1>@ViewData["Title"]</h1>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Roles" asp-controller="Users">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="UserName" />
+
+            <div class="form-group">
+                <b><label asp-for="UserName" class="control-label"></label></b>
+                <label class="form-control">@Model.UserName</label>
+            </div>
+            <div>
+                <b><label asp-for="Roles" class="control-label"></label></b>
+                <select multiple="multiple" asp-for="Roles" class="form-control" asp-items="ViewBag.AllRoles"></select>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save Roles" class="btn btn-primary" />
+            </div>
+        </form>
+
+    </div>
+
+</div>

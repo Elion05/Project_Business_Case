@@ -1,0 +1,26 @@
+#Dit gaat testen of je code de .NET formatting standards volgt
+#Je hebt de .editorconfig file nodig om deze action te laten werken
+
+name: Code Style
+
+on:
+  push:
+    branches: ["Elion"]
+  pull_request:
+    branches: ["Elion"]
+  workflow_dispatch:
+
+jobs:
+  format-check:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Check Format
+      run: dotnet format BestelApp_Web/BestelApp_Web.sln --verify-no-changes --verbosity diagnostic

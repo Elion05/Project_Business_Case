@@ -1,10 +1,10 @@
-﻿using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using BestelApp_Cons.Models;
 using BestelApp_Cons.Salesforce;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 // ========================================
 // STAP 1: Configuratie laden
@@ -50,6 +50,7 @@ await channel.QueueDeclareAsync(
     exclusive: false,
     autoDelete: false,
     arguments: null);
+
 
 Console.WriteLine("✅ Consumer is klaar!");
 Console.WriteLine($"👂 Wachten op bestellingen in queue '{queueNaam}'...");
@@ -162,4 +163,4 @@ await channel.BasicConsumeAsync(
     consumer);
 
 Console.WriteLine("Druk op ENTER om te stoppen...");
-Console.ReadLine();
+
