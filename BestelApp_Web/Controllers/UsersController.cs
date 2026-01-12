@@ -1,17 +1,17 @@
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 using BestelApp_Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BestelApp_Web.Controllers
 {
-    
+
     public class UsersController : Controller
     {
         private readonly AppDbContext _context;
@@ -28,8 +28,8 @@ namespace BestelApp_Web.Controllers
                              where (user.UserName != "dummy"
                              && (username == "" || (user.UserName != null && user.UserName.Contains(username))))
                              && (roleId == "?" || (from ur in _context.UserRoles
-                                                  where ur.UserId == user.Id
-                                                  select ur.RoleId).Contains(roleId))
+                                                   where ur.UserId == user.Id
+                                                   select ur.RoleId).Contains(roleId))
                              orderby user.UserName
                              select new UserViewModel
                              {

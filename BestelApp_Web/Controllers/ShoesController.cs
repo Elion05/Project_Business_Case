@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using BestelApp_Models;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace BestelApp_Web.Controllers
 {
@@ -153,7 +153,7 @@ namespace BestelApp_Web.Controllers
             return Shoes.Any(e => e.Id == id);
         }
 
-        
+
         // POST: Shoes/Order/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -172,6 +172,6 @@ namespace BestelApp_Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        
+
     }
 }

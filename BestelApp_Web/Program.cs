@@ -1,8 +1,8 @@
 using BestelApp_Models;
+using BestelApp_Web.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
-using BestelApp_Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,7 +11,7 @@ builder.Services.AddDbContext<AppDbContext>();
 
 //Identity configureren met de aangepaste 'Users' klasse
 //Dit is nodig om de inlogfunctionaliteit werkend te krijgen
-builder.Services.AddIdentity<Users, IdentityRole>(options => 
+builder.Services.AddIdentity<Users, IdentityRole>(options =>
     {
         options.SignIn.RequireConfirmedAccount = false; // Geen e-mailbevestiging nodig voor nu
     })
@@ -58,7 +58,7 @@ app.UseStaticFiles();
 app.UseRouting();
 
 // Authentication MOET voor Authorization staan om inloggen te laten werken
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

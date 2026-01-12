@@ -1,6 +1,6 @@
-﻿using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System.Text;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 
 var factory = new ConnectionFactory()
@@ -22,8 +22,6 @@ await channel.QueueDeclareAsync(
     exclusive: false,
     autoDelete: false,
     arguments: null);
-
-
 
 Console.WriteLine("Wachten op bestellingen...");
 

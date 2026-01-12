@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 
 
@@ -18,7 +18,7 @@ namespace BestelApp_Models
         [MaxLength(30)]
         public string LastName { get; set; } = string.Empty;
 
-       
+
 
 
 

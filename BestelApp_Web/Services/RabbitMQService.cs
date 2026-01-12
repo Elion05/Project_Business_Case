@@ -1,6 +1,6 @@
-using RabbitMQ.Client;
 using System.Text;
 using BestelApp_Models;
+using RabbitMQ.Client;
 
 namespace BestelApp_Web.Services
 {
@@ -39,7 +39,7 @@ namespace BestelApp_Web.Services
             //De message omzetten naar bytes
             var body = Encoding.UTF8.GetBytes(message);
 
-            //Dit is de message die wordt gestuurd naar de queue  
+            //Dit is de message die wordt gestuurd naar de queue
             await channel.BasicPublishAsync(
                 //exchange is default
                 exchange: string.Empty,
