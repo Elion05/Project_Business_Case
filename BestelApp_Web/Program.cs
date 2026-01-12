@@ -9,19 +9,8 @@ var builder = WebApplication.CreateBuilder(args);
 //DbContext toevoegen voor Entity Framework (configuratie staat in AppDbContext.cs)
 builder.Services.AddDbContext<AppDbContext>();
 
-//Identity configureren met de aangepaste 'Users' klasse
-//Dit is nodig om de inlogfunctionaliteit werkend te krijgen
-builder.Services.AddIdentity<Users, IdentityRole>(options =>
-    {
-        options.SignIn.RequireConfirmedAccount = false; // Geen e-mailbevestiging nodig voor nu
-    })
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultUI() // Voegt de standaard Identity UI-pagina's toe
-    .AddDefaultTokenProviders();
-
 // RabbitMQ Service toevoegen zodat we kunnen bestellen
 builder.Services.AddSingleton<RabbitMQService>();
-
 
 //Identity configureren voor login/register functionaliteit
 builder.Services.AddIdentity<Users, IdentityRole>(opties =>
@@ -37,6 +26,7 @@ builder.Services.AddIdentity<Users, IdentityRole>(opties =>
     opties.User.RequireUniqueEmail = true;
 
     // Sign in opties
+    opties.SignIn.RequireConfirmedAccount = false; // Geen e-mailbevestiging nodig
     opties.SignIn.RequireConfirmedEmail = false; // Voor development
 })
 .AddEntityFrameworkStores<AppDbContext>()
