@@ -14,6 +14,7 @@ namespace BestelApp_Web.Controllers
         {
             _context = context;
             _rabbitMQService = rabbitMQService;
+        }
         
         //dit is een property voor de Shoes 
         private DbSet<Shoe> Shoes => _context.Set<Shoe>();

@@ -34,22 +34,47 @@ namespace BestelApp_Web.Services
                 arguments: null
             );
 
-            //Dit is de message die je krijgt als je hebt besteld
-            var message = $"Bestelling geplaatst: {shoe.Brand} {shoe.Name} (Maat: {shoe.Size}) - €{shoe.Price}";
-            //De message omzetten naar bytes
-            var body = Encoding.UTF8.GetBytes(message);
+            // Maak een JSON bericht aan
+            var bestellingBericht = new
+            {
+                orderId = $"ORDER-{DateTime.UtcNow:yyyyMMddHHmmss}-{shoe.Id}",
+                brand = shoe.Brand,
+                name = shoe.Name,
+                size = shoe.Size,
+                price = shoe.Price,
+                createdAt = DateTime.UtcNow
+            };
+
+            // Converteer naar JSON string
+            var jsonBericht = System.Text.Json.JsonSerializer.Serialize(bestellingBericht);
+            
+            // Converteer JSON string naar bytes
+            var body = Encoding.UTF8.GetBytes(jsonBericht);
+
+            // Maak properties met metadata
+            var properties = new BasicProperties
+            {
+                Persistent = true,
+                ContentType = "application/json",
+                MessageId = bestellingBericht.orderId,
+                CorrelationId = Guid.NewGuid().ToString(),
+                Timestamp = new AmqpTimestamp(DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+            };
 
             //Dit is de message die wordt gestuurd naar de queue  
             await channel.BasicPublishAsync(
                 exchange: string.Empty,
-                routingKey: "BestelAppQueue", //Gebruik de queue naam als routing key bij default exchange
+                routingKey: "BestelAppQueue",
                 mandatory: true,
-                //Deze basicproperties zorgen ervoor dat de message persistent is
-                basicProperties: new BasicProperties { Persistent = true },
+                basicProperties: properties,
                 body: body
             );
 
-            Console.WriteLine($"Sent: {message}");
+            // Log voor debugging
+            Console.WriteLine($"JSON bericht verzonden:");
+            Console.WriteLine($"  Order ID: {bestellingBericht.orderId}");
+            Console.WriteLine($"  Product: {shoe.Brand} {shoe.Name}");
+            Console.WriteLine($"  JSON: {jsonBericht}");
         }
     }
 }

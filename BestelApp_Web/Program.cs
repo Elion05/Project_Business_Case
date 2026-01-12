@@ -13,6 +13,35 @@ builder.Services.AddDbContext<AppDbContext>();
 //RabbitMQ Service toevoegen zodat we kunnen bestellen
 builder.Services.AddSingleton<RabbitMQService>();
 
+//Identity configureren voor login/register functionaliteit
+builder.Services.AddIdentity<Users, IdentityRole>(opties =>
+{
+    // Wachtwoord eisen (voor development makkelijk)
+    opties.Password.RequireDigit = true;
+    opties.Password.RequiredLength = 6;
+    opties.Password.RequireNonAlphanumeric = false;
+    opties.Password.RequireUppercase = true;
+    opties.Password.RequireLowercase = true;
+
+    // Gebruiker eisen
+    opties.User.RequireUniqueEmail = true;
+
+    // Sign in opties
+    opties.SignIn.RequireConfirmedEmail = false; // Voor development
+})
+.AddEntityFrameworkStores<AppDbContext>()
+.AddDefaultTokenProviders();
+
+//Cookie instellingen voor login
+builder.Services.ConfigureApplicationCookie(opties =>
+{
+    opties.LoginPath = "/Account/Login"; // Waar moet gebruiker naartoe als niet ingelogd
+    opties.LogoutPath = "/Account/Logout";
+    opties.AccessDeniedPath = "/Account/AccessDenied";
+    opties.ExpireTimeSpan = TimeSpan.FromDays(7); // Cookie blijft 7 dagen geldig
+    opties.SlidingExpiration = true; // Vernieuw cookie bij elke request
+});
+
 //Add services to the container.
 builder.Services.AddControllersWithViews();
 
@@ -46,7 +75,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseRouting();
 
-app.UseAuthorization();
+//BELANGRIJK: Authentication moet VOOR Authorization
+app.UseAuthentication(); // Checkt wie je bent
+app.UseAuthorization();  // Checkt wat je mag doen
 
 app.MapStaticAssets();
 

@@ -1,0 +1,85 @@
+@model BestelApp_Web.Models.RegisterViewModel
+
+@{
+    ViewData["Title"] = "Registreren";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow">
+            <div class="card-body">
+                <h2 class="card-title text-center mb-4">Registreren</h2>
+
+                <!-- Validatie samenvatting -->
+                <div asp-validation-summary="All" class="text-danger"></div>
+
+                <form asp-action="Register" method="post">
+                    <div class="row">
+                        <!-- Voornaam -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="VoorNaam" class="form-label"></label>
+                            <input asp-for="VoorNaam" class="form-control" placeholder="Voer je voornaam in" />
+                            <span asp-validation-for="VoorNaam" class="text-danger"></span>
+                        </div>
+
+                        <!-- Achternaam -->
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="AchterNaam" class="form-label"></label>
+                            <input asp-for="AchterNaam" class="form-control" placeholder="Voer je achternaam in" />
+                            <span asp-validation-for="AchterNaam" class="text-danger"></span>
+                        </div>
+                    </div>
+
+                    <!-- Gebruikersnaam -->
+                    <div class="mb-3">
+                        <label asp-for="GebruikersNaam" class="form-label"></label>
+                        <input asp-for="GebruikersNaam" class="form-control" placeholder="Kies een gebruikersnaam" />
+                        <span asp-validation-for="GebruikersNaam" class="text-danger"></span>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label"></label>
+                        <input asp-for="Email" class="form-control" placeholder="Voer je email adres in" />
+                        <span asp-validation-for="Email" class="text-danger"></span>
+                    </div>
+
+                    <!-- Wachtwoord -->
+                    <div class="mb-3">
+                        <label asp-for="Wachtwoord" class="form-label"></label>
+                        <input asp-for="Wachtwoord" class="form-control" placeholder="Kies een wachtwoord (min. 6 karakters)" />
+                        <span asp-validation-for="Wachtwoord" class="text-danger"></span>
+                        <small class="form-text text-muted">
+                            Minimaal 6 karakters, met hoofdletter en cijfer
+                        </small>
+                    </div>
+
+                    <!-- Bevestig Wachtwoord -->
+                    <div class="mb-3">
+                        <label asp-for="BevestigWachtwoord" class="form-label"></label>
+                        <input asp-for="BevestigWachtwoord" class="form-control" placeholder="Herhaal je wachtwoord" />
+                        <span asp-validation-for="BevestigWachtwoord" class="text-danger"></span>
+                    </div>
+
+                    <!-- Submit knop -->
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">Account aanmaken</button>
+                    </div>
+                </form>
+
+                <!-- Link naar login -->
+                <div class="text-center mt-3">
+                    <p class="mb-0">
+                        Heb je al een account? 
+                        <a asp-action="Login">Log hier in</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

@@ -31,12 +31,62 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Shoes" asp-action="Index">Schoenen</a>
                         </li>
                     </ul>
+
+                    <!-- Login/Register knoppen (rechtsboven) -->
+                    <ul class="navbar-nav">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <!-- Gebruiker is ingelogd -->
+                            <li class="nav-item">
+                                <span class="nav-link text-dark">
+                                    Welkom, <strong>@User.Identity.Name</strong>!
+                                </span>
+                            </li>
+                            <li class="nav-item">
+                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm mt-2">Uitloggen</button>
+                                </form>
+                            </li>
+                        }
+                        else
+                        {
+                            <!-- Gebruiker is NIET ingelogd -->
+                            <li class="nav-item">
+                                <a class="btn btn-outline-primary btn-sm me-2" asp-controller="Account" asp-action="Login">
+                                    Inloggen
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Register">
+                                    Registreren
+                                </a>
+                            </li>
+                        }
+                    </ul>
                 </div>
             </div>
         </nav>
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            <!-- Succes berichten -->
+            @if (TempData["SuccessBericht"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    <strong>✓</strong> @TempData["SuccessBericht"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- Fout berichten -->
+            @if (TempData["FoutBericht"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    <strong>✗</strong> @TempData["FoutBericht"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
             @RenderBody()
         </main>
     </div>
