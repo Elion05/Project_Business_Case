@@ -1,10 +1,10 @@
 using System.Text;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System.Text.Json;
-using Microsoft.Extensions.Configuration;
 using BestelApp_Cons.Models;
 using BestelApp_Cons.Salesforce;
+using Microsoft.Extensions.Configuration;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 // ========================================
 // STAP 1: Configuratie laden
@@ -12,7 +12,7 @@ using BestelApp_Cons.Salesforce;
 Console.WriteLine("📋 Configuratie laden...");
 
 var configuratie = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
+    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .Build();
 
@@ -125,8 +125,8 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
             Console.WriteLine("⏳ Tijdelijke fout → NACK (requeue=TRUE)");
             Console.WriteLine("   Bericht gaat terug in de queue voor later...");
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
-                eventArgs.DeliveryTag, 
-                multiple: false, 
+                eventArgs.DeliveryTag,
+                multiple: false,
                 requeue: true);
         }
         else
@@ -135,8 +135,8 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
             Console.WriteLine("❌ Permanente fout → NACK (requeue=FALSE)");
             Console.WriteLine("   Bericht gaat naar Dead Letter Queue...");
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
-                eventArgs.DeliveryTag, 
-                multiple: false, 
+                eventArgs.DeliveryTag,
+                multiple: false,
                 requeue: false);
         }
     }
@@ -146,10 +146,10 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
         Console.WriteLine($"❌ Onverwachte fout: {ex.Message}");
         Console.WriteLine($"📍 Stack trace: {ex.StackTrace}");
         Console.WriteLine("❌ NACK (requeue=FALSE)");
-        
+
         await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
-            eventArgs.DeliveryTag, 
-            multiple: false, 
+            eventArgs.DeliveryTag,
+            multiple: false,
             requeue: false);
     }
 
