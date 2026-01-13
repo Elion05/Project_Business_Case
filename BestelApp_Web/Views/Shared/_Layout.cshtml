@@ -41,6 +41,24 @@
     </header>
     <div class="container">
         <main role="main" class="pb-3">
+            <!-- Succes berichten -->
+            @if (TempData["SuccessBericht"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+                    <strong>✓</strong> @TempData["SuccessBericht"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <!-- Fout berichten -->
+            @if (TempData["FoutBericht"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+                    <strong>✗</strong> @TempData["FoutBericht"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
             @RenderBody()
         </main>
     </div>
