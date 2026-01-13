@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 
+
 namespace BestelApp_Models
 {
     public class Users : IdentityUser
@@ -17,6 +18,8 @@ namespace BestelApp_Models
         [MaxLength(30)]
         public string LastName { get; set; } = string.Empty;
 
+       
+
 
 
 
@@ -29,7 +32,7 @@ namespace BestelApp_Models
             NormalizedUserName = "DUMMY",
             Email = "dummy@manga.be",
             LockoutEnabled = true,
-            LockoutEnd = DateTimeOffset.MaxValue,
+            LockoutEnd = DateTimeOffset.MaxValue
         };
 
 
@@ -38,11 +41,9 @@ namespace BestelApp_Models
             return $"{FirstName} {LastName} ({UserName})";
         }
 
-
         public static async Task Seeder(AppDbContext context)
         {
             // Gebruik de meegegeven context in plaats van een nieuwe aan te maken
-
             if (!context.Roles.Any())
             {
                 context.Roles.AddRange(new List<IdentityRole>
@@ -65,7 +66,7 @@ namespace BestelApp_Models
                     UserName = "admin",
                     FirstName = "Admin",
                     LastName = "User",
-                    Email = "admin@manga.be",
+                    Email = "admin@lol.be",
                     EmailConfirmed = true,
                 };
 
@@ -75,7 +76,7 @@ namespace BestelApp_Models
                     UserName = "user",
                     FirstName = "Normal",
                     LastName = "User",
-                    Email = "user@manga.be",
+                    Email = "user@lol.be",
                     EmailConfirmed = true,
                 };
 
@@ -85,14 +86,14 @@ namespace BestelApp_Models
                     UserName = "system_admin",
                     FirstName = "System",
                     LastName = "Admin",
-                    Email = "system_admin@manga.be",
-                    EmailConfirmed = true,
+                    Email = "system_admin@lol.be",
+                    EmailConfirmed = true
                 };
 
 
 
-                var usermanager = new UserManager<Users>(new UserStore<Users>(context), null, new PasswordHasher<Users>(),
-                    null, null, null, null, null, null
+                var usermanager = new UserManager<Users>(new UserStore<Users>(context), null!, new PasswordHasher<Users>(),
+                    null!, null!, null!, null!, null!, null!
                 );
 
                 try

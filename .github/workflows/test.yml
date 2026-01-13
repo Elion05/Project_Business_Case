@@ -1,0 +1,16 @@
+name: Test met Input
+
+on:
+  workflow_dispatch:
+    inputs:
+      naam:
+        description: 'Wie voert deze test uit?'
+        required: true
+        default: 'Elion'
+
+jobs:
+  groet:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Zeg hallo
+        run: echo "Hallo ${{ github.event.inputs.naam }}, deze test workflow werkt!"

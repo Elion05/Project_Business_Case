@@ -23,8 +23,7 @@ namespace BestelApp_Models
         [MaxLength(100)]
         public string Color { get; set; } = string.Empty;
 
-
-
+        
         public override string ToString()
         {
             return $"{Brand} {Name} (Size {Size}) - €{Price}";
@@ -61,7 +60,25 @@ namespace BestelApp_Models
                     Size = 41,
                     Color = "Green/White"
 
-                }
+                },
+
+                new Shoe
+                {
+                    Name = "Yeezy",
+                    Brand = "Adidas",
+                    Price = 199.99m,
+                    Size = 42,
+                    Color = "Black/White"
+                },
+
+                new Shoe
+                {
+                    Name = "Random",
+                    Brand = "Random",
+                    Price = 1.88m,
+                    Size = 45,
+                    Color = "Black/Yellow"
+                },
             };
         }
     }
