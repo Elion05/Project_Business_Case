@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.Json;
 using Microsoft.Extensions.Configuration;
 using BestelApp_Cons.Models;
+using BestelApp_Cons.Services;
 using BestelApp_Cons.Salesforce;
 
 // ========================================
@@ -17,12 +18,20 @@ var configuratie = new ConfigurationBuilder()
     .Build();
 
 // ========================================
-// STAP 2: Salesforce services initialiseren
+// STAP 2: Services initialiseren
 // ========================================
-Console.WriteLine("🔐 Salesforce services initialiseren...");
+Console.WriteLine("🔐 Services initialiseren...");
 
 var salesforceAuthService = new SalesforceAuthService(configuratie);
 var salesforceClient = new SalesforceClient(configuratie, salesforceAuthService);
+
+// Idempotency DB pad (data folder naast executable)
+var dbPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "idempotency.db");
+var idempotencyService = new IdempotencyService(dbPath);
+
+// Initialize DB
+Console.WriteLine($"💾 Idempotency DB initialiseren op: {dbPath}");
+await idempotencyService.InitializeAsync();
 
 // ========================================
 // STAP 3: RabbitMQ connectie opzetten
@@ -41,15 +50,19 @@ using var channel = await connection.CreateChannelAsync();
 
 var queueNaam = configuratie["RabbitMQ:QueueName"] ?? "BestelAppQueue";
 
+// DLQ Argumenten
+var queueArgs = new Dictionary<string, object?>
+{
+    { "x-dead-letter-exchange", "" }, // Default exchange
+    { "x-dead-letter-routing-key", queueNaam + "-dlq" } // DLQ naam conventie
+};
+
 await channel.QueueDeclareAsync(
-    //de naam van de queue
     queue: queueNaam,
-    //messages blijven bewaard ook als de broker opnieuw opstart, als het False is en de app crasht zijn de messages weg
     durable: true,
-    //als de subscriber weg is, wordt de queue verwijderd
     exclusive: false,
     autoDelete: false,
-    arguments: null);
+    arguments: queueArgs); // Toegevoegde DLQ argumenten
 
 Console.WriteLine("✅ Consumer is klaar!");
 Console.WriteLine($"👂 Wachten op bestellingen in queue '{queueNaam}'...");
@@ -60,24 +73,34 @@ Console.WriteLine("=====================================\n");
 // ========================================
 var consumer = new AsyncEventingBasicConsumer(channel);
 
-//messages krijgen van de queue
 consumer.ReceivedAsync += async (sender, eventArgs) =>
 {
-    //byte array van de message in de queue om daarna naar UTF8 te omzetten 
     byte[] body = eventArgs.Body.ToArray();
-    //omzetten van byte array naar string
     string berichtTekst = Encoding.UTF8.GetString(body);
+    string messageId = eventArgs.BasicProperties.MessageId ?? Guid.NewGuid().ToString(); // Fallback ID
 
-    Console.WriteLine($"\n📬 Nieuw bericht ontvangen!");
-    Console.WriteLine($"📄 Bericht: {berichtTekst}");
-    Console.WriteLine("-------------------------------------");
+    Console.WriteLine($"\n📬 Nieuw bericht ontvangen! ID: {messageId}");
 
     try
     {
+        // 1. Idempotency Check
+        var state = await idempotencyService.GetStateAsync(messageId);
+        if (state?.Status == "Processed")
+        {
+            Console.WriteLine($"⏭️ Bericht {messageId} is al verwerkt. Skipping (ACK).");
+            await ((AsyncEventingBasicConsumer)sender).Channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
+            return;
+        }
+
+        // 2. Markeer als Processing
+        await idempotencyService.MarkProcessingAsync(messageId, berichtTekst);
+
+        Console.WriteLine($"📄 Bericht: {berichtTekst}");
+        Console.WriteLine("-------------------------------------");
+
         // Probeer JSON te parsen
         OrderMessage? bestelling = null;
         bool isJson = false;
-
         try
         {
             bestelling = JsonSerializer.Deserialize<OrderMessage>(berichtTekst);
@@ -87,7 +110,6 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
                 Console.WriteLine($"✅ JSON parsing succesvol!");
                 Console.WriteLine($"📦 Order ID: {bestelling.OrderId}");
                 Console.WriteLine($"👟 Product: {bestelling.Brand} {bestelling.Name}");
-                Console.WriteLine($"📏 Maat: {bestelling.Size}");
                 Console.WriteLine($"💰 Prijs: €{bestelling.Price}");
             }
         }
@@ -96,59 +118,53 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
             Console.WriteLine("⚠️ Bericht is geen JSON, gebruik fallback...");
         }
 
-        // Verstuur naar Salesforce
+        // 3. Verstuur naar Salesforce
         SalesforceResultaat resultaat;
 
         if (isJson && bestelling != null)
         {
-            // Verstuur als OrderMessage
             resultaat = await salesforceClient.StuurBestellingAsync(bestelling);
         }
         else
         {
-            // Verstuur als fallback (alleen Description veld)
             resultaat = await salesforceClient.StuurFallbackBerichtAsync(berichtTekst);
         }
 
-        // Beslis ACK of NACK op basis van het resultaat
+        // 4. Verwerk resultaat
         if (resultaat.IsSuccesvol)
         {
-            // Success! → ACK
+            // Success! -> Update DB -> ACK
             Console.WriteLine("✅ Salesforce operatie succesvol → ACK");
+            await idempotencyService.MarkProcessedAsync(messageId);
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicAckAsync(eventArgs.DeliveryTag, multiple: false);
         }
         else if (resultaat.IsHerhaalbaar)
         {
-            // Tijdelijke fout (429, 5xx) → NACK met requeue=true
-            Console.WriteLine("⏳ Tijdelijke fout → NACK (requeue=TRUE)");
-            Console.WriteLine("   Bericht gaat terug in de queue voor later...");
-            await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
-                eventArgs.DeliveryTag, 
-                multiple: false, 
-                requeue: true);
+            // Tijdelijke fout -> Update DB (Failed? Of blijven staan op Processing?)
+            // Requirement zegt: "bij error Failed... + NACK(requeue:false)" -> Maar tijdelijke fout wil je vaak retryen.
+            // Echter, user prompt zegt specifiek: "bij error Failed + RetryCount++ ... + NACK(requeue:false)"
+            // Als we strikt de prompt volgen voor ALLE errors:
+            
+            Console.WriteLine($"⏳ Tijdelijke fout ({resultaat.Foutmelding}) → Mark Failed & NACK (requeue=FALSE)"); 
+            // Noot: Normaal zou je hier requeue=true doen OF naar DLQ sturen. User prompt zegt expliciet NACK(requeue:false) -> DLQ.
+            // Dus we behandelen retry via DLQ loop of latere process.
+            
+            await idempotencyService.MarkFailedAsync(messageId, resultaat.Foutmelding ?? "Unknown Temporary Error");
+            await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: false);
         }
         else
         {
-            // Permanente fout (400, 4xx) → NACK met requeue=false
-            Console.WriteLine("❌ Permanente fout → NACK (requeue=FALSE)");
-            Console.WriteLine("   Bericht gaat naar Dead Letter Queue...");
-            await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
-                eventArgs.DeliveryTag, 
-                multiple: false, 
-                requeue: false);
+            // Permanente fout
+            Console.WriteLine($"❌ Permanente fout ({resultaat.Foutmelding}) → Mark Failed & NACK (requeue=FALSE)");
+            await idempotencyService.MarkFailedAsync(messageId, resultaat.Foutmelding ?? "Unknown Permanent Error");
+            await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: false);
         }
     }
     catch (Exception ex)
     {
-        // Bij onverwachte fouten → NACK met requeue=false
         Console.WriteLine($"❌ Onverwachte fout: {ex.Message}");
-        Console.WriteLine($"📍 Stack trace: {ex.StackTrace}");
-        Console.WriteLine("❌ NACK (requeue=FALSE)");
-        
-        await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
-            eventArgs.DeliveryTag, 
-            multiple: false, 
-            requeue: false);
+        await idempotencyService.MarkFailedAsync(messageId, ex.Message);
+        await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(eventArgs.DeliveryTag, multiple: false, requeue: false);
     }
 
     Console.WriteLine("=====================================");
@@ -157,7 +173,6 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
 
 await channel.BasicConsumeAsync(
     queueNaam,
-    //manueel de berichten bevestigen
     autoAck: false,
     consumer);
 

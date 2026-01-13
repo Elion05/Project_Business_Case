@@ -12,10 +12,10 @@
 - **Frequency**: Daily (Recommended).
 - **Target**: `http://10.2.160.221:15672`
 
-## SQLite
+## SQLite (Idempotency)
 ### Backup Method
 - **Script**: `scripts/backup_sqlite.ps1`
-- **Mechanism**: Copies the `BestelApp.db` file to a timestamped backup file.
+- **Mechanism**: Copies the `idempotency.db` file (from Consumer data folder) to a timestamped backup.
 - **Frequency**: Hourly (Recommended).
 - **Locations**: `backups/sqlite/`
 
@@ -23,7 +23,7 @@
 We treat Salesforce as an external system.
 - **Data Recovery**: Relies on Salesforce's internal availability.
 - **Reliability**:
-    - **Idempotency**: We ensure message processing handles duplicate events.
+    - **Idempotency**: We ensure message processing handles duplicate events via local SQLite DB.
     - **Dead Letter Queue (DLQ)**: Failed messages are moved to a DLQ for manual inspection/replay.
     - **Retry Policy**: Transient errors trigger automatic retries.
 
@@ -39,5 +39,5 @@ To schedule these scripts automatically:
 3.  **Trigger**: "Daily" (for RabbitMQ) or "Hourly" (for SQLite).
 4.  **Action**: "Start a Program".
     - **Program/script**: `powershell.exe`
-    - **Add arguments**: `-ExecutionPolicy Bypass -File "C:\Users\noahg\source\repos\Project_Business_Case-1\scripts\backup_rabbitmq.ps1"` (or `backup_sqlite.ps1`)
-    - **Start in**: `C:\Users\noahg\source\repos\Project_Business_Case-1\scripts`
+    - **Add arguments**: `-ExecutionPolicy Bypass -File "C:\path\to\project\scripts\backup_rabbitmq.ps1"` (or `backup_sqlite.ps1`)
+    - **Start in**: `C:\path\to\project\scripts`
