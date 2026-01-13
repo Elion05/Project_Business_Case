@@ -23,6 +23,12 @@ namespace BestelApp_Web.Services
             using var connection = await _factory.CreateConnectionAsync();
             using var channel = await connection.CreateChannelAsync();
 
+            var queueArgs = new Dictionary<string, object?>
+            {
+                { "x-dead-letter-exchange", "" },
+                { "x-dead-letter-routing-key", "BestelAppQueue-dlq" }
+            };
+
             await channel.QueueDeclareAsync(
                 //dit is de queue naam, die kan maken in RabbitMQ om te gebruiken
                 queue: "BestelAppQueue",
@@ -31,7 +37,7 @@ namespace BestelApp_Web.Services
                 //als de subscriber weg is, wordt de queue verwijderd
                 exclusive: false,
                 autoDelete: false,
-                arguments: null
+                arguments: queueArgs
             );
 
             // Maak een JSON bericht aan

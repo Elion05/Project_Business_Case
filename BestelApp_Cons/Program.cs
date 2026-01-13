@@ -25,8 +25,8 @@ Console.WriteLine("🔐 Services initialiseren...");
 var salesforceAuthService = new SalesforceAuthService(configuratie);
 var salesforceClient = new SalesforceClient(configuratie, salesforceAuthService);
 
-// Idempotency DB pad (data folder naast executable)
-var dbPath = Path.Combine(Directory.GetCurrentDirectory(), "data", "idempotency.db");
+// Idempotency DB pad (fixed location for backup consistency)
+var dbPath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../data/idempotency.db"));
 var idempotencyService = new IdempotencyService(dbPath);
 
 // Initialize DB
