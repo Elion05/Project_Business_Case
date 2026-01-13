@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Toegang Geweigerd";
+}
+
+<div class="container text-center mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-body p-5">
+                    <h1 class="text-danger mb-4">
+                        <i class="bi bi-exclamation-triangle"></i> Geen Toegang
+                    </h1>
+                    <h3 class="mb-3">Toegang Geweigerd</h3>
+                    <p class="lead mb-4">
+                        Je hebt geen toestemming om deze pagina te bekijken.
+                    </p>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary btn-lg">
+                            Terug naar Home
+                        </a>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-secondary btn-lg">
+                            Inloggen
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
