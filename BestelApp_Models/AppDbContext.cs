@@ -15,7 +15,7 @@ namespace BestelApp_Models
             // De connectiestring is hier hardcoded ingesteld volgens de GitHub repo
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseSqlServer("Server=(localdb)\\mssqllocaldb;Database=BestelAppDb;Trusted_Connection=true;MultipleActiveResultSets=true");
+                optionsBuilder.UseSqlite("Data Source=BestelApp.db");
             }
         }
 
