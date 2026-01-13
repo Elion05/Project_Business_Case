@@ -14,7 +14,7 @@ namespace BestelApp_Cons.Salesforce
     {
         private readonly IConfiguration _configuratie;
         private readonly HttpClient _httpClient;
-        
+
         // Hier bewaren we het token en wanneer het verloopt
         private string? _huidigAccessToken;
         private DateTime _tokenVerlooptOp;
@@ -59,7 +59,7 @@ namespace BestelApp_Cons.Salesforce
                 var refreshToken = _configuratie["Salesforce:RefreshToken"];
 
                 // Check of alle waardes er zijn
-                if (string.IsNullOrEmpty(loginUrl) || string.IsNullOrEmpty(clientId) || 
+                if (string.IsNullOrEmpty(loginUrl) || string.IsNullOrEmpty(clientId) ||
                     string.IsNullOrEmpty(clientSecret) || string.IsNullOrEmpty(refreshToken))
                 {
                     throw new Exception("❌ Salesforce configuratie ontbreekt in appsettings.json!");
@@ -100,7 +100,7 @@ namespace BestelApp_Cons.Salesforce
 
                 // Bewaar het token
                 _huidigAccessToken = accessToken;
-                
+
                 // Salesforce tokens zijn standaard 2 uur geldig
                 // We trekken er 5 minuten van af voor de zekerheid
                 _tokenVerlooptOp = DateTime.UtcNow.AddMinutes(115);

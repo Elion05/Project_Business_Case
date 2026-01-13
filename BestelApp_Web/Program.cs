@@ -6,8 +6,10 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//DbContext toevoegen voor Entity Framework (configuratie staat in AppDbContext.cs)
-builder.Services.AddDbContext<AppDbContext>();
+//DbContext toevoegen voor Entity Framework
+var connectionString = $"Data Source={Path.Combine(builder.Environment.ContentRootPath, "BestelApp.db")}";
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(connectionString));
 
 //Identity configureren met de aangepaste 'Users' klasse
 //Dit is nodig om de inlogfunctionaliteit werkend te krijgen

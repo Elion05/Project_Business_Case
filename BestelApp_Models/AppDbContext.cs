@@ -7,6 +7,9 @@ namespace BestelApp_Models
     // AppDbContext erft over van IdentityDbContext om Identity te ondersteunen
     public class AppDbContext : IdentityDbContext<Users>
     {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
         public DbSet<Users> AppUsers { get; set; }
         public DbSet<Shoe> Shoes { get; set; }
 

@@ -47,9 +47,13 @@ namespace BestelApp_Web.Services
 
             // Converteer naar JSON string
             var jsonBericht = System.Text.Json.JsonSerializer.Serialize(bestellingBericht);
-            
-            // Converteer JSON string naar bytes
-            var body = Encoding.UTF8.GetBytes(jsonBericht);
+
+            // ENCRYPTIE TOEVOEGEN
+            var encryptedBericht = EncryptionHelper.Encrypt(jsonBericht);
+
+            // Converteer encrypted string naar bytes
+            // We sturen nu de encrypted string over de lijn, niet de leesbare JSON
+            var body = Encoding.UTF8.GetBytes(encryptedBericht);
 
             // Maak properties met metadata
             var properties = new BasicProperties

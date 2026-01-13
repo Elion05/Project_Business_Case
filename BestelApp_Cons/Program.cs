@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using BestelApp_Cons.Models;
 using BestelApp_Cons.Salesforce;
+using BestelApp_Models;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
@@ -67,11 +68,16 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
 {
     //byte array van de message in de queue om daarna naar UTF8 te omzetten 
     byte[] body = eventArgs.Body.ToArray();
-    //omzetten van byte array naar string
-    string berichtTekst = Encoding.UTF8.GetString(body);
+    //omzetten van byte array naar string (dit is nu de encrypted string!)
+    string encryptedBericht = Encoding.UTF8.GetString(body);
 
     Console.WriteLine($"\n📬 Nieuw bericht ontvangen!");
-    Console.WriteLine($"📄 Bericht: {berichtTekst}");
+    Console.WriteLine($"� Encrypted: {encryptedBericht}"); // Debug log voor demo
+
+    // DECRYPTIE
+    string berichtTekst = EncryptionHelper.Decrypt(encryptedBericht);
+
+    Console.WriteLine($"🔓 Decrypted: {berichtTekst}");
     Console.WriteLine("-------------------------------------");
 
     try

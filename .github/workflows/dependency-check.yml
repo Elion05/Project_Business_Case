@@ -24,7 +24,7 @@ jobs:
         dotnet-version: 9.0.x
 
     - name: Restore dependencies
-      run: dotnet restore BestelApp_Web/BestelApp_Web.sln
+      run: dotnet restore Project_Business_Case.sln
 
     - name: List vulnerable packages
-      run: dotnet list BestelApp_Web/BestelApp_Web.sln package --vulnerable --include-transitive
+      run: dotnet list Project_Business_Case.sln package --vulnerable --include-transitive
