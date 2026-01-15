@@ -14,9 +14,9 @@ namespace BestelApp_Web.Controllers
     
     public class UsersController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public UsersController(AppDbContext context)
+        public UsersController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -38,8 +38,9 @@ namespace BestelApp_Web.Controllers
                                  Email = user.Email ?? string.Empty,
                                  Blocked = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
                                  Roles = (from ur in _context.UserRoles
+                                          join r in _context.Roles on ur.RoleId equals r.Id
                                           where ur.UserId == user.Id
-                                          select ur.RoleId).ToList()
+                                          select r.Name ?? string.Empty).ToList()
                              };
 
             ViewData["username"] = username;
@@ -96,7 +97,7 @@ namespace BestelApp_Web.Controllers
                                select userRole.RoleId).ToListAsync()
             };
             // Create a MultiSelectList containing all available roles, with the user's current roles pre-selected.
-            ViewData["AllRoles"] = new MultiSelectList(_context.Roles.OrderBy(r => r.Name), "Id", "Id", roleViewModel.Roles);
+            ViewData["AllRoles"] = new MultiSelectList(_context.Roles.OrderBy(r => r.Name), "Id", "Name", roleViewModel.Roles);
             // Return the view, passing the view model to it.
             return View(roleViewModel);
         }

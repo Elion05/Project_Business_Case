@@ -1,51 +1,10 @@
-# Build workflow voor BestelApp project
 name: Build en Test
 
-# Wanneer moet deze workflow runnen
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main", "master", "Elion" ]
   pull_request:
-    branches: [ main, master ]
-
-# Welke jobs moeten uitgevoerd worden
-jobs:
-  build:
-    # Welk besturingssysteem gebruiken we
-    runs-on: ubuntu-latest
-    
-    # Stappen die uitgevoerd moeten worden
-    steps:
-    # Stap 1: Haal de code op
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    # Stap 2: Installeer .NET
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
-    
-    # Stap 3: Herstel dependencies
-    - name: Herstel dependencies
-      run: dotnet restore BestelApp_Web/BestelApp_Web.sln
-    
-    # Stap 4: Build het project
-    - name: Build project
-      run: dotnet build BestelApp_Web/BestelApp_Web.sln --configuration Release --no-restore
-    
-    # Stap 5: Run tests (optioneel)
-    # - name: Run tests
-    #   run: dotnet test BestelApp_Web/BestelApp_Web.sln --no-restore --verbosity normal
-
-
-name: .NET Build
-
-on:
-  push:
-    branches: ["Elion"]
-  pull_request:
-    branches: ["Elion"]
+    branches: [ "main", "master", "Elion" ]
   workflow_dispatch:
 
 jobs:
@@ -53,18 +12,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 9.0.x
-
+    
     - name: Restore dependencies
-      run: dotnet restore BestelApp_Web/BestelApp_Web.sln
-
-    - name: Build
-      run: dotnet build BestelApp_Web/BestelApp_Web.sln --no-restore
-
+      run: dotnet restore Project_Business_Case.sln
+    
+    - name: Build project
+      run: dotnet build Project_Business_Case.sln --configuration Release --no-restore
+    
     - name: Test
-      run: dotnet test BestelApp_Web/BestelApp_Web.sln --no-build --verbosity normal
+      run: dotnet test Project_Business_Case.sln --no-build --verbosity normal

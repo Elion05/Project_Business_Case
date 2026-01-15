@@ -1,0 +1,30 @@
+#Wat doet dit?
+#Dit gaat jouw NuGet packages scannen voor kwetsbaarheden
+name: Dependency Check
+
+on:
+  push:
+    branches: ["Elion"]
+  pull_request:
+    branches: ["Elion"]
+  schedule:
+    - cron: '0 0 * * 1' 
+  workflow_dispatch:
+
+jobs:
+  check-vulnerabilities:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 9.0.x
+
+    - name: Restore dependencies
+      run: dotnet restore Project_Business_Case.sln
+
+    - name: List vulnerable packages
+      run: dotnet list Project_Business_Case.sln package --vulnerable --include-transitive

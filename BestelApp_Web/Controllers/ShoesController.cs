@@ -6,13 +6,13 @@ namespace BestelApp_Web.Controllers
 {
     public class ShoesController : Controller
     {
-        private readonly AppDbContext _context;
-        private readonly BestelApp_Web.Services.RabbitMQService _rabbitMQService;
+        private readonly ApplicationDbContext _context;
+        private readonly BestelApp_Web.Services.OrderApiService _orderApiService;
 
-        public ShoesController(AppDbContext context, BestelApp_Web.Services.RabbitMQService rabbitMQService)
+        public ShoesController(ApplicationDbContext context, BestelApp_Web.Services.OrderApiService orderApiService)
         {
             _context = context;
-            _rabbitMQService = rabbitMQService;
+            _orderApiService = orderApiService;
         }
 
         //dit is een property voor de Shoes 
@@ -165,10 +165,18 @@ namespace BestelApp_Web.Controllers
                 return NotFound();
             }
 
-            await _rabbitMQService.SendOrderMessageAsync(shoe);
+            // Verstuur naar Backend API (niet meer direct naar RabbitMQ!)
+            var success = await _orderApiService.PlaceOrderAsync(shoe);
 
-            //Dit is een kleine message dat je op de schoenen Index te zien krijgt
-            TempData["SuccessMessage"] = $"Bestelling voor {shoe.Name} is verzonden!";
+            if (success)
+            {
+                //Dit is een kleine message dat je op de schoenen Index te zien krijgt
+                TempData["SuccessMessage"] = $"Bestelling voor {shoe.Name} is verzonden!";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = $"Fout bij versturen bestelling. Probeer later opnieuw.";
+            }
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,0 +1,24 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ "Elion", "master", "main" ]
+  pull_request:
+    branches: [ "Elion", "master", "main" ]
+  workflow_dispatch:
+
+jobs:
+  secret-scan:
+    name: Scan for Secrets & Keys
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Nodig voor Gitleaks om de geschiedenis te scannen
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Deze stap faalt als hij secrets (zoals in EncryptionHelper.cs) vindt.
