@@ -55,6 +55,10 @@ namespace BestelApp_Web.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,Name,Brand,Price,Size,Color")] Shoe shoe)
         {
+            // =========================================================================
+            // VALIDATIE CHECK (BACKEND)
+            // Hier controleren we of de ingevulde data voldoet aan de regels in Shoe.cs
+            // =========================================================================
             if (ModelState.IsValid)
             {
                 _context.Add(shoe);
@@ -92,6 +96,10 @@ namespace BestelApp_Web.Controllers
                 return NotFound();
             }
 
+            // =========================================================================
+            // VALIDATIE CHECK (BACKEND)
+            // Ook bij het bewerken checken we of de regels (bv. prijs > 0) kloppen
+            // =========================================================================
             if (ModelState.IsValid)
             {
                 try

@@ -1,5 +1,6 @@
 using System.Text;
 using BestelApp_Models;
+using BestelApp_Shared;
 using RabbitMQ.Client;
 
 namespace BestelApp_Web.Services
@@ -23,16 +24,19 @@ namespace BestelApp_Web.Services
             using var connection = await _factory.CreateConnectionAsync();
             using var channel = await connection.CreateChannelAsync();
 
-            await channel.QueueDeclareAsync(
-                //dit is de queue naam, die kan maken in RabbitMQ om te gebruiken
-                queue: "BestelAppQueue",
-                //messages blijven bewaard ook als de broker opnieuw opstart, als het False is en de app crasht zijn de messages weg
-                durable: true,
-                //als de subscriber weg is, wordt de queue verwijderd
-                exclusive: false,
-                autoDelete: false,
-                arguments: null
-            );
+            // GEBRUIK PASSIVE DECLARE OM ARGUMENT MISMATCH TE VOORKOMEN
+            // De queue bestaat al (gemaakt via Management Console of elders) met specifieke settings (DLX).
+            // We willen niet crashen omdat onze definitie afwijkt.
+            try
+            {
+                await channel.QueueDeclarePassiveAsync("BestelAppQueue");
+            }
+            catch (Exception ex)
+            {
+                // Log de fout maar crash niet meteen hard, of throw een duidelijkere error
+                Console.WriteLine($"[ERROR] Kan queue BestelAppQueue niet vinden of settings wijken af: {ex.Message}");
+                throw;
+            }
 
             // Maak een JSON bericht aan
             var bestellingBericht = new
@@ -48,8 +52,11 @@ namespace BestelApp_Web.Services
             // Converteer naar JSON string
             var jsonBericht = System.Text.Json.JsonSerializer.Serialize(bestellingBericht);
 
-            // ENCRYPTIE TOEVOEGEN
+            // ENCRYPTIE
             var encryptedBericht = EncryptionHelper.Encrypt(jsonBericht);
+
+            // LOGGING TOEVOEGEN VOOR VERIFICATIE
+            Console.WriteLine($"[VERIFICATIE] Encrypted Message: {encryptedBericht}");
 
             // Converteer encrypted string naar bytes
             // We sturen nu de encrypted string over de lijn, niet de leesbare JSON
@@ -79,7 +86,6 @@ namespace BestelApp_Web.Services
             Console.WriteLine($"JSON bericht verzonden:");
             Console.WriteLine($"  Order ID: {bestellingBericht.orderId}");
             Console.WriteLine($"  Product: {shoe.Brand} {shoe.Name}");
-            Console.WriteLine($"  JSON: {jsonBericht}");
         }
     }
 }

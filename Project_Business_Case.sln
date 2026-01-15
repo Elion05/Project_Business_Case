@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestelApp_Cons", "BestelApp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestelApp_Models", "BestelApp_Models\BestelApp_Models.csproj", "{103FD42D-C34F-43B4-818C-7E2AC769A1FC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BestelApp_Shared", "BestelApp_Shared\BestelApp_Shared.csproj", "{41956EBC-18E1-4351-B986-A35276DB93AA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,18 @@ Global
 		{103FD42D-C34F-43B4-818C-7E2AC769A1FC}.Release|x64.Build.0 = Release|Any CPU
 		{103FD42D-C34F-43B4-818C-7E2AC769A1FC}.Release|x86.ActiveCfg = Release|Any CPU
 		{103FD42D-C34F-43B4-818C-7E2AC769A1FC}.Release|x86.Build.0 = Release|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Debug|x64.Build.0 = Debug|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Debug|x86.Build.0 = Debug|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Release|x64.ActiveCfg = Release|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Release|x64.Build.0 = Release|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Release|x86.ActiveCfg = Release|Any CPU
+		{41956EBC-18E1-4351-B986-A35276DB93AA}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

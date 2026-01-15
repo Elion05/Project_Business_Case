@@ -6,6 +6,7 @@ namespace BestelApp_Models
     {
         public long Id { get; set; }
 
+        // << VALIDATIE REGEL: Verplicht veld, max 50 tekens
         [Required]
         [MaxLength(50)]
         public string Name { get; set; } = string.Empty;
@@ -14,6 +15,7 @@ namespace BestelApp_Models
         [MaxLength(30)]
         public string Brand { get; set; } = string.Empty;
 
+        // << VALIDATIE REGEL: Prijs moet tussen 0.01 en 10000 zitten
         [Range(0.01, 10000)]
         public decimal Price { get; set; }
 

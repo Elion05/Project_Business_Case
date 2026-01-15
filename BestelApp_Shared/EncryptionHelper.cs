@@ -1,15 +1,13 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace BestelApp_Models
+namespace BestelApp_Shared
 {
     public static class EncryptionHelper
     {
         // ⚠️ WAARSCHUWING: In productie moeten deze keys in een veilige omgeving (Azure KeyVault, User Secrets) staan!
         // NIET hardcoded in de code checken. Voor deze demo is dit voldoende.
-        private static readonly string KeyConfig = "E546C8DF278CD5931069B522E695D4F2"; // 32 bytes (256-bit) -> 32 chars hex is niet 32 bytes... wacht.
-                                                                                       // Laten we makkelijk doen: 32 karakters string en Encoding.UTF8 gebruiken is riskant qua lengte.
-                                                                                       // Beter: Hardcoded base64 string voor 32 bytes.
+        private static readonly string KeyConfig = "E546C8DF278CD5931069B522E695D4F2";
 
         // 32 bytes key (256-bit) generated for demo
         private static readonly byte[] Key = Convert.FromBase64String("q7w1E9Z/8JqW3zT4r5Y7uI9oP2aS4dF6gH8jK1l3zX0=");

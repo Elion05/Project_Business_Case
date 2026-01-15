@@ -3,9 +3,11 @@ using System.Text.Json;
 using BestelApp_Cons.Models;
 using BestelApp_Cons.Salesforce;
 using BestelApp_Models;
+using BestelApp_Shared;
 using Microsoft.Extensions.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
+using RabbitMQ.Client.Exceptions;
 
 // ========================================
 // STAP 1: Configuratie laden
@@ -42,15 +44,18 @@ using var channel = await connection.CreateChannelAsync();
 
 var queueNaam = configuratie["RabbitMQ:QueueName"] ?? "BestelAppQueue";
 
-await channel.QueueDeclareAsync(
-    //de naam van de queue
-    queue: queueNaam,
-    //messages blijven bewaard ook als de broker opnieuw opstart, als het False is en de app crasht zijn de messages weg
-    durable: true,
-    //als de subscriber weg is, wordt de queue verwijderd
-    exclusive: false,
-    autoDelete: false,
-    arguments: null);
+// GEBRUIK PASSIVE DECLARE OM ARGUMENT MISMATCH TE VOORKOMEN
+// Dit controleert alleen of de queue bestaat.
+try
+{
+    await channel.QueueDeclarePassiveAsync(queueNaam);
+}
+catch (OperationInterruptedException ex)
+{
+    Console.WriteLine($"❌ Fout bij verbinden met queue: {ex.Message}");
+    Console.WriteLine("De Queue bestaat mogelijk niet of heeft andere instellingen.");
+    return;
+}
 
 
 Console.WriteLine("✅ Consumer is klaar!");
@@ -72,7 +77,7 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
     string encryptedBericht = Encoding.UTF8.GetString(body);
 
     Console.WriteLine($"\n📬 Nieuw bericht ontvangen!");
-    Console.WriteLine($"� Encrypted: {encryptedBericht}"); // Debug log voor demo
+    Console.WriteLine($"🔒 Encrypted: {encryptedBericht}"); // Debug log voor demo
 
     // DECRYPTIE
     string berichtTekst = EncryptionHelper.Decrypt(encryptedBericht);
