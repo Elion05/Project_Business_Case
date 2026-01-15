@@ -26,7 +26,7 @@ namespace BestelApp_Web.Services
             var queueArgs = new Dictionary<string, object?>
             {
                 { "x-dead-letter-exchange", "" },
-                { "x-dead-letter-routing-key", "BestelAppQueue-dlq" }
+                { "x-dead-letter-routing-key", "BestelAppQueue_DLQ" }
             };
 
             await channel.QueueDeclareAsync(

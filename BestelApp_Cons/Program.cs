@@ -54,7 +54,7 @@ var queueNaam = configuratie["RabbitMQ:QueueName"] ?? "BestelAppQueue";
 var queueArgs = new Dictionary<string, object?>
 {
     { "x-dead-letter-exchange", "" }, // Default exchange
-    { "x-dead-letter-routing-key", queueNaam + "-dlq" } // DLQ naam conventie
+    { "x-dead-letter-routing-key", queueNaam + "_DLQ" } // DLQ naam conventie
 };
 
 await channel.QueueDeclareAsync(
