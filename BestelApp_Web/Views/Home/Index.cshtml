@@ -15,12 +15,15 @@
             <h5 class="mb-0">👋 Hoi @User.Identity.Name! Je bent ingelogd.</h5>
         </div>
         <div class="mt-4">
-            <a asp-controller="Shoes" asp-action="Index" class="btn btn-primary btn-lg me-2">
-                🛍️ Bekijk Schoenen
+            <a asp-controller="Shoes" asp-action="Index" class="btn btn-primary btn-lg">
+                🛍️ Bekijk Schoenen & Bestel
             </a>
-            <a asp-controller="Shoes" asp-action="Create" class="btn btn-success btn-lg">
-                ➕ Nieuwe Bestelling
-            </a>
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Shoes" asp-action="Create" class="btn btn-success btn-lg ms-2">
+                    ➕ Nieuwe Schoen Toevoegen
+                </a>
+            }
         </div>
     }
     else

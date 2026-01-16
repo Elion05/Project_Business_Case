@@ -78,11 +78,13 @@ namespace BestelApp_Cons.Salesforce
                 var jsonBody = JsonSerializer.Serialize(salesforceData);
                 var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-                // Maak een POST request
-                var url = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Lead";
-                var request = new HttpRequestMessage(HttpMethod.Post, url);
-                request.Headers.Add("Authorization", $"Bearer {accessToken}");
-                request.Content = content;
+            // Maak een POST request
+            var url = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Lead";
+            var request = new HttpRequestMessage(HttpMethod.Post, url);
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
+            // BELANGRIJK: Forceer opslaan zelfs als Salesforce duplicates detecteert
+            request.Headers.Add("Sforce-Duplicate-Rule-Header", "allowSave=true");
+            request.Content = content;
 
                 Console.WriteLine($"📤 Verstuur fallback bericht naar Salesforce...");
 
@@ -122,11 +124,26 @@ namespace BestelApp_Cons.Salesforce
             }
 
             // Maak JSON body voor Salesforce Lead object
+            // Zet order items om naar description
+            var itemsDescription = string.Join("\n", bestelling.Items.Select(i => 
+                $"- {i.Brand} {i.ProductName} (Maat {i.Size}, {i.Color}) x{i.Quantity} = €{i.SubTotal}"));
+
             var salesforceData = new
             {
-                Company = bestelling.Brand,  // Verplicht veld in Lead
-                LastName = bestelling.Name,  // Verplicht veld in Lead
-                Description = $"Order {bestelling.OrderId} - {bestelling.Brand} {bestelling.Name} - Maat: {bestelling.Size} - Prijs: €{bestelling.Price}",
+                Company = bestelling.Items.FirstOrDefault()?.Brand ?? "Unknown",  // Verplicht veld in Lead
+                LastName = bestelling.UserName,  // Verplicht veld in Lead
+                Email = bestelling.UserEmail,
+                Description = $"Order: {bestelling.OrderId}\n" +
+                              $"Klant: {bestelling.UserName} ({bestelling.UserEmail})\n" +
+                              $"Status: {bestelling.Status}\n" +
+                              $"Totaal: €{bestelling.TotalPrice} ({bestelling.TotalQuantity} items)\n" +
+                              $"Verzendadres: {bestelling.ShippingAddress?.FullAddress}\n" +
+                              $"\nItems:\n{itemsDescription}\n" +
+                              $"\nNotities: {bestelling.Notes}",
+                Street = bestelling.ShippingAddress?.Address,
+                City = bestelling.ShippingAddress?.City,
+                PostalCode = bestelling.ShippingAddress?.PostalCode,
+                Country = bestelling.ShippingAddress?.Country,
                 LeadSource = "RabbitMQ"
             };
 
@@ -137,6 +154,8 @@ namespace BestelApp_Cons.Salesforce
             var url = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Lead";
             var request = new HttpRequestMessage(HttpMethod.Post, url);
             request.Headers.Add("Authorization", $"Bearer {accessToken}");
+            // BELANGRIJK: Forceer opslaan zelfs als Salesforce duplicates detecteert
+            request.Headers.Add("Sforce-Duplicate-Rule-Header", "allowSave=true");
             request.Content = content;
 
             Console.WriteLine($"📤 Verstuur bestelling {bestelling.OrderId} naar Salesforce...");

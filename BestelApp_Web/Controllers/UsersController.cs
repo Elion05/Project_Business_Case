@@ -1,22 +1,22 @@
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
 using BestelApp_Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace BestelApp_Web.Controllers
 {
-
+    [Authorize(Roles = "Admin")] // Alleen Admin mag gebruikers beheren
     public class UsersController : Controller
     {
-        private readonly AppDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public UsersController(AppDbContext context)
+        public UsersController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -28,8 +28,8 @@ namespace BestelApp_Web.Controllers
                              where (user.UserName != "dummy"
                              && (username == "" || (user.UserName != null && user.UserName.Contains(username))))
                              && (roleId == "?" || (from ur in _context.UserRoles
-                                                   where ur.UserId == user.Id
-                                                   select ur.RoleId).Contains(roleId))
+                                                  where ur.UserId == user.Id
+                                                  select ur.RoleId).Contains(roleId))
                              orderby user.UserName
                              select new UserViewModel
                              {
@@ -38,8 +38,9 @@ namespace BestelApp_Web.Controllers
                                  Email = user.Email ?? string.Empty,
                                  Blocked = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
                                  Roles = (from ur in _context.UserRoles
+                                          join r in _context.Roles on ur.RoleId equals r.Id
                                           where ur.UserId == user.Id
-                                          select ur.RoleId).ToList()
+                                          select r.Name ?? string.Empty).ToList()
                              };
 
             ViewData["username"] = username;
@@ -96,7 +97,7 @@ namespace BestelApp_Web.Controllers
                                select userRole.RoleId).ToListAsync()
             };
             // Create a MultiSelectList containing all available roles, with the user's current roles pre-selected.
-            ViewData["AllRoles"] = new MultiSelectList(_context.Roles.OrderBy(r => r.Name), "Id", "Id", roleViewModel.Roles);
+            ViewData["AllRoles"] = new MultiSelectList(_context.Roles.OrderBy(r => r.Name), "Id", "Name", roleViewModel.Roles);
             // Return the view, passing the view model to it.
             return View(roleViewModel);
         }
