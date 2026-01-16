@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace BestelApp_Web.Controllers
 {
-    
+    [Authorize(Roles = "Admin")] // Alleen Admin mag gebruikers beheren
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;

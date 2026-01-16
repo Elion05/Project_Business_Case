@@ -370,25 +370,32 @@ namespace BestelApp_API.Controllers
         /// TODO: Vervang dit door volledige Cart → Checkout flow
         /// </summary>
         [HttpPost]
-        [AllowAnonymous] // Tijdelijk geen auth voor testing
+        [AllowAnonymous] // WebApp stuurt UserId mee in request body
         public async Task<ActionResult> CreateQuickOrder([FromBody] QuickOrderRequest request)
         {
             try
             {
-                _logger.LogInformation("Quick order ontvangen voor: {Brand} {Name}", request.Brand, request.Name);
+                _logger.LogInformation("Quick order ontvangen voor: {Brand} {Name} van user {UserId}", 
+                    request.Brand, request.Name, request.UserId);
 
-                // Haal de eerste user op uit de database (voor tijdelijk testing)
-                var firstUser = await _context.Users.FirstOrDefaultAsync();
-                if (firstUser == null)
+                // Valideer dat UserId is meegegeven
+                if (string.IsNullOrEmpty(request.UserId))
                 {
-                    return BadRequest(new { message = "Geen users gevonden in database. Run eerst de seeder!" });
+                    return BadRequest(new { message = "UserId is verplicht" });
+                }
+
+                // Controleer of user bestaat
+                var gebruiker = await _context.Users.FindAsync(request.UserId);
+                if (gebruiker == null)
+                {
+                    return BadRequest(new { message = $"Gebruiker met ID {request.UserId} niet gevonden" });
                 }
 
                 // Maak een tijdelijke order
                 var order = new Order
                 {
                     OrderId = $"ORD-{DateTime.UtcNow:yyyyMMddHHmmss}-{Guid.NewGuid().ToString().Substring(0, 8)}",
-                    UserId = firstUser.Id, // Gebruik eerste user uit database
+                    UserId = request.UserId, // Gebruik UserId uit request
                     OrderDate = DateTime.UtcNow,
                     Status = "Pending",
                     TotalPrice = request.Price,
@@ -497,6 +504,7 @@ namespace BestelApp_API.Controllers
     /// </summary>
     public class QuickOrderRequest
     {
+        public string UserId { get; set; } = string.Empty; // Van WebApp
         public string Name { get; set; } = string.Empty;
         public string Brand { get; set; } = string.Empty;
         public decimal Price { get; set; }

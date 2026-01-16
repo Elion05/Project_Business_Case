@@ -28,15 +28,17 @@ namespace BestelApp_Web.Services
         /// <summary>
         /// Plaats een bestelling via de Backend API
         /// </summary>
-        public async Task<bool> PlaceOrderAsync(Shoe shoe)
+        public async Task<bool> PlaceOrderAsync(Shoe shoe, string gebruikerId)
         {
             try
             {
-                _logger.LogInformation("Verstuur bestelling naar Backend API: {Brand} {Name}", shoe.Brand, shoe.Name);
+                _logger.LogInformation("Verstuur bestelling naar Backend API: {Brand} {Name} voor gebruiker {UserId}", 
+                    shoe.Brand, shoe.Name, gebruikerId);
 
                 // Maak simpel request object (vermijdt validatie problemen)
                 var quickOrder = new
                 {
+                    UserId = gebruikerId, // Stuur gebruikerId mee!
                     Name = shoe.Name,
                     Brand = shoe.Brand,
                     Price = shoe.Price,

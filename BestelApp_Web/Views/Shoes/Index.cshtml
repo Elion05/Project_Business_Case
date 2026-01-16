@@ -4,67 +4,216 @@
     ViewData["Title"] = "Schoenen Overzicht";
 }
 
-<h1 class="display-4 mb-4 text-primary">Schoenen Overzicht</h1>
+<style>
+    /* Simple & Clean Admin Layout */
+    .page-header {
+        background: #0d6efd;
+        color: white;
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+        border-bottom: 4px solid #0a58ca;
+    }
+    
+    .page-footer {
+        background: #f8f9fa;
+        border-top: 2px solid #dee2e6;
+        padding: 1.5rem 0;
+        margin-top: 3rem;
+        text-align: center;
+        color: #6c757d;
+    }
+    
+    .btn-admin-action {
+        padding: 0.5rem 1rem;
+        margin: 0.25rem;
+        font-weight: 600;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-edit {
+        background: #0d6efd;
+        color: white;
+        border: 2px solid #0d6efd;
+    }
+    
+    .btn-edit:hover {
+        background: #0b5ed7;
+        color: white;
+        border-color: #0b5ed7;
+    }
+    
+    .btn-view {
+        background: #198754;
+        color: white;
+        border: 2px solid #198754;
+    }
+    
+    .btn-view:hover {
+        background: #157347;
+        color: white;
+        border-color: #157347;
+    }
+    
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+        border: 2px solid #dc3545;
+    }
+    
+    .btn-delete:hover {
+        background: #bb2d3b;
+        color: white;
+        border-color: #bb2d3b;
+    }
+    
+    .table-hover tbody tr:hover {
+        background-color: #e7f1ff;
+    }
+    
+    .product-img {
+        width: 80px;
+        height: 80px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 2px solid #dee2e6;
+    }
+    
+    .no-image {
+        width: 80px;
+        height: 80px;
+        background: #e9ecef;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 2rem;
+        border: 2px solid #dee2e6;
+    }
+</style>
 
-<div class="mb-3">
-    <a asp-action="Create" class="btn btn-success">
-        <i class="bi bi-plus-circle"></i> Nieuwe Schoen Toevoegen
-    </a>
+<!-- Header -->
+<div class="page-header">
+    <div class="container">
+        <h1 class="mb-2">📦 Schoenen Beheer</h1>
+        <p class="mb-0">Overzicht van alle producten in de catalogus</p>
+    </div>
 </div>
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+<div class="container">
+    <!-- Admin Actions -->
+    @if (User.IsInRole("Admin"))
+    {
+        <div class="mb-4">
+            <a asp-action="Create" class="btn btn-success btn-lg">
+                ➕ Nieuwe Schoen Toevoegen
+            </a>
+        </div>
+    }
 
-<div class="table-responsive">
-    <table class="table table-hover table-bordered align-middle shadow-sm">
-        <thead class="table-dark">
-            <tr>
-                <th>@Html.DisplayNameFor(model => model.Name)</th>
-                <th>@Html.DisplayNameFor(model => model.Brand)</th>
-                <th>@Html.DisplayNameFor(model => model.Price)</th>
-                <th>@Html.DisplayNameFor(model => model.Size)</th>
-                <th>@Html.DisplayNameFor(model => model.Color)</th>
-                <th>Bestellen</th>
-                <th>Acties</th>
-            </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in Model) {
-            <tr>
-                <td>@Html.DisplayFor(modelItem => item.Name)</td>
-                <td>@Html.DisplayFor(modelItem => item.Brand)</td>
-                <td>€ @item.Price.ToString("0.00")</td>
-                <td>@Html.DisplayFor(modelItem => item.Size)</td>
-                <td>
-                    <span class="badge bg-secondary">@Html.DisplayFor(modelItem => item.Color)</span>
-                </td>
-                <td>
-                    <form asp-action="Order" asp-route-id="@item.Id" method="post">
-                        <button type="submit" class="btn btn-warning btn-sm">
-                            <i class="bi bi-cart-plus"></i> Bestel
-                        </button>
-                    </form>
-                </td>
-                <td>
-                    <div class="btn-group" role="group">
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-outline-primary btn-sm" title="Bewerken">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-outline-info btn-sm" title="Details">
-                            <i class="bi bi-info-circle"></i>
-                        </a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-outline-danger btn-sm" title="Verwijderen">
-                            <i class="bi bi-trash"></i>
-                        </a>
-                    </div>
-                </td>
-            </tr>
-        }
-        </tbody>
-    </table>
+    <!-- Success Message -->
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <strong>✅ Succes!</strong> @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <!-- Products Table -->
+    @if (Model.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-bordered align-middle">
+                <thead class="table-primary">
+                    <tr>
+                        <th style="width: 100px;">Afbeelding</th>
+                        <th>Naam</th>
+                        <th>Merk</th>
+                        <th>Prijs</th>
+                        <th>Maat</th>
+                        <th>Kleur</th>
+                        <th style="min-width: 150px;">Bestel</th>
+                        <th style="min-width: 280px;">Admin Acties</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl" alt="@item.Name" class="product-img" />
+                                }
+                                else
+                                {
+                                    <div class="no-image">👟</div>
+                                }
+                            </td>
+                            <td><strong>@item.Name</strong></td>
+                            <td>@item.Brand</td>
+                            <td><strong>€@item.Price.ToString("0.00")</strong></td>
+                            <td>@(item.Size.HasValue ? item.Size.ToString() : "-")</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Color))
+                                {
+                                    <span class="badge bg-secondary">@item.Color</span>
+                                }
+                                else
+                                {
+                                    <span>-</span>
+                                }
+                            </td>
+                            <td>
+                                <form asp-action="Order" asp-route-id="@item.Id" method="post" style="display:inline;">
+                                    <button type="submit" class="btn btn-warning btn-sm">
+                                        🛒 Bestel
+                                    </button>
+                                </form>
+                            </td>
+                            <td>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <div class="d-flex gap-2">
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn-admin-action btn-edit">
+                                            ✏️ Bewerk
+                                        </a>
+                                        <a asp-action="Details" asp-route-id="@item.Id" class="btn-admin-action btn-view">
+                                            👁️ Bekijk
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn-admin-action btn-delete">
+                                            🗑️ Verwijder
+                                        </a>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn-admin-action btn-view">
+                                        👁️ Bekijk Details
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center py-5">
+            <h4>📦 Geen schoenen beschikbaar</h4>
+            <p>Klik op "Nieuwe Schoen Toevoegen" om te beginnen.</p>
+        </div>
+    }
+</div>
+
+<!-- Footer -->
+<div class="page-footer">
+    <div class="container">
+        <p class="mb-0">© 2026 - BestelApp | Schoenen Beheer Systeem</p>
+    </div>
 </div>

@@ -48,6 +48,15 @@ builder.Services.AddHttpClient<OrderApiService>();
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // Nodig voor Identity pagina's
 
+// Localization configuratie voor decimale getallen (accepteert punt en komma)
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[] { new System.Globalization.CultureInfo("nl-BE") };
+    options.DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("nl-BE");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+});
+
 var app = builder.Build();
 
 // WebApp gebruikt DEZELFDE database als de Backend API!
@@ -64,6 +73,9 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
+
+// Gebruik localization voor decimale getallen
+app.UseRequestLocalization();
 
 app.UseRouting();
 
