@@ -11,7 +11,7 @@ namespace BestelApp_Cons.Services
     {
         // Thread-safe dictionary voor verwerkte order IDs
         private readonly ConcurrentDictionary<string, ProcessedOrderInfo> _processedOrders;
-        
+
         // Hoe lang een order ID in cache blijft (standaard 24 uur)
         private readonly TimeSpan _cacheDuration;
 
@@ -44,11 +44,11 @@ namespace BestelApp_Cons.Services
                 {
                     Console.WriteLine($"⚠️  Order {orderId} al verwerkt op {info.ProcessedAt:yyyy-MM-dd HH:mm:ss}");
                     Console.WriteLine($"    Aantal keer gezien: {info.ProcessCount}");
-                    
+
                     // Increment counter
                     info.ProcessCount++;
                     info.LastSeenAt = DateTime.UtcNow;
-                    
+
                     return true;
                 }
                 else

@@ -28,8 +28,8 @@ namespace BestelApp_Web.Controllers
                              where (user.UserName != "dummy"
                              && (username == "" || (user.UserName != null && user.UserName.Contains(username))))
                              && (roleId == "?" || (from ur in _context.UserRoles
-                                                  where ur.UserId == user.Id
-                                                  select ur.RoleId).Contains(roleId))
+                                                   where ur.UserId == user.Id
+                                                   select ur.RoleId).Contains(roleId))
                              orderby user.UserName
                              select new UserViewModel
                              {

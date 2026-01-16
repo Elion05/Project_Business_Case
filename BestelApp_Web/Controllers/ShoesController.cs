@@ -66,7 +66,7 @@ namespace BestelApp_Web.Controllers
             Console.WriteLine($"  - Name: {shoe.Name}");
             Console.WriteLine($"  - Brand: {shoe.Brand}");
             Console.WriteLine($"  - Description: {shoe.Description}");
-            
+
             // DEBUG: Check ModelState errors
             if (!ModelState.IsValid)
             {
@@ -79,11 +79,11 @@ namespace BestelApp_Web.Controllers
                     }
                 }
             }
-            
+
             // Verwijder de Category navigation property validatie error
             // We sturen alleen CategoryId, niet het hele Category object
             ModelState.Remove("Category");
-            
+
             // Als CategoryId 0 is, probeer de eerste category te pakken
             if (shoe.CategoryId == 0)
             {
@@ -104,20 +104,20 @@ namespace BestelApp_Web.Controllers
             {
                 Console.WriteLine($"✅ CategoryId ontvangen: {shoe.CategoryId}");
             }
-            
+
             if (ModelState.IsValid)
             {
                 // Zet CreatedAt timestamp
                 shoe.CreatedAt = DateTime.UtcNow;
-                
+
                 _context.Add(shoe);
                 await _context.SaveChangesAsync();
-                
+
                 Console.WriteLine($"✅ Schoen succesvol toegevoegd!");
                 TempData["SuccessMessage"] = $"Schoen '{shoe.Name}' succesvol toegevoegd!";
                 return RedirectToAction(nameof(Index));
             }
-            
+
             // Als validatie faalt, toon fouten
             Console.WriteLine($"❌ Validatie gefaald, terug naar formulier");
             return View(shoe);
@@ -163,7 +163,7 @@ namespace BestelApp_Web.Controllers
                 {
                     _context.Update(shoe);
                     await _context.SaveChangesAsync();
-                    
+
                     TempData["SuccessMessage"] = $"Schoen '{shoe.Name}' succesvol bijgewerkt!";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -222,7 +222,7 @@ namespace BestelApp_Web.Controllers
             return Shoes.Any(e => e.Id == id);
         }
 
-        
+
         // POST: Shoes/Order/5
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -257,6 +257,6 @@ namespace BestelApp_Web.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        
+
     }
 }

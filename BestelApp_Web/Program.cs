@@ -80,7 +80,7 @@ app.UseRequestLocalization();
 app.UseRouting();
 
 // Authentication MOET voor Authorization staan om inloggen te laten werken
-app.UseAuthentication(); 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();

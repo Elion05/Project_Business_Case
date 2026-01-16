@@ -78,13 +78,13 @@ namespace BestelApp_Cons.Salesforce
                 var jsonBody = JsonSerializer.Serialize(salesforceData);
                 var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
 
-            // Maak een POST request
-            var url = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Lead";
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            request.Headers.Add("Authorization", $"Bearer {accessToken}");
-            // BELANGRIJK: Forceer opslaan zelfs als Salesforce duplicates detecteert
-            request.Headers.Add("Sforce-Duplicate-Rule-Header", "allowSave=true");
-            request.Content = content;
+                // Maak een POST request
+                var url = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Lead";
+                var request = new HttpRequestMessage(HttpMethod.Post, url);
+                request.Headers.Add("Authorization", $"Bearer {accessToken}");
+                // BELANGRIJK: Forceer opslaan zelfs als Salesforce duplicates detecteert
+                request.Headers.Add("Sforce-Duplicate-Rule-Header", "allowSave=true");
+                request.Content = content;
 
                 Console.WriteLine($"📤 Verstuur fallback bericht naar Salesforce...");
 
@@ -125,7 +125,7 @@ namespace BestelApp_Cons.Salesforce
 
             // Maak JSON body voor Salesforce Lead object
             // Zet order items om naar description
-            var itemsDescription = string.Join("\n", bestelling.Items.Select(i => 
+            var itemsDescription = string.Join("\n", bestelling.Items.Select(i =>
                 $"- {i.Brand} {i.ProductName} (Maat {i.Size}, {i.Color}) x{i.Quantity} = €{i.SubTotal}"));
 
             var salesforceData = new
@@ -169,10 +169,10 @@ namespace BestelApp_Cons.Salesforce
             if (response.StatusCode == HttpStatusCode.Unauthorized && eerstePoging)
             {
                 Console.WriteLine("⚠️ 401 Unauthorized - Token verlopen, vernieuw token en probeer opnieuw...");
-                
+
                 // Forceer token refresh
                 accessToken = await _authService.ForceerTokenRefreshAsync();
-                
+
                 // Probeer opnieuw (maar dit keer is het NIET de eerste poging meer)
                 return await VerstuurNaarSalesforceAsync(bestelling, eerstePoging: false);
             }

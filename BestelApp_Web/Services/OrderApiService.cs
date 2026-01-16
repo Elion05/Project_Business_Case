@@ -32,7 +32,7 @@ namespace BestelApp_Web.Services
         {
             try
             {
-                _logger.LogInformation("Verstuur bestelling naar Backend API: {Brand} {Name} voor gebruiker {UserId}", 
+                _logger.LogInformation("Verstuur bestelling naar Backend API: {Brand} {Name} voor gebruiker {UserId}",
                     shoe.Brand, shoe.Name, gebruikerId);
 
                 // Maak simpel request object (vermijdt validatie problemen)
