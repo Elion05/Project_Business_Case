@@ -18,7 +18,7 @@ Console.WriteLine("════════════════════�
 Console.WriteLine("📋 Configuratie laden...");
 
 var configuratie = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
+    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .Build();
 
@@ -308,7 +308,7 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
     var trackerStats = processedOrdersTracker.GetStats();
     Console.WriteLine($"   Cache: {trackerStats}");
     Console.WriteLine("═══════════════════════════════════════\n");
-    Console.WriteLine($"👂 Wachten op volgende bericht...\n");
+    Console.WriteLine($" Wachten op volgende bericht...\n");
 };
 
 // Start consuming met manual ACK
