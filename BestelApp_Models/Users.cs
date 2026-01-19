@@ -29,7 +29,7 @@ namespace BestelApp_Models
         [MaxLength(50)]
         public string Country { get; set; } = string.Empty;
 
-       
+
 
 
         public override string ToString()

@@ -2,9 +2,9 @@ name: Build en Test
 
 on:
   push:
-    branches: [ "main", "master", "Elion" ]
+    branches: [ "main", "master", "Abdullah" ]
   pull_request:
-    branches: [ "main", "master", "Elion" ]
+    branches: [ "main", "master", "Abdullah" ]
   workflow_dispatch:
 
 jobs:
@@ -21,10 +21,10 @@ jobs:
         dotnet-version: 9.0.x
     
     - name: Restore dependencies
-      run: dotnet restore Project_Business_Case.sln
+      run: dotnet restore BestelApp_Web/BestelApp_Web.sln
     
     - name: Build project
-      run: dotnet build Project_Business_Case.sln --configuration Release --no-restore
+      run: dotnet build BestelApp_Web/BestelApp_Web.sln --configuration Release --no-restore
     
     - name: Test
-      run: dotnet test Project_Business_Case.sln --no-build --verbosity normal
+      run: dotnet test BestelApp_Web/BestelApp_Web.sln --no-build --verbosity normal

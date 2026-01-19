@@ -18,7 +18,7 @@ Console.WriteLine("════════════════════�
 Console.WriteLine("📋 Configuratie laden...");
 
 var configuratie = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
+    .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
     .Build();
 
@@ -108,7 +108,7 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
 {
     var messageId = eventArgs.BasicProperties?.MessageId ?? "Unknown";
     var correlationId = eventArgs.BasicProperties?.CorrelationId ?? "Unknown";
-    
+
     Console.WriteLine("\n═══════════════════════════════════════");
     Console.WriteLine($"📬 Nieuw bericht ontvangen!");
     Console.WriteLine($"   MessageId: {messageId}");
@@ -146,12 +146,12 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
         {
             Console.WriteLine($"✗ JSON deserialisatie gefaald: {jsonEx.Message}");
             Console.WriteLine("❌ PERMANENTE FOUT → NACK (requeue=FALSE) → DLQ");
-            
+
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
                 eventArgs.DeliveryTag,
                 multiple: false,
                 requeue: false);
-            
+
             totalFailed++;
             return;
         }
@@ -160,12 +160,12 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
         {
             Console.WriteLine("✗ Order is null na deserialisatie");
             Console.WriteLine("❌ PERMANENTE FOUT → NACK (requeue=FALSE) → DLQ");
-            
+
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
                 eventArgs.DeliveryTag,
                 multiple: false,
                 requeue: false);
-            
+
             totalFailed++;
             return;
         }
@@ -173,9 +173,9 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
         // STAP 2: Valideer verplichte velden
         Console.WriteLine("───────────────────────────────────────");
         Console.WriteLine("🔍 Validatie van verplichte velden...");
-        
+
         var validationResult = OrderValidator.ValidateOrder(order);
-        
+
         if (!validationResult.IsValid)
         {
             Console.WriteLine($"✗ Validatie gefaald:");
@@ -184,39 +184,39 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
                 Console.WriteLine($"  - {error}");
             }
             Console.WriteLine("❌ PERMANENTE FOUT → NACK (requeue=FALSE) → DLQ");
-            
+
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
                 eventArgs.DeliveryTag,
                 multiple: false,
                 requeue: false);
-            
+
             totalFailed++;
             return;
         }
-        
+
         Console.WriteLine("✓ Validatie succesvol - alle verplichte velden aanwezig");
 
         // STAP 3: Check of order al verwerkt is
         Console.WriteLine("───────────────────────────────────────");
         Console.WriteLine("🔍 Check op dubbele verwerking...");
-        
+
         if (processedOrdersTracker.IsOrderAlreadyProcessed(order.OrderId))
         {
             Console.WriteLine($"⚠️  DUPLICAAT GEDETECTEERD: Order {order.OrderId} al verwerkt!");
             Console.WriteLine("✓ ACK (bericht wordt verwijderd, niet opnieuw verwerkt)");
-            
+
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicAckAsync(
                 eventArgs.DeliveryTag,
                 multiple: false);
-            
+
             totalDuplicates++;
-            
+
             // Toon statistieken
             var stats = processedOrdersTracker.GetStats();
             Console.WriteLine($"📊 Statistieken: {stats}");
             return;
         }
-        
+
         Console.WriteLine("✓ Order nog niet verwerkt, doorgaan...");
 
         // STAP 4: Zet order om naar Salesforce formaat en verstuur
@@ -225,27 +225,27 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
         Console.WriteLine($"   Klant: {order.UserName}");
         Console.WriteLine($"   Items: {order.Items.Count}");
         Console.WriteLine($"   Adres: {order.ShippingAddress?.FullAddress}");
-        
+
         Console.WriteLine("\n📤 Versturen naar Salesforce...");
         var resultaat = await salesforceClient.StuurBestellingAsync(order);
 
         // STAP 5: Verwerk resultaat en besluit ACK/NACK/Retry
         Console.WriteLine("───────────────────────────────────────");
-        
+
         if (resultaat.IsSuccesvol)
         {
             // SUCCES! → ACK
             Console.WriteLine("✅ Salesforce operatie SUCCESVOL");
             Console.WriteLine($"   Status Code: {resultaat.StatusCode}");
             Console.WriteLine("✓ ACK (bericht wordt verwijderd uit queue)");
-            
+
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicAckAsync(
                 eventArgs.DeliveryTag,
                 multiple: false);
-            
+
             // Markeer als verwerkt
             processedOrdersTracker.MarkAsProcessed(order.OrderId);
-            
+
             totalSucceeded++;
         }
         else if (resultaat.IsHerhaalbaar)
@@ -255,12 +255,12 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
             Console.WriteLine($"   Status Code: {resultaat.StatusCode}");
             Console.WriteLine($"   Foutmelding: {resultaat.Foutmelding}");
             Console.WriteLine("🔄 NACK (requeue=TRUE) - bericht gaat terug in queue voor retry");
-            
+
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
                 eventArgs.DeliveryTag,
                 multiple: false,
                 requeue: true);
-            
+
             // Kleine delay om thundering herd te voorkomen
             await Task.Delay(TimeSpan.FromSeconds(5));
         }
@@ -271,12 +271,12 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
             Console.WriteLine($"   Status Code: {resultaat.StatusCode}");
             Console.WriteLine($"   Foutmelding: {resultaat.Foutmelding}");
             Console.WriteLine($"💀 NACK (requeue=FALSE) - bericht gaat naar Dead Letter Queue");
-            
+
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
                 eventArgs.DeliveryTag,
                 multiple: false,
                 requeue: false);
-            
+
             totalFailed++;
         }
     }
@@ -289,12 +289,12 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
         Console.WriteLine($"   Message: {ex.Message}");
         Console.WriteLine($"   Stack: {ex.StackTrace}");
         Console.WriteLine("💀 NACK (requeue=FALSE) - bericht gaat naar Dead Letter Queue");
-        
+
         await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(
             eventArgs.DeliveryTag,
             multiple: false,
             requeue: false);
-        
+
         totalFailed++;
     }
 
@@ -308,7 +308,7 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
     var trackerStats = processedOrdersTracker.GetStats();
     Console.WriteLine($"   Cache: {trackerStats}");
     Console.WriteLine("═══════════════════════════════════════\n");
-    Console.WriteLine($"👂 Wachten op volgende bericht...\n");
+    Console.WriteLine($" Wachten op volgende bericht...\n");
 };
 
 // Start consuming met manual ACK
