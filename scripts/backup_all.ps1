@@ -6,8 +6,8 @@ Param(
 
 $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 
-& (Join-Path $scriptDir "backup_rabbitmq.ps1") -BackupRoot $BackupRoot
-& (Join-Path $scriptDir "backup_sqlite.ps1") -BackupRoot $BackupRoot
+& (Join-Path $scriptDir "backup_rabbitmq.ps1")
+& (Join-Path $scriptDir "backup_sqlite.ps1")
 
 # Optional: zip latest folder
 $latest = Get-ChildItem -Directory $BackupRoot | Sort-Object Name -Descending | Select-Object -First 1

@@ -1,5 +1,5 @@
 $scriptDir = $PSScriptRoot
-$sourcePath = Join-Path $scriptDir "..\BestelApp_Web\BestelApp.db"
+$sourcePath = Join-Path $scriptDir "..\BestelApp_Cons\data\idempotency.db"
 $backupDir = Join-Path $scriptDir "..\backups\sqlite"
 $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
 

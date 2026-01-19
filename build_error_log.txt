@@ -1,0 +1,13 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+C:\Users\noahg\source\repos\Project_Business_Case-1\BestelApp_Cons\Program.cs(54,5): error CS0136: A local or parameter named 'args' cannot be declared in this scope because that name is used in an enclosing local scope to define a local or parameter [C:\Users\noahg\source\repos\Project_Business_Case-1\BestelApp_Cons\BestelApp_Cons.csproj]
+C:\Users\noahg\source\repos\Project_Business_Case-1\BestelApp_Cons\Program.cs(65,16): warning CS8620: Argument of type 'Dictionary<string, object>' cannot be used for parameter 'arguments' of type 'IDictionary<string, object?>' in 'Task<QueueDeclareOk> IChannel.QueueDeclareAsync(string queue, bool durable, bool exclusive, bool autoDelete, IDictionary<string, object?>? arguments = null, bool passive = false, bool noWait = false, CancellationToken cancellationToken = default(CancellationToken))' due to differences in the nullability of reference types. [C:\Users\noahg\source\repos\Project_Business_Case-1\BestelApp_Cons\BestelApp_Cons.csproj]
+
+Build FAILED.
+
+C:\Users\noahg\source\repos\Project_Business_Case-1\BestelApp_Cons\Program.cs(65,16): warning CS8620: Argument of type 'Dictionary<string, object>' cannot be used for parameter 'arguments' of type 'IDictionary<string, object?>' in 'Task<QueueDeclareOk> IChannel.QueueDeclareAsync(string queue, bool durable, bool exclusive, bool autoDelete, IDictionary<string, object?>? arguments = null, bool passive = false, bool noWait = false, CancellationToken cancellationToken = default(CancellationToken))' due to differences in the nullability of reference types. [C:\Users\noahg\source\repos\Project_Business_Case-1\BestelApp_Cons\BestelApp_Cons.csproj]
+C:\Users\noahg\source\repos\Project_Business_Case-1\BestelApp_Cons\Program.cs(54,5): error CS0136: A local or parameter named 'args' cannot be declared in this scope because that name is used in an enclosing local scope to define a local or parameter [C:\Users\noahg\source\repos\Project_Business_Case-1\BestelApp_Cons\BestelApp_Cons.csproj]
+    1 Warning(s)
+    1 Error(s)
+
+Time Elapsed 00:00:01.20
