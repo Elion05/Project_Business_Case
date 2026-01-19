@@ -1,0 +1,40 @@
+# Build workflow voor BestelApp project
+name: Build en Test
+
+# Wanneer moet deze workflow runnen
+on:
+  push:
+    branches: [ "main", "master", "Elion" ]
+  pull_request:
+    branches: [ "main", "master", "Elion" ]
+  workflow_dispatch:
+
+# Welke jobs moeten uitgevoerd worden
+jobs:
+  build:
+    # Welk besturingssysteem gebruiken we
+    runs-on: ubuntu-latest
+    
+    # Stappen die uitgevoerd moeten worden
+    steps:
+    # Stap 1: Haal de code op
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    # Stap 2: Installeer .NET
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '9.0.x'
+    
+    # Stap 3: Herstel dependencies
+    - name: Herstel dependencies
+      run: dotnet restore BestelApp_Web/BestelApp_Web.sln
+    
+    # Stap 4: Build het project
+    - name: Build project
+      run: dotnet build BestelApp_Web/BestelApp_Web.sln --configuration Release --no-restore
+    
+    # Stap 5: Run tests
+    - name: Run tests
+      run: dotnet test BestelApp_Web/BestelApp_Web.sln --configuration Release --no-build --verbosity normal
