@@ -1,77 +1,100 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "Home";
 }
 
-<div class="text-center mt-5">
-    <h1 class="display-3 fw-bold">Welkom bij BestelApp</h1>
-    <p class="lead mb-4">
-        Bestel je favoriete schoenen en zie ze automatisch in Salesforce verschijnen!
-    </p>
+<style>
+    .feature-card {
+        background: hsl(var(--card));
+        border-radius: 16px;
+        padding: 2rem;
+        border: 1px solid hsl(var(--border));
+        box-shadow: var(--shadow-soft);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        height: 100%;
+    }
 
-    @if (User.Identity?.IsAuthenticated == true)
-    {
-        <!-- Gebruiker is ingelogd -->
-        <div class="alert alert-success d-inline-block" role="alert">
-            <h5 class="mb-0">👋 Hoi @User.Identity.Name! Je bent ingelogd.</h5>
-        </div>
-        <div class="mt-4">
-            <a asp-controller="Shoes" asp-action="Index" class="btn btn-primary btn-lg">
-                🛍️ Bekijk Schoenen & Bestel
-            </a>
-            @if (User.IsInRole("Admin"))
-            {
-                <a asp-controller="Shoes" asp-action="Create" class="btn btn-success btn-lg ms-2">
-                    ➕ Nieuwe Schoen Toevoegen
-                </a>
-            }
-        </div>
+    .feature-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-hover);
     }
-    else
-    {
-        <!-- Gebruiker is NIET ingelogd -->
-        <div class="alert alert-info d-inline-block" role="alert">
-            <h5 class="mb-0">Nieuwe gebruiker? Maak een account aan om te beginnen!</h5>
-        </div>
-        <div class="mt-4">
-            <a asp-controller="Account" asp-action="Register" class="btn btn-primary btn-lg me-2">
-                📝 Registreren
-            </a>
-            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-primary btn-lg">
-                🔑 Inloggen
-            </a>
-        </div>
-        <div class="mt-4">
-            <p class="text-muted">
-                Of bekijk de schoenen zonder in te loggen:
-                <a asp-controller="Shoes" asp-action="Index">Ga naar schoenen</a>
-            </p>
-        </div>
+
+    .feature-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
     }
+
+    .feature-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: hsl(var(--foreground));
+        margin-bottom: 0.75rem;
+    }
+
+    .feature-text {
+        color: hsl(var(--muted-foreground));
+        line-height: 1.6;
+    }
+</style>
+
+<!-- Hero (premium, leesbaar) -->
+<div class="container" style="padding-top: 2rem;">
+    <div class="catalog-hero" style="margin-bottom: 2rem;">
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <div class="catalog-kicker">Welkom</div>
+            <h1 class="catalog-title">Welkom terug, @User.Identity.Name!</h1>
+            <p class="catalog-subtitle">Ontdek onze nieuwste schoenen collectie.</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap mt-4">
+                <a asp-controller="Shoes" asp-action="Index" class="btn-luxe">Bekijk schoenen</a>
+                <a asp-controller="Favorites" asp-action="Index" class="btn-luxe-outline">Mijn favorieten</a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Admin" asp-action="Index" class="btn-luxe-outline">Admin</a>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="catalog-kicker">BestelApp</div>
+            <h1 class="catalog-title">Welkom bij BestelApp</h1>
+            <p class="catalog-subtitle">Bestel schoenen en volg de verwerking via RabbitMQ & Salesforce.</p>
+            <div class="d-flex justify-content-center gap-2 flex-wrap mt-4">
+                <a asp-controller="Account" asp-action="Register" class="btn-luxe">Registreren</a>
+                <a asp-controller="Account" asp-action="Login" class="btn-luxe-outline">Inloggen</a>
+                <a asp-controller="Shoes" asp-action="Index" class="btn-luxe-outline">Schoenen bekijken</a>
+            </div>
+        }
+    </div>
 </div>
 
-<!-- Features sectie -->
-<div class="row mt-5 text-center">
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h3>🐰 RabbitMQ</h3>
-                <p>Bestellingen worden via RabbitMQ verwerkt voor betrouwbare message delivery.</p>
+<!-- Features Section -->
+<div class="container">
+    <div class="row g-4">
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">🐰</div>
+                <h3 class="feature-title">RabbitMQ</h3>
+                <p class="feature-text">
+                    Bestellingen worden via RabbitMQ verwerkt voor betrouwbare message delivery en real-time order processing.
+                </p>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h3>☁️ Salesforce</h3>
-                <p>Automatische synchronisatie met Salesforce voor real-time order tracking.</p>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">☁️</div>
+                <h3 class="feature-title">Salesforce</h3>
+                <p class="feature-text">
+                    Automatische synchronisatie met Salesforce voor real-time order tracking en klantbeheer.
+                </p>
             </div>
         </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm h-100">
-            <div class="card-body">
-                <h3>🔐 Identity</h3>
-                <p>Veilige authenticatie en autorisatie met ASP.NET Core Identity.</p>
+        <div class="col-md-4">
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <h3 class="feature-title">Veilige Authenticatie</h3>
+                <p class="feature-text">
+                    Veilige authenticatie en autorisatie met ASP.NET Core Identity voor een betrouwbare gebruikerservaring.
+                </p>
             </div>
         </div>
     </div>
