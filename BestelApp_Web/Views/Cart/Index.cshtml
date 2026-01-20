@@ -1,0 +1,355 @@
+@model BestelApp_Web.Services.CartApiService.CartResponse
+
+@{
+    ViewData["Title"] = "Winkelwagen";
+}
+
+<style>
+    .cart-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .page-header {
+        background: var(--gradient-hero);
+        color: hsl(var(--primary-foreground));
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    @@media (min-width: 768px) {
+        .section-title {
+            font-size: 2.5rem;
+        }
+    }
+
+    .cart-item {
+        background: hsl(var(--card));
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1rem;
+        box-shadow: var(--shadow-card);
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    @@media (min-width: 768px) {
+        .cart-item {
+            flex-direction: row;
+            align-items: center;
+        }
+    }
+
+    .cart-item-image {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+
+    .cart-item-info {
+        flex: 1;
+    }
+
+    .cart-item-name {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.25rem;
+    }
+
+    .cart-item-details {
+        font-size: 0.9rem;
+        color: #6c757d;
+        margin-bottom: 0.5rem;
+    }
+
+    .cart-item-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2c3e50;
+    }
+
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .quantity-input {
+        width: 60px;
+        text-align: center;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        padding: 0.5rem;
+    }
+
+    .quantity-btn {
+        width: 36px;
+        height: 36px;
+        border: 1px solid #dee2e6;
+        background: white;
+        border-radius: 4px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .quantity-btn:hover {
+        background: #f8f9fa;
+    }
+
+    .remove-btn {
+        background: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 0.5rem 1rem;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
+    .remove-btn:hover {
+        background: #c82333;
+    }
+
+    .cart-summary {
+        background: hsl(var(--card));
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow-card);
+        margin-top: 2rem;
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #dee2e6;
+    }
+
+    .summary-row.total {
+        border-bottom: none;
+        border-top: 2px solid #2c3e50;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        font-size: 1.25rem;
+        font-weight: 700;
+    }
+
+    .checkout-btn {
+        width: 100%;
+        padding: 1rem;
+        background: hsl(var(--accent));
+        color: hsl(var(--accent-foreground));
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        margin-top: 1.5rem;
+    }
+
+    .checkout-btn:hover {
+        background: hsl(var(--accent-dark));
+    }
+
+    .checkout-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+
+    .empty-cart {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-cart-icon {
+        font-size: 5rem;
+        margin-bottom: 1rem;
+    }
+</style>
+
+<!-- Header (premium, leesbaar) -->
+<div class="container" style="padding-top: 2rem; max-width: 1100px;">
+    <div class="catalog-hero" style="margin-bottom: 1.5rem;">
+        <div class="catalog-kicker">Winkelwagen</div>
+        <h1 class="catalog-title">Jouw selectie</h1>
+        <p class="catalog-subtitle">Beheer je items en ga verder naar checkout wanneer je klaar bent.</p>
+    </div>
+</div>
+
+<div class="cart-container">
+    @if (Model == null)
+    {
+        <div class="empty-cart">
+            <div class="empty-cart-icon">🛒</div>
+            <h2>Winkelwagen kon niet geladen worden</h2>
+            <p class="text-muted">Controleer of de API draait en probeer opnieuw.</p>
+            <div class="d-flex gap-2 justify-content-center mt-3">
+                <a asp-controller="Cart" asp-action="Index" class="btn-luxe">Opnieuw proberen</a>
+                <a asp-controller="Shoes" asp-action="Index" class="btn-luxe-outline">Verder shoppen</a>
+            </div>
+        </div>
+    }
+    else if (Model.Items != null && Model.Items.Any())
+    {
+        <div class="row">
+            <div class="col-lg-8">
+                @foreach (var item in Model.Items)
+                {
+                    <div class="cart-item">
+                        <!-- Product Image -->
+                        <img src="@(item.ShoeVariant.Shoe.ImageUrl ?? "/images/placeholder.png")" 
+                             alt="@item.ShoeVariant.Shoe.Name" 
+                             class="cart-item-image"
+                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23f8f9fa%22 width=%22100%22 height=%22100%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2220%22%3E👟%3C/text%3E%3C/svg%3E'">
+
+                        <!-- Product Info -->
+                        <div class="cart-item-info">
+                            <div class="cart-item-name">@item.ShoeVariant.Shoe.Name</div>
+                            <div class="cart-item-details">
+                                @item.ShoeVariant.Shoe.Brand - 
+                                Maat: @item.ShoeVariant.Size - 
+                                Kleur: @item.ShoeVariant.Color
+                            </div>
+                            <div class="cart-item-price">€@(item.Price.ToString("0.00")) per stuk</div>
+                        </div>
+
+                        <!-- Quantity Controls -->
+                        <div class="quantity-controls">
+                            <form asp-action="Update" method="post" style="display: inline;">
+                                <input type="hidden" name="itemId" value="@item.Id" />
+                                <button type="button" class="quantity-btn" onclick="updateQuantity(@item.Id, @item.Quantity - 1, @item.ShoeVariant.Stock)">-</button>
+                                <input type="number" 
+                                       name="quantity" 
+                                       value="@item.Quantity" 
+                                       min="1" 
+                                       max="@item.ShoeVariant.Stock"
+                                       class="quantity-input"
+                                       onchange="updateQuantityDirect(@item.Id, this.value, @item.ShoeVariant.Stock)" />
+                                <button type="button" class="quantity-btn" onclick="updateQuantity(@item.Id, @item.Quantity + 1, @item.ShoeVariant.Stock)">+</button>
+                            </form>
+                        </div>
+
+                        <!-- Subtotal -->
+                        <div class="cart-item-price">
+                            €@((item.Quantity * item.Price).ToString("0.00"))
+                        </div>
+
+                        <!-- Remove Button -->
+                        <form asp-action="Remove" method="post" style="display: inline;">
+                            <input type="hidden" name="itemId" value="@item.Id" />
+                            <button type="submit" class="btn-luxe-outline">Verwijderen</button>
+                        </form>
+                    </div>
+                }
+            </div>
+
+            <!-- Cart Summary -->
+            <div class="col-lg-4">
+                <div class="cart-summary">
+                    <h3 class="mb-3">Bestelling Overzicht</h3>
+                    
+                    <div class="summary-row">
+                        <span>Aantal items:</span>
+                        <span>@Model.TotalItems</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>Subtotaal:</span>
+                        <span>€@Model.TotalPrice.ToString("0.00")</span>
+                    </div>
+                    
+                    <div class="summary-row">
+                        <span>Verzendkosten:</span>
+                        <span>Gratis</span>
+                    </div>
+                    
+                    <div class="summary-row total">
+                        <span>Totaal:</span>
+                        <span>€@Model.TotalPrice.ToString("0.00")</span>
+                    </div>
+
+                    <a asp-controller="Checkout" asp-action="Index" class="btn-luxe" style="text-decoration: none; display: block; text-align: center;">
+                        Naar Checkout
+                    </a>
+
+                    <form asp-action="Clear" method="post" style="margin-top: 1rem;">
+                        <button type="submit" class="btn-luxe-outline w-100" onclick="return confirm('Weet je zeker dat je de hele winkelwagen wilt legen?')">
+                            Winkelwagen legen
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="empty-cart">
+            <div class="empty-cart-icon">🛒</div>
+            <h2>Je winkelwagen is leeg</h2>
+            <p class="text-muted">Voeg producten toe aan je winkelwagen om verder te gaan.</p>
+            <a asp-controller="Shoes" asp-action="Index" class="btn-luxe mt-3" style="display:inline-block;">
+                Bekijk Schoenen
+            </a>
+        </div>
+    }
+</div>
+
+<script>
+    function updateQuantity(itemId, newQuantity, maxStock) {
+        if (newQuantity < 1) {
+            newQuantity = 1;
+        }
+        if (newQuantity > maxStock) {
+            alert('Niet genoeg voorraad. Beschikbaar: ' + maxStock);
+            return;
+        }
+        
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '@Url.Action("Update", "Cart")';
+        
+        const itemIdInput = document.createElement('input');
+        itemIdInput.type = 'hidden';
+        itemIdInput.name = 'itemId';
+        itemIdInput.value = itemId;
+        
+        const quantityInput = document.createElement('input');
+        quantityInput.type = 'hidden';
+        quantityInput.name = 'quantity';
+        quantityInput.value = newQuantity;
+        
+        form.appendChild(itemIdInput);
+        form.appendChild(quantityInput);
+        
+        // Add anti-forgery token
+        const token = document.querySelector('input[name="__RequestVerificationToken"]');
+        if (token) {
+            const tokenClone = token.cloneNode(true);
+            form.appendChild(tokenClone);
+        }
+        
+        document.body.appendChild(form);
+        form.submit();
+    }
+
+    function updateQuantityDirect(itemId, newQuantity, maxStock) {
+        const quantity = parseInt(newQuantity);
+        if (isNaN(quantity) || quantity < 1) {
+            return;
+        }
+        updateQuantity(itemId, quantity, maxStock);
+    }
+</script>

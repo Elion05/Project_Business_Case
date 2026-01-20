@@ -1,87 +1,91 @@
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace BestelApp_Models
 {
+    /// <summary>
+    /// Shoe model - Basis product informatie
+    /// Elke schoen kan meerdere varianten hebben (ShoeVariant)
+    /// </summary>
     public class Shoe
     {
+        [Key]
         public long Id { get; set; }
 
-        // << VALIDATIE REGEL: Verplicht veld, max 50 tekens
         [Required]
-        [MaxLength(50)]
+        [MaxLength(100)]
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [MaxLength(30)]
+        [MaxLength(50)]
         public string Brand { get; set; } = string.Empty;
 
-        // << VALIDATIE REGEL: Prijs moet tussen 0.01 en 10000 zitten
+        [Required]
+        [MaxLength(1000)]
+        public string Description { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Basis prijs (kan per variant verschillen)
+        /// </summary>
+        [Required]
         [Range(0.01, 10000)]
+        [Column(TypeName = "decimal(18,2)")]
         public decimal Price { get; set; }
 
+        /// <summary>
+        /// Foreign Key naar Category
+        /// </summary>
+        [Required]
+        public long CategoryId { get; set; }
+
+        /// <summary>
+        /// Navigation property naar Category
+        /// </summary>
+        [ForeignKey("CategoryId")]
+        public Category Category { get; set; } = null!;
+
+        /// <summary>
+        /// Gender: "Male", "Female", "Unisex"
+        /// </summary>
+        [Required]
+        [MaxLength(20)]
+        public string Gender { get; set; } = "Unisex";
+
+        /// <summary>
+        /// Product afbeelding URL
+        /// </summary>
+        [MaxLength(500)]
+        public string ImageUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Is product actief/beschikbaar?
+        /// </summary>
+        public bool IsActive { get; set; } = true;
+
+        /// <summary>
+        /// Wanneer product is toegevoegd
+        /// </summary>
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// Navigation property: Varianten van deze schoen (maat, kleur, voorraad)
+        /// </summary>
+        public ICollection<ShoeVariant> Variants { get; set; } = new List<ShoeVariant>();
+
+        /// <summary>
+        /// DEPRECATED: Oude velden voor backwards compatibility
+        /// Gebruik Variants voor voorraad per maat/kleur
+        /// </summary>
         [Range(20, 50)]
-        public int Size { get; set; }
+        public int? Size { get; set; }
 
         [MaxLength(100)]
-        public string Color { get; set; } = string.Empty;
-
+        public string? Color { get; set; }
 
         public override string ToString()
         {
-            return $"{Brand} {Name} (Size {Size}) - €{Price}";
-        }
-
-        //Dummydata seeding
-        public static List<Shoe> SeedingData()
-        {
-            return new List<Shoe>
-            {
-                new Shoe
-                {
-                    Name = "Air Max",
-                    Brand = "Nike",
-                    Price = 129.99m,
-                    Size = 42,
-                    Color = "White/Red"
-                },
-
-                new Shoe
-                {
-                    Name = "Classic Leather",
-                    Brand = "Reebok",
-                    Price = 89.99m,
-                    Size = 44,
-                    Color = "Black"
-                },
-
-                new Shoe
-                {
-                    Name = "Stan Smith",
-                    Brand = "Adidas",
-                    Price = 99.99m,
-                    Size = 41,
-                    Color = "Green/White"
-
-                },
-
-                new Shoe
-                {
-                    Name = "Yeezy",
-                    Brand = "Adidas",
-                    Price = 199.99m,
-                    Size = 42,
-                    Color = "Black/White"
-                },
-
-                new Shoe
-                {
-                    Name = "Random",
-                    Brand = "Random",
-                    Price = 1.88m,
-                    Size = 45,
-                    Color = "Black/Yellow"
-                },
-            };
+            return $"{Brand} {Name} - €{Price}";
         }
     }
 }
+
