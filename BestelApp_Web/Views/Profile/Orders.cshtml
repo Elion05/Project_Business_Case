@@ -1,0 +1,343 @@
+@model List<OrderViewModel>
+
+@{
+    ViewData["Title"] = "Mijn Bestellingen";
+}
+
+<style>
+    .orders-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .page-header {
+        background: var(--gradient-hero);
+        color: hsl(var(--primary-foreground));
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    @@media (min-width: 768px) {
+        .page-header {
+            padding: 3rem 0;
+        }
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    @@media (min-width: 768px) {
+        .section-title {
+            font-size: 2.5rem;
+        }
+    }
+
+    .orders-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    @@media (min-width: 768px) {
+        .orders-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    .order-card {
+        background: hsl(var(--card));
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-card);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .order-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    }
+
+    .order-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: start;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+    }
+
+    .order-id {
+        font-weight: 700;
+        color: #2c3e50;
+        font-size: 1.1rem;
+        font-family: monospace;
+    }
+
+    .order-status {
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .status-pending {
+        background: #fff3cd;
+        color: #856404;
+    }
+
+    .status-processing {
+        background: #cfe2ff;
+        color: #084298;
+    }
+
+    .status-completed {
+        background: #d1e7dd;
+        color: #0a3622;
+    }
+
+    .status-failed {
+        background: #f8d7da;
+        color: #842029;
+    }
+
+    .order-info {
+        margin-bottom: 1rem;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .info-label {
+        color: #6c757d;
+    }
+
+    .info-value {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .order-total {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: hsl(var(--accent));
+        text-align: right;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .order-items {
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #e9ecef;
+    }
+
+    .order-items-title {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.75rem;
+        font-size: 0.95rem;
+    }
+
+    .order-item {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem;
+        margin-bottom: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 8px;
+    }
+
+    .item-info {
+        flex: 1;
+        font-size: 0.875rem;
+    }
+
+    .item-name {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .item-details {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+
+    .item-price {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        margin-bottom: 1rem;
+    }
+
+    .toggle-items {
+        background: #f8f9fa;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 1rem;
+        transition: background 0.3s ease;
+    }
+
+    .toggle-items:hover {
+        background: #e9ecef;
+    }
+
+    .items-hidden {
+        display: none;
+    }
+</style>
+
+<!-- Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="section-title">📦 Mijn Bestellingen</div>
+        <p class="mb-0">Overzicht van al je bestellingen</p>
+    </div>
+</div>
+
+<div class="orders-container">
+    @if (Model != null && Model.Any())
+    {
+        <div class="orders-grid">
+            @foreach (var order in Model.OrderByDescending(o => o.OrderDate))
+            {
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <div class="order-id">#@order.OrderId</div>
+                            <div class="info-row">
+                                <span class="info-label">📅 @order.OrderDate.ToString("dd MMMM yyyy")</span>
+                            </div>
+                        </div>
+                        <div>
+                            @{
+                                var statusClass = order.Status.ToLower() switch
+                                {
+                                    "pending" => "status-pending",
+                                    "processing" => "status-processing",
+                                    "completed" => "status-completed",
+                                    "failed" => "status-failed",
+                                    _ => "status-pending"
+                                };
+                                var statusText = order.Status.ToLower() switch
+                                {
+                                    "pending" => "In behandeling",
+                                    "processing" => "Wordt verwerkt",
+                                    "completed" => "Voltooid",
+                                    "failed" => "Mislukt",
+                                    _ => order.Status
+                                };
+                            }
+                            <div class="order-status @statusClass">@statusText</div>
+                        </div>
+                    </div>
+
+                    <div class="order-info">
+                        <div class="info-row">
+                            <span class="info-label">📍 Leveradres:</span>
+                            <span class="info-value">@order.ShippingCity</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(order.ShippingAddress))
+                        {
+                            <div class="info-row">
+                                <span class="info-label"></span>
+                                <span class="info-value" style="font-size: 0.85rem;">
+                                    @order.ShippingAddress, @order.ShippingPostalCode @order.ShippingCity, @order.ShippingCountry
+                                </span>
+                            </div>
+                        }
+                        @if (order.Items != null && order.Items.Any())
+                        {
+                            <div class="info-row">
+                                <span class="info-label">📦 Aantal items:</span>
+                                <span class="info-value">@order.Items.Sum(i => i.Quantity)</span>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="order-total">
+                        Totaal: €@order.TotalPrice.ToString("0.00")
+                    </div>
+
+                    @if (order.Items != null && order.Items.Any())
+                    {
+                        <button class="toggle-items" onclick="toggleItems('order-@order.Id')">
+                            ▼ Toon items (@order.Items.Count)
+                        </button>
+                        
+                        <div id="order-@order.Id" class="order-items items-hidden">
+                            <div class="order-items-title">Bestelde items:</div>
+                            @foreach (var item in order.Items)
+                            {
+                                <div class="order-item">
+                                    <div class="item-info">
+                                        <div class="item-name">@item.ProductBrand @item.ProductName</div>
+                                        <div class="item-details">
+                                            Maat: @item.Size | Kleur: @item.Color | Aantal: @item.Quantity
+                                        </div>
+                                    </div>
+                                    <div class="item-price">
+                                        €@((item.Quantity * item.Price).ToString("0.00"))
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <h2>Nog geen bestellingen</h2>
+            <p class="text-muted">Je hebt nog geen bestellingen geplaatst.</p>
+            <a asp-controller="Shoes" asp-action="Index" class="btn btn-primary btn-lg mt-3">
+                Bekijk Schoenen
+            </a>
+        </div>
+    }
+
+    <div class="text-center mt-4">
+        <a asp-action="Index" class="btn btn-outline-secondary btn-lg">
+            👤 Terug naar Profiel
+        </a>
+    </div>
+</div>
+
+<script>
+    function toggleItems(orderId) {
+        const itemsDiv = document.getElementById(orderId);
+        const button = itemsDiv.previousElementSibling;
+        
+        if (itemsDiv.classList.contains('items-hidden')) {
+            itemsDiv.classList.remove('items-hidden');
+            button.innerHTML = '▲ Verberg items';
+        } else {
+            itemsDiv.classList.add('items-hidden');
+            const itemCount = itemsDiv.querySelectorAll('.order-item').length;
+            button.innerHTML = `▼ Toon items (${itemCount})`;
+        }
+    }
+</script>

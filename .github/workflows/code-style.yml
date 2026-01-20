@@ -5,9 +5,9 @@ name: Code Style
 
 on:
   push:
-    branches: ["Elion"]
+    branches: ["Abdullah"]
   pull_request:
-    branches: ["Elion"]
+    branches: ["Abdullah"]
   workflow_dispatch:
 
 jobs:

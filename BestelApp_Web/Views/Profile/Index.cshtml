@@ -1,0 +1,224 @@
+@model ProfileViewModel
+
+@{
+    ViewData["Title"] = "Mijn Profiel";
+}
+
+<style>
+    .profile-container {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .page-header {
+        background: var(--gradient-hero);
+        color: hsl(var(--primary-foreground));
+        padding: 2rem 0;
+        margin-bottom: 2rem;
+    }
+
+    @@media (min-width: 768px) {
+        .page-header {
+            padding: 3rem 0;
+        }
+    }
+
+    .section-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    @@media (min-width: 768px) {
+        .section-title {
+            font-size: 2.5rem;
+        }
+    }
+
+    .profile-card {
+        background: hsl(var(--card));
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow-card);
+        margin-bottom: 2rem;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #e9ecef;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+    }
+
+    .form-control:focus {
+        border-color: #ff6b35;
+        box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+    }
+
+    .form-control:disabled,
+    .form-control[readonly] {
+        background-color: #f8f9fa;
+    }
+
+    .update-btn {
+        width: 100%;
+        padding: 1rem;
+        background: hsl(var(--accent));
+        color: hsl(var(--accent-foreground));
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        cursor: pointer;
+        transition: background 0.3s ease;
+    }
+
+    .update-btn:hover {
+        background: hsl(var(--accent-dark));
+    }
+
+    .info-badge {
+        background: #e7f3ff;
+        border-left: 4px solid #0d6efd;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        font-size: 0.875rem;
+    }
+</style>
+
+<!-- Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="section-title">👤 Mijn Profiel</div>
+        <p class="mb-0">Beheer je persoonlijke gegevens en adresgegevens</p>
+    </div>
+</div>
+
+<div class="profile-container">
+    <form asp-action="UpdateProfile" method="post">
+        <!-- Persoonlijke Gegevens -->
+        <div class="profile-card">
+            <h2 class="card-title">
+                <span>📝</span> Persoonlijke Gegevens
+            </h2>
+
+            <div class="info-badge">
+                ℹ️ Je email kan niet worden gewijzigd. Neem contact op met support als je email wilt aanpassen.
+            </div>
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Voornaam *</label>
+                    <input type="text" 
+                           class="form-control" 
+                           name="FirstName" 
+                           value="@Model.FirstName" 
+                           required />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Achternaam *</label>
+                    <input type="text" 
+                           class="form-control" 
+                           name="LastName" 
+                           value="@Model.LastName" 
+                           required />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">E-mailadres</label>
+                <input type="email" 
+                       class="form-control" 
+                       value="@Model.Email" 
+                       readonly />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Telefoonnummer</label>
+                <input type="tel" 
+                       class="form-control" 
+                       name="PhoneNumber" 
+                       value="@Model.PhoneNumber" 
+                       placeholder="+31 6 12345678" />
+            </div>
+        </div>
+
+        <!-- Adresgegevens -->
+        <div class="profile-card">
+            <h2 class="card-title">
+                <span>📍</span> Adresgegevens
+            </h2>
+
+            <div class="info-badge">
+                ℹ️ Dit adres wordt gebruikt als standaard leveradres bij het afrekenen.
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Adres</label>
+                <input type="text" 
+                       class="form-control" 
+                       name="Address" 
+                       value="@Model.Address" 
+                       placeholder="Straat en huisnummer" />
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Postcode</label>
+                    <input type="text" 
+                           class="form-control" 
+                           name="PostalCode" 
+                           value="@Model.PostalCode" 
+                           placeholder="1000 AB" />
+                </div>
+                <div class="col-md-8 mb-3">
+                    <label class="form-label">Plaats</label>
+                    <input type="text" 
+                           class="form-control" 
+                           name="City" 
+                           value="@Model.City" 
+                           placeholder="Amsterdam" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Land</label>
+                <select class="form-control" name="Country">
+                    <option value="">Selecteer land</option>
+                    <option value="Nederland" selected="@(Model.Country == "Nederland" ? "selected" : null)">Nederland</option>
+                    <option value="België" selected="@(Model.Country == "België" ? "selected" : null)">België</option>
+                    <option value="Duitsland" selected="@(Model.Country == "Duitsland" ? "selected" : null)">Duitsland</option>
+                </select>
+            </div>
+        </div>
+
+        <button type="submit" class="update-btn">
+            💾 Profiel Bijwerken
+        </button>
+    </form>
+
+    <div class="text-center mt-4">
+        <a asp-action="Orders" class="btn btn-outline-primary btn-lg">
+            📦 Bekijk Mijn Bestellingen
+        </a>
+    </div>
+</div>

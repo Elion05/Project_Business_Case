@@ -8,70 +8,72 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/BestelApp_Web.styles.css" asp-append-version="true" />
+    <!-- Lucide icons (premium icon set) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">BestelApp_Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+        <nav class="navbar navbar-expand-lg luxe-navbar">
+            <div class="container-fluid px-3 px-lg-4">
+                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">
+                    BestelApp
+                </a>
 
+                <!-- Acties altijd zichtbaar (ook mobiel) -->
+                <div class="d-flex align-items-center gap-2 ms-auto">
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <a class="luxe-icon-btn position-relative" asp-controller="Favorites" asp-action="Index" title="Favorieten">
+                            <i data-lucide="heart" style="width:18px;height:18px;"></i>
+                        </a>
+
+                        <a class="luxe-icon-btn position-relative" asp-controller="Cart" asp-action="Index" title="Winkelwagen">
+                            <i data-lucide="shopping-bag" style="width:18px;height:18px;"></i>
+                            <span id="cart-count" class="luxe-badge" style="display:none;"></span>
+                        </a>
+                    }
+
+                    <partial name="_LoginPartial" />
+
+                    @if (User.IsInRole("Admin"))
+                    {
+                        <a class="btn-luxe-outline ms-1" asp-area="" asp-controller="Admin" asp-action="Index">Admin</a>
+                    }
+
+                    <button class="navbar-toggler ms-1" type="button" data-bs-toggle="collapse" data-bs-target="#luxeNavbarCollapse" aria-controls="luxeNavbarCollapse"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+
+                <div class="collapse navbar-collapse" id="luxeNavbarCollapse">
+                    <ul class="navbar-nav flex-grow-1 mt-3 mt-lg-0">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Shoes" asp-action="Index">Schoenen</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Users" asp-action="Index">Gebruikers</a>
+                            <a class="nav-link" asp-area="" asp-controller="Shoes" asp-action="Index">Schoenen</a>
+                        </li>
+                        
+                        <!-- Categorieën Dropdown -->
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Categorieën
+                            </a>
+                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="categoriesDropdown">
+                                <li><a class="dropdown-item" asp-controller="Shoes" asp-action="Index">Alle Schoenen</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <!-- Kategoriler JavaScript ile gelir -->
+                            </ul>
                         </li>
                     </ul>
 
-
-                    <!-- Login/Register knoppen (rechtsboven) -->
-                    <ul class="navbar-nav">
-                        @if (User.Identity?.IsAuthenticated == true)
-                        {
-                            <!-- Gebruiker is ingelogd -->
-                            <li class="nav-item">
-                                <span class="nav-link text-dark">
-                                    Welkom, <strong>@User.Identity.Name</strong>!
-                                </span>
-                            </li>
-                            <li class="nav-item">
-                                <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
-                                    <button type="submit" class="btn btn-outline-danger btn-sm mt-2">Uitloggen</button>
-                                </form>
-                            </li>
-                        }
-                        else
-                        {
-                            <!-- Gebruiker is NIET ingelogd -->
-                            <li class="nav-item">
-                                <a class="btn btn-outline-primary btn-sm me-2" asp-controller="Account" asp-action="Login">
-                                    Inloggen
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Register">
-                                    Registreren
-                                </a>
-                            </li>
-                        }
-                    </ul>
+                    <!-- Zoekbalk zit in de Shoes filter bar (niet dubbel in navbar) -->
                 </div>
             </div>
         </nav>
     </header>
-    <div class="container">
+    <div class="container luxe-page">
         <main role="main" class="pb-3">
             <!-- Succes berichten -->
             @if (TempData["SuccessBericht"] != null)
@@ -103,6 +105,65 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    
+    <!-- Laad categorieën in navbar -->
+    <script>
+        // Laad categorieën wanneer pagina geladen is
+        document.addEventListener('DOMContentLoaded', function() {
+            laadCategorieen();
+        });
+
+        async function laadCategorieen() {
+            try {
+                const response = await fetch('https://localhost:7001/api/category');
+                if (response.ok) {
+                    const categorieen = await response.json();
+                    const dropdown = document.getElementById('categoriesDropdown');
+                    
+                    // Voeg categorieën toe aan dropdown
+                    categorieen.forEach(cat => {
+                        const li = document.createElement('li');
+                        const a = document.createElement('a');
+                        a.className = 'dropdown-item';
+                        a.href = '/Shoes?categoryId=' + cat.id;
+                        a.textContent = cat.name + ' (' + cat.productCount + ')';
+                        li.appendChild(a);
+                        dropdown.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error('Fout bij laden categorieën:', error);
+            }
+        }
+
+        // Laad cart count als user ingelogd is
+        @if (User.Identity?.IsAuthenticated == true)
+        {
+            <text>
+            async function laadCartCount() {
+                try {
+                    const response = await fetch('https://localhost:7001/api/cart', {
+                        credentials: 'include'
+                    });
+                    if (response.ok) {
+                        const cart = await response.json();
+                        const cartCountEl = document.getElementById('cart-count');
+                        if (cartCountEl && cart.totalItems > 0) {
+                            cartCountEl.textContent = cart.totalItems;
+                            cartCountEl.style.display = 'inline';
+                        } else if (cartCountEl) {
+                            cartCountEl.style.display = 'none';
+                        }
+                    }
+                } catch (error) {
+                    console.error('Fout bij laden cart count:', error);
+                }
+            }
+            laadCartCount();
+            </text>
+        }
+    </script>
+    
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

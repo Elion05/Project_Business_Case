@@ -1,0 +1,30 @@
+name: Security Scan
+
+on:
+  push:
+    branches: [ "Abdullah", "master", "main" ]
+  pull_request:
+    branches: [ "Abdullah", "master", "main" ]
+  workflow_dispatch:
+
+jobs:
+  secret-scan:
+    name: Scan for Secrets & Keys
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Nodig voor Gitleaks om de geschiedenis te scannen
+
+      - name: Patch Gitleaks for Act
+        if: ${{ env.ACT }}
+        run: |
+          echo '{"repository": {"owner": {"login": "act-user"}, "name": "Project_Business_Case"}}' > event.json
+          echo "GITHUB_EVENT_PATH=$(pwd)/event.json" >> $GITHUB_ENV
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Deze stap faalt als hij secrets (zoals in EncryptionHelper.cs) vindt.

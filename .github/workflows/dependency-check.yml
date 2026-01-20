@@ -4,9 +4,9 @@ name: Dependency Check
 
 on:
   push:
-    branches: ["Elion"]
+    branches: ["Abdullah"]
   pull_request:
-    branches: ["Elion"]
+    branches: ["Abdullah"]
   schedule:
     - cron: '0 0 * * 1' 
   workflow_dispatch:

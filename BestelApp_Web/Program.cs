@@ -1,69 +1,101 @@
 using BestelApp_Models;
-using BestelApp_Web.Services;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
+using BestelApp_Web.Services;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//DbContext toevoegen voor Entity Framework (configuratie staat in AppDbContext.cs)
-builder.Services.AddDbContext<AppDbContext>();
+// Shared DataProtection keys (zodat Web + API dezelfde Identity cookie kunnen lezen)
+var gedeeldeKeysPad = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "SharedKeys"));
+Directory.CreateDirectory(gedeeldeKeysPad);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(gedeeldeKeysPad))
+    .SetApplicationName("BestelApp");
 
-// RabbitMQ Service toevoegen zodat we kunnen bestellen
-builder.Services.AddSingleton<RabbitMQService>();
+//ApplicationDbContext toevoegen voor Entity Framework met connection string
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//Identity configureren voor login/register functionaliteit
-builder.Services.AddIdentity<Users, IdentityRole>(opties =>
+//Identity configureren met de aangepaste 'Users' klasse en rollen
+builder.Services.AddIdentity<Users, IdentityRole>(options =>
 {
-    // Wachtwoord eisen (voor development makkelijk)
-    opties.Password.RequireDigit = true;
-    opties.Password.RequiredLength = 6;
-    opties.Password.RequireNonAlphanumeric = false;
-    opties.Password.RequireUppercase = true;
-    opties.Password.RequireLowercase = true;
+    // Wachtwoord eisen
+    options.Password.RequireDigit = true;
+    options.Password.RequiredLength = 6;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireLowercase = true;
 
     // Gebruiker eisen
-    opties.User.RequireUniqueEmail = true;
+    options.User.RequireUniqueEmail = true;
 
     // Sign in opties
-    opties.SignIn.RequireConfirmedAccount = false; // Geen e-mailbevestiging nodig
-    opties.SignIn.RequireConfirmedEmail = false; // Voor development
+    options.SignIn.RequireConfirmedAccount = false;
+    options.SignIn.RequireConfirmedEmail = false;
 })
-.AddEntityFrameworkStores<AppDbContext>()
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultUI()
 .AddDefaultTokenProviders();
 
 //Cookie instellingen voor login
-builder.Services.ConfigureApplicationCookie(opties =>
+builder.Services.ConfigureApplicationCookie(options =>
 {
-    opties.LoginPath = "/Account/Login"; // Waar moet gebruiker naartoe als niet ingelogd
-    opties.LogoutPath = "/Account/Logout";
-    opties.AccessDeniedPath = "/Account/AccessDenied";
-    opties.ExpireTimeSpan = TimeSpan.FromDays(7); // Cookie blijft 7 dagen geldig
-    opties.SlidingExpiration = true; // Vernieuw cookie bij elke request
+    options.Cookie.Name = ".AspNetCore.Identity.Application";
+    options.LoginPath = "/Account/Login";
+    options.LogoutPath = "/Account/Logout";
+    options.AccessDeniedPath = "/Account/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromDays(7);
+    options.SlidingExpiration = true;
 });
+
+// Backend API Service toevoegen (vervangt directe RabbitMQ connectie)
+// Configureer HttpClient met cookie forwarding voor authentication
+builder.Services.AddHttpClient<OrderApiService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        UseCookies = true,
+        CookieContainer = new System.Net.CookieContainer()
+    });
+
+builder.Services.AddHttpClient<FavoritesApiService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        UseCookies = true,
+        CookieContainer = new System.Net.CookieContainer()
+    });
+
+builder.Services.AddHttpClient<CartApiService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        UseCookies = true,
+        CookieContainer = new System.Net.CookieContainer()
+    });
+
+// HttpContextAccessor voor services die user context nodig hebben
+builder.Services.AddHttpContextAccessor();
 
 // Services toevoegen voor Controllers en Views
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages(); // Nodig voor Identity pagina's
 
+// Localization configuratie voor decimale getallen (accepteert punt en komma)
+builder.Services.Configure<RequestLocalizationOptions>(options =>
+{
+    var supportedCultures = new[] { new System.Globalization.CultureInfo("nl-BE") };
+    options.DefaultRequestCulture = new Microsoft.AspNetCore.Localization.RequestCulture("nl-BE");
+    options.SupportedCultures = supportedCultures;
+    options.SupportedUICultures = supportedCultures;
+});
+
 var app = builder.Build();
 
-// Database migraties uitvoeren en data seeden bij het opstarten
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var context = services.GetRequiredService<AppDbContext>();
-        context.Database.Migrate(); // Voert database wijzigingen door
-        await AppDbContext.Seeder(context); // Voegt testdata toe (Users en Shoes)
-    }
-    catch (Exception ex)
-    {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Er is een fout opgetreden bij het seeden van de database.");
-    }
-}
+// WebApp gebruikt DEZELFDE database als de Backend API!
+// Geen migrations of seeding nodig - de API doet dat al!
+Console.WriteLine("📊 WebApp gebruikt gedeelde database: ../BestelApp_API/BestelApp.db");
+Console.WriteLine("✅ Database wordt beheerd door Backend API");
 
 // Configureer de HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -75,13 +107,14 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 
+// Gebruik localization voor decimale getallen
+app.UseRequestLocalization();
+
 app.UseRouting();
 
-
-//BELANGRIJK: Authentication moet VOOR Authorization
-app.UseAuthentication(); // Checkt wie je bent
-app.UseAuthorization();  // Checkt wat je mag doen
-
+// Authentication MOET voor Authorization staan om inloggen te laten werken
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapStaticAssets();
 

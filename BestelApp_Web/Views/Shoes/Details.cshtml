@@ -1,48 +1,520 @@
 ﻿@model BestelApp_Models.Shoe
 
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = Model.Name;
 }
 
-<h1>Details</h1>
+<style>
+    .product-detail-container {
+        margin-top: 2rem;
+    }
 
-<div>
-    <h4>Shoe</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Name)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Name)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Brand)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Brand)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Price)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Price)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Size)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Size)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Color)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Color)
-        </dd>
-    </dl>
+    .product-image-section {
+        position: relative;
+    }
+
+    .product-main-image {
+        width: 100%;
+        height: 500px;
+        object-fit: cover;
+        border-radius: 16px;
+        background: hsl(var(--muted));
+        border: 1px solid hsl(var(--border));
+        box-shadow: var(--shadow-soft);
+    }
+
+    .product-info-section {
+        padding-left: 2rem;
+    }
+
+    .product-category {
+        font-size: 0.875rem;
+        color: hsl(var(--muted-foreground));
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+
+    .product-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: hsl(var(--foreground));
+        font-family: "Playfair Display", serif;
+        margin-bottom: 1rem;
+    }
+
+    .product-brand {
+        font-size: 1.25rem;
+        color: hsl(var(--muted-foreground));
+        margin-bottom: 1.5rem;
+    }
+
+    .product-price {
+        font-size: 2rem;
+        font-weight: 700;
+        color: hsl(var(--primary));
+        margin-bottom: 2rem;
+    }
+
+    .product-description {
+        font-size: 1rem;
+        color: hsl(var(--muted-foreground));
+        line-height: 1.8;
+        margin-bottom: 2rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .favorite-btn-large {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        border: 1px solid hsl(var(--border));
+        background: hsl(var(--card));
+        color: hsl(var(--primary));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: var(--shadow-soft);
+    }
+
+    .favorite-btn-large:hover {
+        border-color: hsl(var(--primary));
+        color: hsl(var(--primary));
+        transform: translateY(-1px);
+    }
+
+    .favorite-btn-large.active {
+        background: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
+        border-color: hsl(var(--primary));
+    }
+
+    .variant-section {
+        margin-top: 2rem;
+        padding-top: 2rem;
+        border-top: 1px solid hsl(var(--border));
+    }
+
+    .variant-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 1rem;
+    }
+
+    .variant-card {
+        padding: 1rem;
+        border: 1px solid hsl(var(--border));
+        border-radius: 14px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: hsl(var(--card));
+    }
+
+    .variant-card:hover {
+        border-color: hsl(var(--primary));
+        transform: translateY(-2px);
+    }
+
+    .variant-card.available {
+        border-color: #198754;
+    }
+
+    .variant-card.out-of-stock {
+        opacity: 0.5;
+        background: #f8f9fa;
+    }
+
+    .variant-card.selected {
+        border-color: hsl(var(--accent));
+        border-width: 3px;
+        background: hsl(var(--muted));
+    }
+
+    .variant-selected-info {
+        margin-top: 0.75rem;
+        font-size: 0.95rem;
+        color: hsl(var(--muted-foreground));
+    }
+
+    .quantity-row {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .quantity-row input[type="number"] {
+        width: 90px;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.6rem 0.75rem;
+    }
+</style>
+
+<div class="container product-detail-container">
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6 product-image-section">
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img src="@Model.ImageUrl" alt="@Model.Name" class="product-main-image" />
+            }
+            else
+            {
+                <div class="product-main-image d-flex align-items-center justify-content-center" style="font-size: 8rem; color: #dee2e6;">
+                    👟
+                </div>
+            }
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-md-6 product-info-section">
+            <div class="product-category">@(Model.Category?.Name ?? "Schoenen")</div>
+            <h1 class="product-title">@Model.Name</h1>
+            <p class="product-brand">@Model.Brand</p>
+            <div class="product-price">€@Model.Price.ToString("0.00")</div>
+            
+            <!-- Stok Info -->
+            @{
+                var totalStock = Model.Variants?.Sum(v => v.Stock) ?? 0;
+                var availableVariants = Model.Variants?.Count(v => v.Stock > 0) ?? 0;
+            }
+            @if (totalStock > 0)
+            {
+                <div style="font-size: 1rem; color: hsl(var(--muted-foreground)); margin-bottom: 1rem; font-weight: 600;">
+                    Op voorraad (@totalStock stuks beschikbaar)
+                </div>
+            }
+            else
+            {
+                <div style="font-size: 1rem; color: hsl(var(--muted-foreground)); margin-bottom: 1rem; font-weight: 600;">
+                    Uitverkocht
+                </div>
+            }
+            
+            <p class="product-description">@Model.Description</p>
+
+            <!-- Variants Section (maat/kleur kiezen) -->
+            @if (Model.Variants != null && Model.Variants.Any())
+            {
+                <div class="variant-section">
+                    <h4>Selecteer Maat & Kleur</h4>
+
+                    <!-- Dropdowns (duidelijker voor nummer + kleur) -->
+                    <div class="row g-3 mt-1">
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Maat (nummer)</label>
+                            <select id="maatSelect" class="form-select">
+                                <option value="">Selecteer maat</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Kleur</label>
+                            <select id="kleurSelect" class="form-select" disabled>
+                                <option value="">Selecteer kleur</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="variant-selected-info" id="selectedVariantInfo">
+                        Selecteer een maat en kleur om toe te voegen aan de winkelwagen.
+                    </div>
+
+                    <div class="quantity-row">
+                        <label style="font-weight:600; color:hsl(var(--foreground)); margin:0;">Aantal:</label>
+                        <input id="quantityInput" type="number" min="1" value="1" disabled />
+                        <span id="stockHint" style="font-size:0.9rem; color:hsl(var(--muted-foreground));"></span>
+                    </div>
+
+                    <input type="hidden" id="selectedVariantId" value="" />
+                </div>
+            }
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <button type="button" 
+                            class="favorite-btn-large" 
+                            data-shoe-id="@Model.Id"
+                            data-is-favorite="false"
+                            onclick="toggleFavorite(@Model.Id, this)"
+                            title="Toevoegen aan favorieten">
+                        <i data-lucide="heart" style="width:20px;height:20px;"></i>
+                    </button>
+                }
+                <form asp-controller="Cart" asp-action="Add" method="post" style="flex:1;">
+                    <input type="hidden" id="cartVariantId" name="shoeVariantId" value="" />
+                    <input type="hidden" id="cartQuantity" name="quantity" value="1" />
+                    <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Shoes", new { id = Model.Id })" />
+                    <button type="submit"
+                            id="addToCartBtn"
+                            class="btn-luxe w-100"
+                            disabled>
+                        In Winkelwagen
+                    </button>
+                </form>
+            </div>
+
+            <div class="d-flex justify-content-end" style="margin-top: 0.75rem;">
+                <a class="btn-luxe-outline" asp-controller="Cart" asp-action="Index">Naar winkelwagen</a>
+            </div>
+            
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <script>
+                    // Laad favoriet status voor dit product
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const button = document.querySelector('.favorite-btn-large[data-shoe-id="@Model.Id"]');
+                        if (button) {
+                            checkFavoriteStatus(@Model.Id, button);
+                        }
+                    });
+
+                    async function checkFavoriteStatus(shoeId, button) {
+                        try {
+                            const response = await fetch(`https://localhost:7001/api/favorites/check/${shoeId}`, {
+                                credentials: 'include'
+                            });
+                            
+                            if (response.ok) {
+                                const data = await response.json();
+                                if (data.isFavorite) {
+                                    button.classList.add('active');
+                                    button.setAttribute('data-is-favorite', 'true');
+                                    button.title = 'Verwijderen uit favorieten';
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Fout bij checken favoriet status:', error);
+                        }
+                    }
+
+                    async function toggleFavorite(shoeId, button) {
+                        const isFavorite = button.getAttribute('data-is-favorite') === 'true';
+                        const apiUrl = `https://localhost:7001/api/favorites/${shoeId}`;
+                        
+                        try {
+                            let response;
+                            if (isFavorite) {
+                                response = await fetch(apiUrl, {
+                                    method: 'DELETE',
+                                    credentials: 'include'
+                                });
+                            } else {
+                                response = await fetch(apiUrl, {
+                                    method: 'POST',
+                                    credentials: 'include'
+                                });
+                            }
+
+                            if (response.ok) {
+                                if (isFavorite) {
+                                    button.classList.remove('active');
+                                    button.setAttribute('data-is-favorite', 'false');
+                                    button.title = 'Toevoegen aan favorieten';
+                                } else {
+                                    button.classList.add('active');
+                                    button.setAttribute('data-is-favorite', 'true');
+                                    button.title = 'Verwijderen uit favorieten';
+                                }
+                            } else {
+                                const errorData = await response.json();
+                                alert('Fout: ' + (errorData.message || 'Er ging iets fout'));
+                            }
+                        } catch (error) {
+                            console.error('Fout bij toggle favoriet:', error);
+                            alert('Er ging iets fout bij het toevoegen/verwijderen van favoriet');
+                        }
+                    }
+
+                    // Variant selectie
+                    let geselecteerdeVariantId = null;
+                    let geselecteerdeVariantStock = 0;
+
+                    // Variants data (basic, zonder backend change)
+                    const varianten = [
+@foreach (var variant in (Model.Variants ?? Enumerable.Empty<BestelApp_Models.ShoeVariant>()))
+{
+<text>                        { id: @variant.Id, maat: @variant.Size, kleur: "@(((variant.Color ?? string.Empty).Replace("\"","\\\"")))", stock: @variant.Stock, beschikbaar: @variant.IsAvailable.ToString().ToLower() },</text>
+}
+                    ];
+
+                    function vulMaten() {
+                        const maatSelect = document.getElementById('maatSelect');
+                        if (!maatSelect) return;
+
+                        const uniekeMaten = [...new Set(varianten.map(v => v.maat))].sort((a, b) => a - b);
+                        uniekeMaten.forEach(maat => {
+                            const opt = document.createElement('option');
+                            opt.value = maat.toString();
+                            opt.textContent = maat.toString();
+                            maatSelect.appendChild(opt);
+                        });
+                    }
+
+                    function vulKleurenVoorMaat(maat) {
+                        const kleurSelect = document.getElementById('kleurSelect');
+                        if (!kleurSelect) return;
+
+                        kleurSelect.innerHTML = '<option value="">Selecteer kleur</option>';
+
+                        if (!maat) {
+                            kleurSelect.disabled = true;
+                            return;
+                        }
+
+                        const kleuren = varianten
+                            .filter(v => v.maat === parseInt(maat))
+                            .map(v => v.kleur);
+
+                        const uniekeKleuren = [...new Set(kleuren)].sort();
+                        uniekeKleuren.forEach(kleur => {
+                            const opt = document.createElement('option');
+                            opt.value = kleur;
+                            opt.textContent = kleur;
+                            kleurSelect.appendChild(opt);
+                        });
+
+                        kleurSelect.disabled = false;
+                    }
+
+                    function updateGeselecteerdeVariant() {
+                        const maatSelect = document.getElementById('maatSelect');
+                        const kleurSelect = document.getElementById('kleurSelect');
+                        const info = document.getElementById('selectedVariantInfo');
+                        const qtyEl = document.getElementById('quantityInput');
+                        const hint = document.getElementById('stockHint');
+                        const btn = document.getElementById('addToCartBtn');
+                        const cartVariant = document.getElementById('cartVariantId');
+                        const hidden = document.getElementById('selectedVariantId');
+
+                        const maat = maatSelect ? maatSelect.value : '';
+                        const kleur = kleurSelect ? kleurSelect.value : '';
+
+                        geselecteerdeVariantId = null;
+                        geselecteerdeVariantStock = 0;
+                        if (hidden) hidden.value = '';
+                        if (cartVariant) cartVariant.value = '';
+                        if (btn) btn.disabled = true;
+                        if (qtyEl) qtyEl.disabled = true;
+                        if (hint) hint.textContent = '';
+
+                        if (!maat || !kleur) {
+                            if (info) info.textContent = 'Selecteer een maat en kleur om toe te voegen aan de winkelwagen.';
+                            return;
+                        }
+
+                        const variant = varianten.find(v => v.maat === parseInt(maat) && v.kleur === kleur);
+                        if (!variant) {
+                            if (info) info.textContent = 'Variant niet gevonden.';
+                            return;
+                        }
+
+                        if (!variant.beschikbaar || variant.stock <= 0) {
+                            if (info) info.textContent = `Geselecteerd: Maat ${maat} - ${kleur} (uitverkocht)`;
+                            return;
+                        }
+
+                        geselecteerdeVariantId = variant.id;
+                        geselecteerdeVariantStock = variant.stock;
+                        if (hidden) hidden.value = variant.id;
+                        if (cartVariant) cartVariant.value = variant.id;
+                        if (btn) btn.disabled = false;
+
+                        if (info) info.textContent = `Geselecteerd: Maat ${maat} - ${kleur}`;
+                        if (qtyEl) {
+                            qtyEl.disabled = false;
+                            qtyEl.max = variant.stock.toString();
+                            if (parseInt(qtyEl.value || '1') > variant.stock) qtyEl.value = variant.stock.toString();
+                        }
+                        if (hint) hint.textContent = `(max ${variant.stock})`;
+                    }
+
+                    // Quantity sync naar form
+                    document.addEventListener('DOMContentLoaded', function() {
+                        // Init dropdowns
+                        vulMaten();
+                        const maatSelect = document.getElementById('maatSelect');
+                        const kleurSelect = document.getElementById('kleurSelect');
+                        if (maatSelect) {
+                            maatSelect.addEventListener('change', function() {
+                                vulKleurenVoorMaat(maatSelect.value);
+                                if (kleurSelect) kleurSelect.value = '';
+                                updateGeselecteerdeVariant();
+                            });
+                        }
+                        if (kleurSelect) {
+                            kleurSelect.addEventListener('change', function() {
+                                updateGeselecteerdeVariant();
+                            });
+                        }
+
+                        const qtyEl = document.getElementById('quantityInput');
+                        const cartQty = document.getElementById('cartQuantity');
+                        const cartVariant = document.getElementById('cartVariantId');
+
+                        if (qtyEl && cartQty) {
+                            qtyEl.addEventListener('input', function() {
+                                let qty = parseInt(qtyEl.value || '1');
+                                if (isNaN(qty) || qty < 1) qty = 1;
+                                if (geselecteerdeVariantStock > 0 && qty > geselecteerdeVariantStock) qty = geselecteerdeVariantStock;
+                                qtyEl.value = qty.toString();
+                                cartQty.value = qty.toString();
+                            });
+                        }
+
+                        // Extra safety: prevent submit zonder variant
+                        const btn = document.getElementById('addToCartBtn');
+                        if (btn) {
+                            btn.closest('form')?.addEventListener('submit', function(e) {
+                                if (!geselecteerdeVariantId || !cartVariant || !cartVariant.value) {
+                                    e.preventDefault();
+                                    alert('Selecteer eerst een maat en kleur');
+                                }
+                            });
+                        }
+                    });
+                </script>
+            }
+
+            <!-- Variants Section -->
+
+            <!-- Admin Actions -->
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="mt-4 pt-4 border-top">
+                    <h5>Admin Acties</h5>
+                    <div class="d-flex gap-2">
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
+                            ✏️ Bewerk
+                        </a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
+                            🗑️ Verwijder
+                        </a>
+                        <a asp-action="Index" class="btn btn-secondary">
+                            ← Terug naar Lijst
+                        </a>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary">
+                        ← Terug naar Schoenen
+                    </a>
+                </div>
+            }
+        </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.Id">Edit</a> |
-    <a asp-action="Index">Back to List</a>
 </div>

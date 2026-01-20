@@ -4,49 +4,96 @@
     ViewData["Title"] = "Registreren";
 }
 
-<div class="row justify-content-center mt-5">
-    <div class="col-md-8 col-lg-6">
-        <div class="card shadow">
-            <div class="card-body">
-                <h2 class="card-title text-center mb-4">Registreren</h2>
+<style>
+    .page-header {
+        background: var(--gradient-hero);
+        color: hsl(var(--primary-foreground));
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+    }
 
-                <!-- Validatie samenvatting -->
-                <div asp-validation-summary="All" class="text-danger"></div>
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
 
+    .section-subtitle {
+        font-size: 1rem;
+        color: #bdc3c7;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+
+    .form-container {
+        background: hsl(var(--card));
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow-card);
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+    }
+
+    .form-control:focus {
+        border-color: hsl(var(--accent));
+        box-shadow: 0 0 0 0.2rem hsla(35, 70%, 50%, 0.25);
+    }
+</style>
+
+<!-- Header -->
+<div class="page-header">
+    <div class="container text-center">
+        <div class="section-subtitle">Account</div>
+        <h1 class="section-title">📝 Registreren</h1>
+        <p class="mb-0">Maak een nieuw account aan</p>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="form-container">
                 <form asp-action="Register" method="post">
+                    <div asp-validation-summary="All" class="alert alert-danger"></div>
+
                     <div class="row">
-                        <!-- Voornaam -->
                         <div class="col-md-6 mb-3">
-                            <label asp-for="VoorNaam" class="form-label"></label>
+                            <label asp-for="VoorNaam" class="form-label">Voornaam</label>
                             <input asp-for="VoorNaam" class="form-control" placeholder="Voer je voornaam in" />
                             <span asp-validation-for="VoorNaam" class="text-danger"></span>
                         </div>
 
-                        <!-- Achternaam -->
                         <div class="col-md-6 mb-3">
-                            <label asp-for="AchterNaam" class="form-label"></label>
+                            <label asp-for="AchterNaam" class="form-label">Achternaam</label>
                             <input asp-for="AchterNaam" class="form-control" placeholder="Voer je achternaam in" />
                             <span asp-validation-for="AchterNaam" class="text-danger"></span>
                         </div>
                     </div>
 
-                    <!-- Gebruikersnaam -->
                     <div class="mb-3">
-                        <label asp-for="GebruikersNaam" class="form-label"></label>
+                        <label asp-for="GebruikersNaam" class="form-label">Gebruikersnaam</label>
                         <input asp-for="GebruikersNaam" class="form-control" placeholder="Kies een gebruikersnaam" />
                         <span asp-validation-for="GebruikersNaam" class="text-danger"></span>
                     </div>
 
-                    <!-- Email -->
                     <div class="mb-3">
-                        <label asp-for="Email" class="form-label"></label>
+                        <label asp-for="Email" class="form-label">Email</label>
                         <input asp-for="Email" class="form-control" placeholder="Voer je email adres in" />
                         <span asp-validation-for="Email" class="text-danger"></span>
                     </div>
 
-                    <!-- Wachtwoord -->
                     <div class="mb-3">
-                        <label asp-for="Wachtwoord" class="form-label"></label>
+                        <label asp-for="Wachtwoord" class="form-label">Wachtwoord</label>
                         <input asp-for="Wachtwoord" class="form-control" placeholder="Kies een wachtwoord (min. 6 karakters)" />
                         <span asp-validation-for="Wachtwoord" class="text-danger"></span>
                         <small class="form-text text-muted">
@@ -54,24 +101,21 @@
                         </small>
                     </div>
 
-                    <!-- Bevestig Wachtwoord -->
                     <div class="mb-3">
-                        <label asp-for="BevestigWachtwoord" class="form-label"></label>
+                        <label asp-for="BevestigWachtwoord" class="form-label">Bevestig Wachtwoord</label>
                         <input asp-for="BevestigWachtwoord" class="form-control" placeholder="Herhaal je wachtwoord" />
                         <span asp-validation-for="BevestigWachtwoord" class="text-danger"></span>
                     </div>
 
-                    <!-- Submit knop -->
-                    <div class="d-grid gap-2">
+                    <div class="d-grid gap-2 mb-3">
                         <button type="submit" class="btn btn-success btn-lg">Account aanmaken</button>
                     </div>
                 </form>
 
-                <!-- Link naar login -->
                 <div class="text-center mt-3">
                     <p class="mb-0">
                         Heb je al een account? 
-                        <a asp-action="Login">Log hier in</a>
+                        <a asp-action="Login" class="fw-bold">Log hier in</a>
                     </p>
                 </div>
             </div>
@@ -82,4 +126,3 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
-
