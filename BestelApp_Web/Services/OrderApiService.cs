@@ -21,7 +21,7 @@ namespace BestelApp_Web.Services
             _logger = logger;
 
             // Configureer base URL voor Backend API
-            var apiBaseUrl = _configuration["BackendAPI:BaseUrl"] ?? "https://localhost:7001";
+            var apiBaseUrl = _configuration["BackendApi:BaseUrl"] ?? "https://localhost:7001";
             _httpClient.BaseAddress = new Uri(apiBaseUrl);
         }
 
