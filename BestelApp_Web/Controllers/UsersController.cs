@@ -45,7 +45,7 @@ namespace BestelApp_Web.Controllers
 
             ViewData["username"] = username;
             var roles = await _context.Roles.ToListAsync();
-            roles.Add(new IdentityRole { Id = "?", Name = "?" });
+            roles.Add(new IdentityRole { Id = "?", Name = "Alle rollen" });
             ViewData["Roles"] = new SelectList(roles, "Id", "Name", roles.First(r => r.Id == roleId));
             return View(await usersQuery.ToListAsync());
         }
@@ -73,6 +73,74 @@ namespace BestelApp_Web.Controllers
             }
             _context.Update(user);
             await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: Users/Edit/{id}
+        public async Task<IActionResult> Edit(string? id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                return NotFound();
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var model = new AdminGebruikerEditViewModel
+            {
+                Id = user.Id,
+                UserName = user.UserName ?? string.Empty,
+                Email = user.Email ?? string.Empty,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
+                PhoneNumber = user.PhoneNumber ?? string.Empty,
+                Address = user.Address ?? string.Empty,
+                City = user.City ?? string.Empty,
+                PostalCode = user.PostalCode ?? string.Empty,
+                Country = user.Country ?? string.Empty
+            };
+
+            return View(model);
+        }
+
+        // POST: Users/Edit
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(AdminGebruikerEditViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["FoutBericht"] = "Ongeldige invoer.";
+                return View(model);
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == model.Id);
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Basic profielvelden aanpassen (we wijzigen UserName niet om problemen te vermijden)
+            user.Email = model.Email;
+            user.NormalizedEmail = (model.Email ?? string.Empty).ToUpperInvariant();
+
+            user.FirstName = model.FirstName ?? string.Empty;
+            user.LastName = model.LastName ?? string.Empty;
+            user.PhoneNumber = model.PhoneNumber ?? string.Empty;
+
+            user.Address = model.Address ?? string.Empty;
+            user.City = model.City ?? string.Empty;
+            user.PostalCode = model.PostalCode ?? string.Empty;
+            user.Country = model.Country ?? string.Empty;
+
+            _context.Update(user);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessBericht"] = "Gebruiker bijgewerkt.";
             return RedirectToAction(nameof(Index));
         }
 
@@ -155,5 +223,46 @@ namespace BestelApp_Web.Controllers
 
         [Display(Name = "Roles")]
         public List<string> Roles { get; set; } = new();
+    }
+
+    public class AdminGebruikerEditViewModel
+    {
+        [Required]
+        public string Id { get; set; } = string.Empty;
+
+        [Display(Name = "Gebruikersnaam")]
+        public string UserName { get; set; } = string.Empty;
+
+        [Required]
+        [EmailAddress]
+        [Display(Name = "E-mail")]
+        public string Email { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        [Display(Name = "Voornaam")]
+        public string FirstName { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        [Display(Name = "Achternaam")]
+        public string LastName { get; set; } = string.Empty;
+
+        [Display(Name = "Telefoon")]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [MaxLength(200)]
+        [Display(Name = "Adres")]
+        public string Address { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        [Display(Name = "Stad")]
+        public string City { get; set; } = string.Empty;
+
+        [MaxLength(20)]
+        [Display(Name = "Postcode")]
+        public string PostalCode { get; set; } = string.Empty;
+
+        [MaxLength(100)]
+        [Display(Name = "Land")]
+        public string Country { get; set; } = string.Empty;
     }
 }
