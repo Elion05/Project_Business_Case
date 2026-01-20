@@ -6,100 +6,157 @@
     var categories = Db.Categories.OrderBy(c => c.Name).ToList();
 }
 
-<h1 class="display-4 mb-4">Schoen Bewerken</h1>
+<style>
+    .page-header {
+        background: var(--gradient-hero);
+        color: hsl(var(--primary-foreground));
+        padding: 3rem 0;
+        margin-bottom: 3rem;
+    }
 
-<div class="row">
-    <div class="col-md-6">
-        <form asp-action="Edit" method="post">
-            <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
-            <input type="hidden" asp-for="Id" />
-            <input type="hidden" asp-for="CreatedAt" />
-            
-            <div class="form-group mb-3">
-                <label asp-for="Name" class="form-label">Naam *</label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
 
-            <div class="form-group mb-3">
-                <label asp-for="Brand" class="form-label">Merk *</label>
-                <input asp-for="Brand" class="form-control" />
-                <span asp-validation-for="Brand" class="text-danger"></span>
-            </div>
+    .section-subtitle {
+        font-size: 1rem;
+        color: #bdc3c7;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
 
-            <div class="form-group mb-3">
-                <label asp-for="Description" class="form-label">Beschrijving *</label>
-                <textarea asp-for="Description" class="form-control" rows="3"></textarea>
-                <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
+    .form-container {
+        background: hsl(var(--card));
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: var(--shadow-card);
+    }
 
-            <div class="form-group mb-3">
-                <label asp-for="CategoryId" class="form-label">Categorie *</label>
-                <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(categories, "Id", "Name"))" required>
-                </select>
-                <span asp-validation-for="CategoryId" class="text-danger"></span>
-                <small class="form-text text-muted">Selecteer de juiste categorie voor deze schoen</small>
-            </div>
+    .form-label {
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 0.5rem;
+    }
 
-            <div class="form-group mb-3">
-                <label asp-for="Price" class="form-label">Prijs (€) *</label>
-                <input asp-for="Price" type="number" step="0.01" min="0.01" class="form-control" />
-                <span asp-validation-for="Price" class="text-danger"></span>
-                <small class="form-text text-muted">Gebruik een punt (.) voor decimalen</small>
-            </div>
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.75rem;
+    }
 
-            <div class="form-group mb-3">
-                <label asp-for="Gender" class="form-label">Geslacht *</label>
-                <select asp-for="Gender" class="form-select">
-                    <option value="Male">Heren</option>
-                    <option value="Female">Dames</option>
-                    <option value="Unisex">Unisex</option>
-                </select>
-                <span asp-validation-for="Gender" class="text-danger"></span>
-            </div>
+    .form-control:focus, .form-select:focus {
+        border-color: hsl(var(--accent));
+        box-shadow: 0 0 0 0.2rem hsla(35, 70%, 50%, 0.25);
+    }
+</style>
 
-            <div class="form-group mb-3">
-                <label asp-for="ImageUrl" class="form-label">Afbeelding URL (optioneel)</label>
-                <input asp-for="ImageUrl" class="form-control" />
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
-            </div>
-
-            <div class="row">
-                <div class="col-md-6">
-                    <div class="form-group mb-3">
-                        <label asp-for="Size" class="form-label">Maat (optioneel)</label>
-                        <input asp-for="Size" type="number" class="form-control" />
-                        <span asp-validation-for="Size" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="form-group mb-3">
-                        <label asp-for="Color" class="form-label">Kleur (optioneel)</label>
-                        <input asp-for="Color" class="form-control" />
-                        <span asp-validation-for="Color" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="form-check mb-3">
-                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                <label asp-for="IsActive" class="form-check-label">Actief (zichtbaar in winkel)</label>
-            </div>
-
-            <div class="form-group mt-4">
-                <button type="submit" class="btn btn-success btn-lg me-2">
-                    <i class="bi bi-check-circle"></i> Opslaan
-                </button>
-                <a asp-action="Index" class="btn btn-secondary btn-lg">
-                    <i class="bi bi-x-circle"></i> Annuleren
-                </a>
-            </div>
-        </form>
+<!-- Header -->
+<div class="page-header">
+    <div class="container">
+        <div class="section-subtitle">Admin Beheer</div>
+        <h1 class="section-title">✏️ Schoen Bewerken</h1>
+        <p class="mb-0">Bewerk product informatie</p>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="form-container">
+                <form asp-action="Edit" method="post">
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CreatedAt" />
+                    
+                    <div class="form-group mb-3">
+                        <label asp-for="Name" class="form-label">Naam *</label>
+                        <input asp-for="Name" class="form-control" />
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Brand" class="form-label">Merk *</label>
+                        <input asp-for="Brand" class="form-control" />
+                        <span asp-validation-for="Brand" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Description" class="form-label">Beschrijving *</label>
+                        <textarea asp-for="Description" class="form-control" rows="4"></textarea>
+                        <span asp-validation-for="Description" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="CategoryId" class="form-label">Categorie *</label>
+                                <select asp-for="CategoryId" class="form-select" asp-items="@(new SelectList(categories, "Id", "Name"))" required>
+                                </select>
+                                <span asp-validation-for="CategoryId" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Gender" class="form-label">Geslacht *</label>
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="Male">Heren</option>
+                                    <option value="Female">Dames</option>
+                                    <option value="Unisex">Unisex</option>
+                                </select>
+                                <span asp-validation-for="Gender" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="Price" class="form-label">Prijs (€) *</label>
+                        <input asp-for="Price" type="number" step="0.01" min="0.01" class="form-control" />
+                        <span asp-validation-for="Price" class="text-danger"></span>
+                        <small class="form-text text-muted">Gebruik een punt (.) voor decimalen</small>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label asp-for="ImageUrl" class="form-label">Afbeelding URL (optioneel)</label>
+                        <input asp-for="ImageUrl" class="form-control" />
+                        <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Size" class="form-label">Maat (optioneel)</label>
+                                <input asp-for="Size" type="number" class="form-control" />
+                                <span asp-validation-for="Size" class="text-danger"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group mb-3">
+                                <label asp-for="Color" class="form-label">Kleur (optioneel)</label>
+                                <input asp-for="Color" class="form-control" />
+                                <span asp-validation-for="Color" class="text-danger"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-check mb-4">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <label asp-for="IsActive" class="form-check-label">Actief (zichtbaar in winkel)</label>
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            ✅ Opslaan
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary btn-lg">
+                            ❌ Annuleren
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section Scripts {
