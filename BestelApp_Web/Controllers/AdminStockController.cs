@@ -1,8 +1,8 @@
+using System.ComponentModel.DataAnnotations;
 using BestelApp_Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations;
 
 namespace BestelApp_Web.Controllers
 {

@@ -1,9 +1,9 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
+using System.Text.Json;
 using BestelApp_Models;
 using BestelApp_Web.Models;
-using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BestelApp_Web.Controllers
 {
@@ -26,7 +26,7 @@ namespace BestelApp_Web.Controllers
             _configuration = configuration;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
-            
+
             _httpClient = new HttpClient();
             var apiBaseUrl = _configuration["BackendApi:BaseUrl"] ?? "https://localhost:7001";
             _httpClient.BaseAddress = new Uri(apiBaseUrl);
@@ -105,7 +105,7 @@ namespace BestelApp_Web.Controllers
                 ForwardCookies();
 
                 var response = await _httpClient.GetAsync("/api/orders");
-                
+
                 if (response.IsSuccessStatusCode)
                 {
                     var orders = await response.Content.ReadFromJsonAsync<List<OrderViewModel>>();

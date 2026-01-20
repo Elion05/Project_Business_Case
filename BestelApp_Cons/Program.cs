@@ -1,11 +1,11 @@
-﻿using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
-using Microsoft.Extensions.Configuration;
 using BestelApp_Cons.Models;
 using BestelApp_Cons.Salesforce;
 using BestelApp_Cons.Services;
+using Microsoft.Extensions.Configuration;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 Console.WriteLine("═══════════════════════════════════════");
 Console.WriteLine("  🐰 BestelApp RabbitMQ Consumer");

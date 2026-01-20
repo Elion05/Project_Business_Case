@@ -1,9 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using BestelApp_Models;
 using System.Security.Claims;
+using BestelApp_Models;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore;
 
 namespace BestelApp_Web.Controllers
 {
@@ -36,9 +36,9 @@ namespace BestelApp_Web.Controllers
             // Zoekfilter
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(s => 
-                    s.Name.Contains(search) || 
-                    s.Brand.Contains(search) || 
+                query = query.Where(s =>
+                    s.Name.Contains(search) ||
+                    s.Brand.Contains(search) ||
                     s.Description.Contains(search));
             }
 

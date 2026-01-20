@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
+using System.Text;
+using System.Text.Json;
 using BestelApp_Models;
 using BestelApp_Web.Models;
 using BestelApp_Web.Services;
-using System.Text;
-using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BestelApp_Web.Controllers
 {
@@ -31,7 +31,7 @@ namespace BestelApp_Web.Controllers
             _configuration = configuration;
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
-            
+
             _httpClient = new HttpClient();
             var apiBaseUrl = _configuration["BackendApi:BaseUrl"] ?? "https://localhost:7001";
             _httpClient.BaseAddress = new Uri(apiBaseUrl);
@@ -81,9 +81,9 @@ namespace BestelApp_Web.Controllers
         public async Task<IActionResult> PlaceOrder(CheckoutViewModel model)
         {
             // Valideer adresgegevens
-            if (string.IsNullOrEmpty(model.Address) || 
-                string.IsNullOrEmpty(model.City) || 
-                string.IsNullOrEmpty(model.PostalCode) || 
+            if (string.IsNullOrEmpty(model.Address) ||
+                string.IsNullOrEmpty(model.City) ||
+                string.IsNullOrEmpty(model.PostalCode) ||
                 string.IsNullOrEmpty(model.Country))
             {
                 TempData["FoutBericht"] = "Vul alle adresgegevens in";
