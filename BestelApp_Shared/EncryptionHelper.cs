@@ -1,42 +1,43 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.IO;
 
 namespace BestelApp_Shared
 {
     public static class EncryptionHelper
     {
-        // ⚠️ WAARSCHUWING: In productie moeten deze keys in een veilige omgeving (Azure KeyVault, User Secrets) staan!
-        // NIET hardcoded in de code checken. Voor deze demo is dit voldoende.
-        private static readonly string KeyConfig = "E546C8DF278CD5931069B522E695D4F2";
+        // ⚠️ In productie moeten keys veilig opgeslagen worden (bv. KeyVault / User Secrets)
+        // Voor deze demo is hardcoded OK
 
-        // 32 bytes key (256-bit) generated for demo
-        private static readonly byte[] Key = Convert.FromBase64String("q7w1E9Z/8JqW3zT4r5Y7uI9oP2aS4dF6gH8jK1l3zX0=");
+        // 32 bytes key (256-bit)
+        private static readonly byte[] Key =
+            Convert.FromBase64String("q7w1E9Z/8JqW3zT4r5Y7uI9oP2aS4dF6gH8jK1l3zX0=");
 
-        // 16 bytes IV (128-bit) generated for demo
-        private static readonly byte[] IV = Convert.FromBase64String("9sX2k5v8yRn4qWe1tZa3oQ==");
+        // 16 bytes IV (128-bit)
+        private static readonly byte[] IV =
+            Convert.FromBase64String("9sX2k5v8yRn4qWe1tZa3oQ==");
 
         public static string Encrypt(string plainText)
         {
             if (string.IsNullOrEmpty(plainText))
                 return plainText;
 
-            using (Aes aesAlg = Aes.Create())
+            using (Aes aes = Aes.Create())
             {
-                aesAlg.Key = Key;
-                aesAlg.IV = IV;
+                aes.Key = Key;
+                aes.IV = IV;
 
-                ICryptoTransform encryptor = aesAlg.CreateEncryptor(aesAlg.Key, aesAlg.IV);
+                ICryptoTransform encryptor = aes.CreateEncryptor();
 
-                using (MemoryStream msEncrypt = new MemoryStream())
+                using (MemoryStream ms = new MemoryStream())
                 {
-                    using (CryptoStream csEncrypt = new CryptoStream(msEncrypt, encryptor, CryptoStreamMode.Write))
+                    using (CryptoStream cs = new CryptoStream(ms, encryptor, CryptoStreamMode.Write))
+                    using (StreamWriter sw = new StreamWriter(cs))
                     {
-                        using (StreamWriter swEncrypt = new StreamWriter(csEncrypt))
-                        {
-                            swEncrypt.Write(plainText);
-                        }
+                        sw.Write(plainText);
                     }
-                    return Convert.ToBase64String(msEncrypt.ToArray());
+
+                    return Convert.ToBase64String(ms.ToArray());
                 }
             }
         }
@@ -50,33 +51,24 @@ namespace BestelApp_Shared
             {
                 byte[] cipherBytes = Convert.FromBase64String(cipherText);
 
-                using (Aes aesAlg = Aes.Create())
+                using (Aes aes = Aes.Create())
                 {
-                    aesAlg.Key = Key;
-                    aesAlg.IV = IV;
+                    aes.Key = Key;
+                    aes.IV = IV;
 
-                    ICryptoTransform decryptor = aesAlg.CreateDecryptor(aesAlg.Key, aesAlg.IV);
+                    ICryptoTransform decryptor = aes.CreateDecryptor();
 
-                    using (MemoryStream msDecrypt = new MemoryStream(cipherBytes))
+                    using (MemoryStream ms = new MemoryStream(cipherBytes))
+                    using (CryptoStream cs = new CryptoStream(ms, decryptor, CryptoStreamMode.Read))
+                    using (StreamReader sr = new StreamReader(cs))
                     {
-                        using (CryptoStream csDecrypt = new CryptoStream(msDecrypt, decryptor, CryptoStreamMode.Read))
-                        {
-                            using (StreamReader srDecrypt = new StreamReader(csDecrypt))
-                            {
-                                return srDecrypt.ReadToEnd();
-                            }
-                        }
+                        return sr.ReadToEnd();
                     }
                 }
             }
-            catch (FormatException)
+            catch
             {
-                // Waarschijnlijk geen base64 of geen encrypted string, return origineel zodat fallback werkt
-                return cipherText;
-            }
-            catch (CryptographicException)
-            {
-                // Decryptie faalt (verkeerde key, of data corrupt/niet encrypted)
+                // Niet encrypted of fout → originele tekst teruggeven
                 return cipherText;
             }
         }
