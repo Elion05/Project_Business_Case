@@ -121,6 +121,9 @@ namespace BestelApp_API.Controllers
                     Notes = request.Notes ?? string.Empty
                 };
 
+                // Link User object voor RabbitMQ serialisatie
+                order.User = user;
+
                 _context.Orders.Add(order);
                 await _context.SaveChangesAsync(); // Save om Order.Id te krijgen
 
@@ -161,19 +164,36 @@ namespace BestelApp_API.Controllers
 
                 _logger.LogInformation($"Order {order.OrderId} succesvol aangemaakt voor user {userId}");
 
-                // Stuur naar RabbitMQ (optioneel, kan ook later)
+                // Laad order opnieuw met alle relaties voor RabbitMQ serialisatie
+                var orderForRabbitMQ = await _context.Orders
+                    .Include(o => o.User)
+                    .Include(o => o.Items)
+                    .FirstOrDefaultAsync(o => o.OrderId == order.OrderId);
+
+                if (orderForRabbitMQ == null)
+                {
+                    _logger.LogError($"Order {order.OrderId} niet gevonden na aanmaken!");
+                    throw new Exception("Order niet gevonden na aanmaken");
+                }
+
+                // Stuur automatisch naar RabbitMQ
                 try
                 {
-                    // TODO: Verstuur order naar RabbitMQ
-                    // await _rabbitMQService.SendOrderMessageAsync(order);
-                    // order.IsSentToQueue = true;
-                    // order.SentToQueueAt = DateTime.UtcNow;
-                    // await _context.SaveChangesAsync();
+                    _logger.LogInformation($"Versturen order {orderForRabbitMQ.OrderId} naar RabbitMQ...");
+                    await _rabbitMQService.SendOrderMessageAsync(orderForRabbitMQ);
+                    
+                    orderForRabbitMQ.IsSentToQueue = true;
+                    orderForRabbitMQ.SentToQueueAt = DateTime.UtcNow;
+                    orderForRabbitMQ.Status = "Processing"; // Update status naar Processing
+                    await _context.SaveChangesAsync();
+                    
+                    _logger.LogInformation($"✓ Order {orderForRabbitMQ.OrderId} succesvol verstuurd naar RabbitMQ");
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, $"Fout bij versturen order {order.OrderId} naar RabbitMQ");
+                    _logger.LogError(ex, $"✗ Fout bij versturen order {orderForRabbitMQ?.OrderId ?? order.OrderId} naar RabbitMQ");
                     // Order is wel aangemaakt, maar niet verstuurd
+                    // Status blijft "Pending" zodat admin handmatig kan proberen
                 }
 
                 return Ok(new OrderCheckoutResponse
@@ -182,7 +202,7 @@ namespace BestelApp_API.Controllers
                     OrderId = order.OrderId,
                     OrderDatabaseId = order.Id,
                     TotalPrice = order.TotalPrice,
-                    ItemCount = order.Items.Count,
+                    ItemCount = orderForRabbitMQ?.Items.Count ?? 0,
                     Message = "Bestelling succesvol geplaatst!"
                 });
             }
