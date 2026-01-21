@@ -5,16 +5,100 @@
     ViewData["Title"] = "Bestellingen (Admin)";
 }
 
-<div class="container" style="max-width: 1100px; padding-top: 2rem;">
+<div class="container" style="max-width: 1400px; padding-top: 2rem;">
     <div class="catalog-hero" style="margin-bottom: 1.5rem;">
         <div class="catalog-kicker">Beheer</div>
         <h1 class="catalog-title">Bestellingen</h1>
         <p class="catalog-subtitle">Alle orders vanuit de Backend API. Je ziet ook of ze naar RabbitMQ verstuurd zijn.</p>
     </div>
 
+    <!-- Statistieken Cards -->
+    @if (Model != null && Model.Any())
+    {
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="card-luxe p-3">
+                    <div style="font-size: 0.875rem; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem;">Totaal Orders</div>
+                    <div style="font-size: 2rem; font-weight: 700; color: hsl(var(--primary));">@ViewBag.TotaalOrders</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-luxe p-3">
+                    <div style="font-size: 0.875rem; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem;">Totaal Omzet</div>
+                    <div style="font-size: 2rem; font-weight: 700; color: hsl(var(--primary));">€@(((decimal?)ViewBag.TotaalOmzet ?? 0).ToString("0.00"))</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-luxe p-3">
+                    <div style="font-size: 0.875rem; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem;">Totaal Items</div>
+                    <div style="font-size: 2rem; font-weight: 700; color: hsl(var(--primary));">@ViewBag.TotaalItems</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="card-luxe p-3">
+                    <div style="font-size: 0.875rem; color: hsl(var(--muted-foreground)); margin-bottom: 0.5rem;">Gem. Order Waarde</div>
+                    <div style="font-size: 2rem; font-weight: 700; color: hsl(var(--primary));">€@(((decimal?)ViewBag.GemiddeldeOrderWaarde ?? 0).ToString("0.00"))</div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Filter Bar -->
+    <div class="filters-shell mb-4">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="luxe-label">Zoeken</label>
+                <input class="luxe-control w-100" name="zoek" value="@ViewBag.Zoek" placeholder="Order ID, klant naam of email..." />
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="luxe-label">Status</label>
+                <select name="status" class="luxe-control luxe-select w-100">
+                    <option value="Alles" selected="@(ViewBag.Status == "Alles" || ViewBag.Status == null)">Alle statussen</option>
+                    <option value="Pending" selected="@(ViewBag.Status == "Pending")">In behandeling</option>
+                    <option value="Processing" selected="@(ViewBag.Status == "Processing")">Wordt verwerkt</option>
+                    <option value="Shipped" selected="@(ViewBag.Status == "Shipped")">Verzonden</option>
+                    <option value="Delivered" selected="@(ViewBag.Status == "Delivered")">Afgeleverd</option>
+                    <option value="Completed" selected="@(ViewBag.Status == "Completed")">Voltooid</option>
+                    <option value="Cancelled" selected="@(ViewBag.Status == "Cancelled")">Geannuleerd</option>
+                    <option value="Failed" selected="@(ViewBag.Status == "Failed")">Mislukt</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="luxe-label">Datum</label>
+                <select name="datumFilter" class="luxe-control luxe-select w-100">
+                    <option value="Alles" selected="@(ViewBag.DatumFilter == "Alles" || ViewBag.DatumFilter == null)">Alle datums</option>
+                    <option value="Vandaag" selected="@(ViewBag.DatumFilter == "Vandaag")">Vandaag</option>
+                    <option value="Deze week" selected="@(ViewBag.DatumFilter == "Deze week")">Deze week</option>
+                    <option value="Deze maand" selected="@(ViewBag.DatumFilter == "Deze maand")">Deze maand</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="luxe-label">Queue</label>
+                <select name="queueStatus" class="luxe-control luxe-select w-100">
+                    <option value="" selected="@(ViewBag.QueueStatus == null)">Alle</option>
+                    <option value="true" selected="@(ViewBag.QueueStatus == true)">Verstuurd</option>
+                    <option value="false" selected="@(ViewBag.QueueStatus == false)">Niet verstuurd</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <button class="btn-luxe w-100" type="submit">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Orders Table -->
     <div class="card-admin p-4">
         @if (Model != null && Model.Any())
         {
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div style="color: hsl(var(--muted-foreground));">
+                    @Model.Count order(s) gevonden
+                </div>
+                <a href="@Url.Action("Index", new { zoek = ViewBag.Zoek, status = ViewBag.Status, datumFilter = ViewBag.DatumFilter, queueStatus = ViewBag.QueueStatus, export = true })" class="btn-luxe-outline btn-sm">
+                    <i data-lucide="download" style="width:16px;height:16px; margin-right: 0.5rem;"></i> Export CSV
+                </a>
+            </div>
+
             <div class="table-responsive">
                 <table class="table admin-table">
                     <thead>
@@ -30,13 +114,16 @@
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach (var o in Model.OrderByDescending(x => x.OrderDate))
+                    @foreach (var o in Model)
                     {
                         var statusText = o.Status.ToLower() switch
                         {
                             "pending" => "In behandeling",
                             "processing" => "Wordt verwerkt",
+                            "shipped" => "Verzonden",
+                            "delivered" => "Afgeleverd",
                             "completed" => "Voltooid",
+                            "cancelled" => "Geannuleerd",
                             "failed" => "Mislukt",
                             _ => o.Status
                         };
@@ -44,7 +131,10 @@
                         {
                             "pending" => "hsl(41 52% 90%)",
                             "processing" => "hsl(200 60% 90%)",
+                            "shipped" => "hsl(220 60% 90%)",
+                            "delivered" => "hsl(120 40% 90%)",
                             "completed" => "hsl(120 40% 90%)",
+                            "cancelled" => "hsl(var(--muted))",
                             "failed" => "hsl(var(--danger) / 0.1)",
                             _ => "hsl(var(--muted))"
                         };
@@ -52,7 +142,10 @@
                         {
                             "pending" => "hsl(41 52% 40%)",
                             "processing" => "hsl(200 60% 30%)",
+                            "shipped" => "hsl(220 60% 30%)",
+                            "delivered" => "hsl(120 40% 30%)",
                             "completed" => "hsl(120 40% 30%)",
+                            "cancelled" => "hsl(var(--muted-foreground))",
                             "failed" => "hsl(var(--danger))",
                             _ => "hsl(var(--foreground))"
                         };
@@ -93,7 +186,16 @@
             <div class="card-luxe p-5 text-center">
                 <div style="font-size: 5rem; margin-bottom: 1rem; color: hsl(var(--muted-foreground));">📦</div>
                 <h3 style="font-family: 'Playfair Display', serif; color: hsl(var(--foreground)); margin-bottom: 0.75rem;">Geen bestellingen</h3>
-                <p style="color: hsl(var(--muted-foreground)); margin: 0;">Er zijn nog geen orders, of de API gaf geen data terug.</p>
+                <p style="color: hsl(var(--muted-foreground)); margin: 0;">
+                    @if (!string.IsNullOrWhiteSpace(ViewBag.Zoek?.ToString()))
+                    {
+                        <text>Geen orders gevonden voor "@ViewBag.Zoek".</text>
+                    }
+                    else
+                    {
+                        <text>Er zijn nog geen orders, of de API gaf geen data terug.</text>
+                    }
+                </p>
             </div>
         }
     </div>
@@ -103,3 +205,11 @@
     </div>
 </div>
 
+@section Scripts {
+    <script>
+        // Initialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    </script>
+}
