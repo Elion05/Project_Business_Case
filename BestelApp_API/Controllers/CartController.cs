@@ -29,7 +29,7 @@ namespace BestelApp_API.Controllers
         /// GET: api/cart
         /// </summary>
         [HttpGet]
-        public async Task<ActionResult<Cart>> GetCart()
+        public async Task<ActionResult> GetCart()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userId))
@@ -37,28 +37,84 @@ namespace BestelApp_API.Controllers
                 return Unauthorized(new { message = "User niet ingelogd" });
             }
 
-            // Zoek of maak cart aan
-            var cart = await _context.Carts
-                .Include(c => c.Items)
-                    .ThenInclude(i => i.ShoeVariant)
-                        .ThenInclude(sv => sv.Shoe)
-                            .ThenInclude(s => s.Category)
-                .FirstOrDefaultAsync(c => c.UserId == userId);
+            // BELANGRIJK:
+            // We retourneren hier GEEN EF entities, omdat die navigation properties object-cycles kunnen maken:
+            // Cart -> Items -> Cart -> Items -> ...
+            // Daarom maken we een simpele DTO (anoniem object) zonder back-references.
 
-            if (cart == null)
+            // Zorg dat er altijd een cart bestaat
+            var cartBestaat = await _context.Carts.AnyAsync(c => c.UserId == userId);
+            if (!cartBestaat)
             {
-                // Maak nieuwe lege cart aan
-                cart = new Cart
+                var nieuweCart = new Cart
                 {
                     UserId = userId,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
-                _context.Carts.Add(cart);
+                _context.Carts.Add(nieuweCart);
                 await _context.SaveChangesAsync();
             }
 
-            return Ok(cart);
+            var cartDto = await _context.Carts
+                .Where(c => c.UserId == userId)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.UserId,
+                    c.CreatedAt,
+                    c.UpdatedAt,
+                    Items = c.Items.Select(i => new
+                    {
+                        i.Id,
+                        i.CartId,
+                        i.ShoeVariantId,
+                        i.Quantity,
+                        i.Price,
+                        i.AddedAt,
+                        ShoeVariant = new
+                        {
+                            i.ShoeVariant.Id,
+                            i.ShoeVariant.ShoeId,
+                            i.ShoeVariant.Size,
+                            i.ShoeVariant.Color,
+                            i.ShoeVariant.Stock,
+                            Shoe = new
+                            {
+                                i.ShoeVariant.Shoe.Id,
+                                i.ShoeVariant.Shoe.Name,
+                                i.ShoeVariant.Shoe.Brand,
+                                i.ShoeVariant.Shoe.Price,
+                                i.ShoeVariant.Shoe.ImageUrl,
+                                Category = new
+                                {
+                                    i.ShoeVariant.Shoe.Category.Id,
+                                    i.ShoeVariant.Shoe.Category.Name
+                                }
+                            }
+                        }
+                    }).ToList(),
+                    TotalItems = c.Items.Sum(x => x.Quantity),
+                    TotalPrice = c.Items.Sum(x => x.Quantity * x.Price)
+                })
+                .FirstOrDefaultAsync();
+
+            if (cartDto == null)
+            {
+                // Heel uitzonderlijk, maar dan sturen we een lege cart terug
+                return Ok(new
+                {
+                    Id = 0L,
+                    UserId = userId,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    Items = new List<object>(),
+                    TotalItems = 0,
+                    TotalPrice = 0m
+                });
+            }
+
+            return Ok(cartDto);
         }
 
         /// <summary>

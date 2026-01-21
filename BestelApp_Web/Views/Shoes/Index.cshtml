@@ -5,64 +5,7 @@
 }
 
 <style>
-    /* Premium catalog header */
-    .catalog-hero {
-        background: var(--gradient-hero);
-        border-radius: 16px;
-        padding: 3.25rem 1.5rem;
-        text-align: center;
-        box-shadow: var(--shadow-soft);
-        border: 1px solid hsl(var(--border));
-    }
-
-    @@media (min-width: 768px) {
-        .catalog-hero {
-            padding: 4.25rem 2rem;
-        }
-    }
-
-    .catalog-kicker {
-        font-size: 0.8rem;
-        letter-spacing: 0.18em;
-        text-transform: uppercase;
-        color: hsl(var(--muted-foreground));
-        margin-bottom: 0.75rem;
-    }
-
-    .catalog-title {
-        font-size: 2.4rem;
-        font-weight: 700;
-        color: hsl(var(--foreground));
-        margin-bottom: 0.75rem;
-    }
-
-    @@media (min-width: 768px) {
-        .catalog-title {
-            font-size: 3.2rem;
-        }
-    }
-
-    .catalog-subtitle {
-        max-width: 52ch;
-        margin: 0 auto;
-        color: hsl(var(--muted-foreground));
-        font-size: 1rem;
-    }
-
-    /* Subtle filter bar */
-    .filters-shell {
-        background: hsl(var(--card));
-        border: 1px solid hsl(var(--border));
-        border-radius: 16px;
-        box-shadow: var(--shadow-soft);
-        padding: 1rem;
-    }
-
-    @@media (min-width: 768px) {
-        .filters-shell {
-            padding: 1.25rem;
-        }
-    }
+    /* Filter UI is now global (site.css) via .filterbar-luxe + .dd-luxe */
 
     .product-grid {
         display: grid;
@@ -385,62 +328,84 @@
     <!-- Filters en Sorteren -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="filters-shell">
-                <form method="get" action="@Url.Action("Index", "Shoes")" class="row g-3 align-items-end">
-                        <!-- Zoekbalk -->
-                        <div class="col-md-4">
-                            <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Zoeken</label>
-                            <input type="text" 
-                                   name="search" 
-                                   class="form-control" 
-                                   placeholder="Zoek schoenen..." 
+            <div class="filters-shell" style="padding: 0; background: transparent; border: none; box-shadow: none;">
+                <form method="get" action="@Url.Action("Index", "Shoes")" class="filterbar-luxe" id="shoesFilterForm">
+                    <!-- Search -->
+                    <div class="filterbar-span-2">
+                        <div class="filterbar-label">Zoeken</div>
+                        <div class="filterbar-search">
+                            <input type="text"
+                                   name="search"
+                                   id="filterSearch"
+                                   class="input-luxe w-100"
+                                   placeholder="Zoek schoenen..."
                                    value="@ViewBag.Search" />
+                            <button type="button" class="filterbar-clear" id="filterClearBtn" aria-label="Zoekveld leegmaken">
+                                ×
+                            </button>
                         </div>
+                    </div>
 
-                        <!-- Categorie -->
-                        <div class="col-md-3">
-                            <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Categorie</label>
-                            <select name="categoryId" class="form-select">
-                                <option value="" selected="@(ViewBag.CategoryId == null ? "selected" : null)">Alle categorieën</option>
-                                @if (ViewBag.Categorieen != null)
+                    <!-- Category (custom dropdown) -->
+                    <div class="dd-luxe" data-dd="categoryId">
+                        <div class="filterbar-label">Categorie</div>
+                        <input type="hidden" name="categoryId" value="@(ViewBag.CategoryId ?? "")" />
+                        <button class="dd-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="dd-value">Alle</span>
+                            <span class="dd-icon"><i data-lucide="chevron-down" style="width:16px;height:16px;"></i></span>
+                        </button>
+                        <div class="dd-menu" role="listbox">
+                            <button type="button" class="dd-item" data-value="">Alle</button>
+                            @if (ViewBag.Categorieen != null)
+                            {
+                                foreach (var c in ViewBag.Categorieen)
                                 {
-                                    foreach (var c in ViewBag.Categorieen)
-                                    {
-                                        <option value="@c.Id" selected="@(ViewBag.CategoryId != null && (long)ViewBag.CategoryId == (long)c.Id ? "selected" : null)">@c.Name</option>
-                                    }
+                                    <button type="button" class="dd-item" data-value="@c.Id">@c.Name</button>
                                 }
-                            </select>
+                            }
                         </div>
+                    </div>
 
-                        <!-- Gender Filter -->
-                        <div class="col-md-3">
-                            <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Geslacht</label>
-                            <select name="gender" class="form-select">
-                                <option value="Alles" selected="@(ViewBag.Gender == "Alles" ? "selected" : null)">Alle geslachten</option>
-                                <option value="Female" selected="@(ViewBag.Gender == "Female" ? "selected" : null)">Vrouwen</option>
-                                <option value="Male" selected="@(ViewBag.Gender == "Male" ? "selected" : null)">Mannen</option>
-                                <option value="Unisex" selected="@(ViewBag.Gender == "Unisex" ? "selected" : null)">Uniseks</option>
-                            </select>
+                    <!-- Gender (custom dropdown) -->
+                    <div class="dd-luxe" data-dd="gender">
+                        <div class="filterbar-label">Geslacht</div>
+                        <input type="hidden" name="gender" value="@(ViewBag.Gender ?? "Alles")" />
+                        <button class="dd-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="dd-value">Alle</span>
+                            <span class="dd-icon"><i data-lucide="chevron-down" style="width:16px;height:16px;"></i></span>
+                        </button>
+                        <div class="dd-menu" role="listbox">
+                            <button type="button" class="dd-item" data-value="Alles">Alle</button>
+                            <button type="button" class="dd-item" data-value="Female">Vrouwen</button>
+                            <button type="button" class="dd-item" data-value="Male">Mannen</button>
+                            <button type="button" class="dd-item" data-value="Unisex">Uniseks</button>
                         </div>
+                    </div>
 
-                        <!-- Sorteren -->
-                        <div class="col-md-3">
-                            <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Sorteren</label>
-                            <select name="sortBy" class="form-select">
-                                <option value="nieuwste" selected="@(ViewBag.SortBy == "nieuwste" ? "selected" : null)">Nieuwste eerst</option>
-                                <option value="oudste" selected="@(ViewBag.SortBy == "oudste" ? "selected" : null)">Oudste eerst</option>
-                                <option value="prijs-laag" selected="@(ViewBag.SortBy == "prijs-laag" ? "selected" : null)">Prijs: Laag → Hoog</option>
-                                <option value="prijs-hoog" selected="@(ViewBag.SortBy == "prijs-hoog" ? "selected" : null)">Prijs: Hoog → Laag</option>
-                                <option value="naam-az" selected="@(ViewBag.SortBy == "naam-az" ? "selected" : null)">Naam: A → Z</option>
-                                <option value="naam-za" selected="@(ViewBag.SortBy == "naam-za" ? "selected" : null)">Naam: Z → A</option>
-                            </select>
+                    <!-- Sort (custom dropdown) -->
+                    <div class="dd-luxe" data-dd="sortBy">
+                        <div class="filterbar-label">Sorteren</div>
+                        <input type="hidden" name="sortBy" value="@(ViewBag.SortBy ?? "nieuwste")" />
+                        <button class="dd-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+                            <span class="dd-value">Nieuwste</span>
+                            <span class="dd-icon"><i data-lucide="chevron-down" style="width:16px;height:16px;"></i></span>
+                        </button>
+                        <div class="dd-menu" role="listbox">
+                            <button type="button" class="dd-item" data-value="nieuwste">Nieuwste</button>
+                            <button type="button" class="dd-item" data-value="oudste">Oudste</button>
+                            <button type="button" class="dd-item" data-value="prijs-laag">Prijs ↑</button>
+                            <button type="button" class="dd-item" data-value="prijs-hoog">Prijs ↓</button>
+                            <button type="button" class="dd-item" data-value="naam-az">Naam A‑Z</button>
+                            <button type="button" class="dd-item" data-value="naam-za">Naam Z‑A</button>
                         </div>
+                    </div>
 
-                        <!-- Buttons -->
-                        <div class="col-md-2">
-                            <button type="submit" class="btn-luxe w-100">Filter</button>
-                        </div>
-                    </form>
+                    <!-- Apply + Reset -->
+                    <div class="filterbar-apply-full" style="display:flex; gap:12px; align-items:end;">
+                        <button type="submit" class="btn-luxe w-100" style="height:46px; border-radius: var(--radius-lg);">Toepassen</button>
+                        <button type="button" class="btn-luxe-ghost" id="filterResetBtn" style="height:46px; border-radius: var(--radius-lg);">Reset</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -35,20 +35,47 @@
   /* Hover darken for primary buttons */
   --primary-dark: 25 58% 30%;
 
+  /* Surface (slightly darker than background) */
+  --surface: 35 33% 92%;
+
+  /* Danger (muted red) */
+  --danger: 6 38% 40%;
+  --danger-foreground: 40 60% 99%;
+  --danger-dark: 6 40% 34%;
+
   --border: 32 18% 85%;
   --input: 32 18% 85%;
   --ring: 41 52% 55%;
 
-  --radius: 0.5rem;
+  /* Spacing scale (4/8/12/16/24/32/48) */
+  --space-4: 4px;
+  --space-8: 8px;
+  --space-12: 12px;
+  --space-16: 16px;
+  --space-24: 24px;
+  --space-32: 32px;
+  --space-48: 48px;
+
+  /* Border radius scale */
+  --radius-sm: 12px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
 
   /* Softer hero block */
   --gradient-hero: linear-gradient(135deg, hsl(35 33% 92%) 0%, hsl(38 41% 96%) 100%);
   --gradient-gold: linear-gradient(135deg, hsl(41 52% 55%) 0%, hsl(32 40% 70%) 100%);
   --gradient-card: linear-gradient(180deg, hsl(40 60% 99%) 0%, hsl(35 22% 96%) 100%);
 
-  --shadow-soft: 0 6px 24px -10px hsl(23 46% 10% / 0.18);
-  --shadow-card: 0 12px 34px -18px hsl(23 46% 10% / 0.22);
-  --shadow-hover: 0 20px 46px -22px hsl(23 46% 10% / 0.28);
+  /* Shadow scale (subtle only) */
+  --shadow-1: 0 6px 24px -10px hsl(23 46% 10% / 0.18);
+  --shadow-2: 0 12px 34px -18px hsl(23 46% 10% / 0.22);
+  --shadow-3: 0 20px 46px -22px hsl(23 46% 10% / 0.28);
+
+  /* Backwards compat for existing pages */
+  --shadow-soft: var(--shadow-1);
+  --shadow-card: var(--shadow-2);
+  --shadow-hover: var(--shadow-3);
 }
 
 html {
@@ -70,6 +97,23 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Playfair Display', serif;
+}
+
+/* =========================
+   Global defaults (no “default web app” feel)
+   ========================= */
+a {
+  color: hsl(var(--primary));
+  text-decoration: none;
+}
+
+a:hover {
+  color: hsl(var(--primary-dark));
+  text-decoration: none;
+}
+
+::selection {
+  background: hsla(26, 53%, 36%, 0.18);
 }
 
 /* =========================
@@ -96,7 +140,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .rounded-luxe {
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
 }
 
 /* =========================
@@ -104,15 +148,15 @@ h1, h2, h3, h4, h5, h6 {
    ========================= */
 .catalog-hero {
   background: var(--gradient-hero);
-  border-radius: 16px;
-  padding: 3.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  padding: var(--space-48) var(--space-24);
   text-align: center;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-1);
   border: 1px solid hsl(var(--border));
 }
 
 @media (min-width: 768px) {
-  .catalog-hero { padding: 4.25rem 2rem; }
+  .catalog-hero { padding: calc(var(--space-48) + var(--space-16)) var(--space-32); }
 }
 
 .catalog-kicker {
@@ -144,13 +188,156 @@ h1, h2, h3, h4, h5, h6 {
 .filters-shell {
   background: hsl(var(--card));
   border: 1px solid hsl(var(--border));
-  border-radius: 16px;
-  box-shadow: var(--shadow-soft);
-  padding: 1rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+  padding: var(--space-16);
 }
 
 @media (min-width: 768px) {
-  .filters-shell { padding: 1.25rem; }
+  .filters-shell { padding: var(--space-24); }
+}
+
+/* =========================
+   Luxury filter bar + custom dropdown
+   ========================= */
+.filterbar-luxe {
+  background: hsla(40, 60%, 99%, 0.72);
+  border: 1px solid hsl(var(--border));
+  border-radius: 18px;
+  box-shadow: var(--shadow-1);
+  padding: var(--space-12);
+  display: grid;
+  grid-template-columns: 2.2fr 1fr 1fr 1fr auto;
+  gap: var(--space-12);
+  align-items: end;
+  backdrop-filter: blur(8px);
+}
+
+@media (max-width: 991px) {
+  .filterbar-luxe {
+    grid-template-columns: 1fr 1fr;
+    align-items: end;
+  }
+  .filterbar-span-2 { grid-column: span 2; }
+  .filterbar-apply-full { grid-column: span 2; }
+}
+
+.filterbar-label {
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 6px;
+}
+
+.filterbar-search {
+  position: relative;
+}
+
+.filterbar-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-pill);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.filterbar-clear:hover {
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+.dd-luxe {
+  position: relative;
+}
+
+.dd-trigger {
+  width: 100%;
+  height: 46px;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  padding: 0 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.dd-trigger .dd-value {
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dd-trigger .dd-icon {
+  width: 16px;
+  height: 16px;
+  color: hsl(var(--primary));
+  flex: 0 0 auto;
+}
+
+.dd-luxe.is-open .dd-trigger {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 0.25rem hsla(26, 53%, 36%, 0.15);
+}
+
+.dd-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  box-shadow: var(--shadow-2);
+  padding: 8px;
+  display: none;
+  max-height: 280px;
+  overflow: auto;
+}
+
+.dd-luxe.is-open .dd-menu {
+  display: block;
+}
+
+.dd-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid transparent;
+  background: transparent;
+  color: hsl(var(--foreground));
+  border-radius: 12px;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.dd-item:hover,
+.dd-item:focus-visible {
+  border-color: hsl(var(--border));
+  background: hsla(26, 53%, 36%, 0.06);
+  outline: none;
+}
+
+.dd-item.is-selected {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
 }
 
 /* =========================
@@ -160,7 +347,7 @@ h1, h2, h3, h4, h5, h6 {
   background: hsl(var(--primary));
   color: hsl(var(--primary-foreground));
   border: 1px solid hsl(var(--primary));
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 0.85rem 1.1rem;
   font-weight: 600;
   letter-spacing: 0.2px;
@@ -181,10 +368,214 @@ h1, h2, h3, h4, h5, h6 {
   background: transparent;
   color: hsl(var(--primary));
   border: 1px solid hsl(var(--primary));
-  border-radius: 14px;
+  border-radius: var(--radius-md);
   padding: 0.85rem 1.1rem;
   font-weight: 600;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-luxe-ghost {
+  background: transparent;
+  color: hsl(var(--foreground));
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.1rem;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-luxe-ghost:hover {
+  background: hsla(26, 53%, 36%, 0.06);
+  border-color: hsl(var(--border));
+  color: hsl(var(--primary));
+}
+
+.btn-luxe-danger {
+  background: hsl(var(--danger));
+  color: hsl(var(--danger-foreground));
+  border: 1px solid hsl(var(--danger));
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.1rem;
+  font-weight: 700;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-luxe-danger:hover {
+  background: hsl(var(--danger-dark));
+  border-color: hsl(var(--danger-dark));
+  color: hsl(var(--danger-foreground));
+}
+
+/* Inputs / selects */
+.input-luxe,
+.select-luxe {
+  height: 46px;
+  border-radius: var(--radius-lg);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  padding: 0 14px;
+  font-size: 0.95rem;
+  color: hsl(var(--foreground));
+}
+
+.input-luxe::placeholder {
+  color: hsl(var(--muted-foreground));
+}
+
+.input-luxe:focus,
+.select-luxe:focus {
+  outline: none;
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 0.25rem hsla(26, 53%, 36%, 0.15);
+}
+
+/* Cards */
+.card-luxe {
+  background: var(--gradient-card);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-1);
+}
+
+.card-admin {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  box-shadow: none;
+}
+
+/* =========================
+   Admin tool UI (professional, data-focused)
+   ========================= */
+.admin-table {
+  --bs-table-bg: hsl(var(--card));
+  --bs-table-color: hsl(var(--foreground));
+  --bs-table-border-color: hsl(var(--border));
+  --bs-table-hover-bg: hsla(var(--primary), 0.05);
+}
+
+.admin-table th {
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid hsl(var(--border));
+}
+
+.admin-table td {
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
+  vertical-align: middle;
+}
+
+.admin-table tbody tr {
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.admin-table tbody tr:hover {
+  background: hsla(var(--primary), 0.03);
+}
+
+/* Stock warning badges */
+.badge-stock-warning {
+  background: hsl(41 52% 95%);
+  color: hsl(41 52% 40%);
+  border: 1px solid hsl(41 52% 80%);
+}
+
+.badge-stock-danger {
+  background: hsl(var(--danger) / 0.1);
+  color: hsl(var(--danger));
+  border: 1px solid hsl(var(--danger) / 0.3);
+}
+
+.badge-stock-success {
+  background: hsl(120 40% 95%);
+  color: hsl(120 40% 30%);
+  border: 1px solid hsl(120 40% 80%);
+}
+
+/* Badges */
+.badge-luxe {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.badge-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.badge-stock {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+/* Icon buttons + badge dot */
+.icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-pill);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-1);
+  transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+  color: hsl(var(--foreground));
+}
+
+.icon-btn:hover {
+  transform: translateY(-1px);
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+.badge-dot {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-pill);
+  background: hsl(var(--primary));
+  box-shadow: 0 0 0 3px hsl(var(--background));
+}
+
+@keyframes badgePulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 3px hsl(var(--background)); }
+  45% { transform: scale(1.3); box-shadow: 0 0 0 6px hsla(26, 53%, 36%, 0.16); }
+  100% { transform: scale(1); box-shadow: 0 0 0 3px hsl(var(--background)); }
+}
+
+.badge-dot.is-pulse {
+  animation: badgePulse 520ms ease-out;
 }
 
 .btn-luxe-outline:hover {
@@ -227,7 +618,7 @@ h1, h2, h3, h4, h5, h6 {
   background: hsla(38, 41%, 96%, 0.92);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid hsl(var(--border));
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-1);
 }
 
 .luxe-navbar .navbar-brand {
@@ -276,7 +667,7 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-soft);
+  box-shadow: var(--shadow-1);
   transition: all 0.25s ease;
   color: hsl(var(--foreground));
 }
@@ -321,4 +712,14 @@ h1, h2, h3, h4, h5, h6 {
 .form-select:focus {
   box-shadow: 0 0 0 0.25rem hsla(41, 52%, 55%, 0.22);
   border-color: hsl(var(--primary));
+}
+
+/* Prefer focus-visible (avoid random blue outlines) */
+:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 0.25rem hsla(26, 53%, 36%, 0.15);
 }
