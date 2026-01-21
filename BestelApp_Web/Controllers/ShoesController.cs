@@ -1,11 +1,11 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using BestelApp_Models;
+using System.Linq;
 using System.Security.Claims;
+using BestelApp_Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Linq;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace BestelApp_Web.Controllers

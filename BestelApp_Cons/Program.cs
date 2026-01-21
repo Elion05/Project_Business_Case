@@ -1,12 +1,12 @@
-using RabbitMQ.Client;
-using BestelApp_Shared;
-using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
 using BestelApp_Cons.Models;
 using BestelApp_Cons.Salesforce;
 using BestelApp_Cons.Services;
+using BestelApp_Shared;
 using Microsoft.Extensions.Configuration;
+using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 
 
 Console.WriteLine("═══════════════════════════════════════");
@@ -131,15 +131,15 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
         Console.WriteLine(encryptedTekst);
 
         string berichtTekst;
-        try 
+        try
         {
-             berichtTekst = EncryptionHelper.Decrypt(encryptedTekst);
+            berichtTekst = EncryptionHelper.Decrypt(encryptedTekst);
         }
         catch (Exception ex)
         {
-             Console.WriteLine($"✗ Decryptie gefaald: {ex.Message}");
-             // Fallback: misschien was het onversleuteld?
-             berichtTekst = encryptedTekst; 
+            Console.WriteLine($"✗ Decryptie gefaald: {ex.Message}");
+            // Fallback: misschien was het onversleuteld?
+            berichtTekst = encryptedTekst;
         }
 
         Console.WriteLine("📄 Decrypted JSON Message:");
