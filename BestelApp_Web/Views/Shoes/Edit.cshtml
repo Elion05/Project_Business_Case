@@ -50,6 +50,42 @@
         border-color: hsl(var(--accent));
         box-shadow: 0 0 0 0.2rem hsla(35, 70%, 50%, 0.25);
     }
+
+    .variant-row {
+        background: hsl(var(--background-alt));
+        border: 1px solid hsl(var(--border));
+        border-radius: 8px;
+    }
+
+    .btn-luxe {
+        background: hsl(var(--accent));
+        color: hsl(var(--accent-foreground));
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-luxe:hover {
+        background: hsl(var(--accent) / 0.9);
+        transform: translateY(-1px);
+    }
+
+    .btn-luxe-outline {
+        background: transparent;
+        color: hsl(var(--accent));
+        border: 2px solid hsl(var(--accent));
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+
+    .btn-luxe-outline:hover {
+        background: hsl(var(--accent));
+        color: hsl(var(--accent-foreground));
+    }
 </style>
 
 <!-- Header -->
@@ -57,13 +93,13 @@
     <div class="container">
         <div class="section-subtitle">Admin Beheer</div>
         <h1 class="section-title">✏️ Schoen Bewerken</h1>
-        <p class="mb-0">Bewerk product informatie</p>
+        <p class="mb-0">Bewerk product informatie en varianten</p>
     </div>
 </div>
 
 <div class="container">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-10">
             <div class="form-container">
                 <form asp-action="Edit" method="post">
                     <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
@@ -123,21 +159,48 @@
                         <span asp-validation-for="ImageUrl" class="text-danger"></span>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label asp-for="Size" class="form-label">Maat (optioneel)</label>
-                                <input asp-for="Size" type="number" class="form-control" />
-                                <span asp-validation-for="Size" class="text-danger"></span>
-                            </div>
+                    <!-- Varianten Sectie -->
+                    <div class="form-group mb-4">
+                        <label class="form-label">Varianten (Maat, Kleur, Voorraad) *</label>
+                        <p class="text-muted small mb-3">Bewerk bestaande varianten of voeg nieuwe toe</p>
+                        
+                        <div id="variantsContainer">
+                            <!-- Bestaande varianten worden hier geladen -->
+                            @if (Model.Variants != null && Model.Variants.Any())
+                            {
+                                int index = 0;
+                                foreach (var variant in Model.Variants)
+                                {
+                                    <div class="variant-row mb-3 p-3 border rounded" data-variant-id="@variant.Id">
+                                        <div class="row g-3">
+                                            <input type="hidden" name="Variants[@index].Id" value="@variant.Id" />
+                                            <div class="col-md-4">
+                                                <label class="form-label">Maat *</label>
+                                                <input type="number" name="Variants[@index].Size" class="form-control" min="20" max="50" required value="@variant.Size" />
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label">Kleur *</label>
+                                                <input type="text" name="Variants[@index].Color" class="form-control" maxlength="50" required value="@variant.Color" />
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label">Voorraad *</label>
+                                                <input type="number" name="Variants[@index].Stock" class="form-control" min="0" required value="@variant.Stock" />
+                                            </div>
+                                            <div class="col-md-1 d-flex align-items-end">
+                                                <button type="button" class="btn btn-danger btn-sm remove-variant-btn" title="Verwijder variant">
+                                                    ×
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    index++;
+                                }
+                            }
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label asp-for="Color" class="form-label">Kleur (optioneel)</label>
-                                <input asp-for="Color" class="form-control" />
-                                <span asp-validation-for="Color" class="text-danger"></span>
-                            </div>
-                        </div>
+                        
+                        <button type="button" id="addVariantBtn" class="btn-luxe-outline mt-2">
+                            + Variant Toevoegen
+                        </button>
                     </div>
 
                     <div class="form-check mb-4">
@@ -146,11 +209,11 @@
                     </div>
 
                     <div class="d-flex gap-2">
-                        <button type="submit" class="btn btn-success btn-lg">
-                            ✅ Opslaan
+                        <button type="submit" class="btn-luxe">
+                            Opslaan
                         </button>
-                        <a asp-action="Index" class="btn btn-secondary btn-lg">
-                            ❌ Annuleren
+                        <a asp-action="Index" class="btn-luxe-outline">
+                            Annuleren
                         </a>
                     </div>
                 </form>
@@ -161,4 +224,103 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        let variantCounter = @(Model.Variants?.Count() ?? 0);
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('variantsContainer');
+            const addBtn = document.getElementById('addVariantBtn');
+            
+            // Als er geen varianten zijn, voeg er één toe
+            if (container.children.length === 0) {
+                addVariantRow();
+            }
+            
+            addBtn.addEventListener('click', function() {
+                addVariantRow();
+            });
+            
+            function addVariantRow() {
+                const row = document.createElement('div');
+                row.className = 'variant-row mb-3 p-3 border rounded';
+                row.setAttribute('data-variant-index', variantCounter);
+                
+                row.innerHTML = `
+                    <div class="row g-3">
+                        <input type="hidden" name="Variants[${variantCounter}].Id" value="0" />
+                        <div class="col-md-4">
+                            <label class="form-label">Maat *</label>
+                            <input type="number" name="Variants[${variantCounter}].Size" class="form-control" min="20" max="50" required placeholder="42" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Kleur *</label>
+                            <input type="text" name="Variants[${variantCounter}].Color" class="form-control" maxlength="50" required placeholder="Zwart" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Voorraad *</label>
+                            <input type="number" name="Variants[${variantCounter}].Stock" class="form-control" min="0" required placeholder="10" />
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm remove-variant-btn" title="Verwijder variant">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(row);
+                variantCounter++;
+                
+                // Verwijder knop functionaliteit
+                row.querySelector('.remove-variant-btn').addEventListener('click', function() {
+                    if (container.children.length > 1) {
+                        row.remove();
+                    } else {
+                        alert('Je moet minimaal één variant hebben');
+                    }
+                });
+            }
+            
+            // Verwijder knoppen voor bestaande varianten
+            container.querySelectorAll('.remove-variant-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const row = btn.closest('.variant-row');
+                    if (container.children.length > 1) {
+                        row.remove();
+                    } else {
+                        alert('Je moet minimaal één variant hebben');
+                    }
+                });
+            });
+            
+            // Valideer formulier voordat het wordt verzonden
+            document.querySelector('form').addEventListener('submit', function(e) {
+                const variants = container.querySelectorAll('.variant-row');
+                if (variants.length === 0) {
+                    e.preventDefault();
+                    alert('Voeg minimaal één variant toe (maat, kleur, voorraad)');
+                    return false;
+                }
+                
+                // Valideer dat alle variant velden zijn ingevuld
+                let isValid = true;
+                variants.forEach(row => {
+                    const size = row.querySelector('input[name*=".Size"]').value;
+                    const color = row.querySelector('input[name*=".Color"]').value;
+                    const stock = row.querySelector('input[name*=".Stock"]').value;
+                    
+                    if (!size || !color || !stock) {
+                        isValid = false;
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Vul alle verplichte velden in voor elke variant');
+                    return false;
+                }
+            });
+        });
+    </script>
 }

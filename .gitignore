@@ -365,3 +365,12 @@ FodyWeavers.xsd
 project_backups/
 backups/
 cron.log
+
+# Data Protection Keys (bevatten encryptiesleutels - NIET pushen!)
+SharedKeys/
+DataProtectionKeys/
+
+# SQLite database bestanden (lokaal, niet pushen)
+*.db
+*.db-shm
+*.db-wal

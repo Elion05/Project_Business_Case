@@ -15,12 +15,12 @@
     <div class="filters-shell mb-4">
         <form asp-action="Index" asp-controller="Users" method="get" class="row g-3 align-items-end">
             <div class="col-12 col-md-6">
-                <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Zoeken</label>
-                <input type="text" name="username" class="form-control" value="@ViewBag.username" placeholder="Zoek gebruikersnaam..." />
+                <label class="luxe-label">Zoeken</label>
+                <input type="text" name="username" class="luxe-control w-100" value="@ViewBag.username" placeholder="Zoek gebruikersnaam..." />
             </div>
             <div class="col-12 col-md-4">
-                <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Rol</label>
-                <select name="roleId" class="form-select" asp-items="ViewBag.Roles"></select>
+                <label class="luxe-label">Rol</label>
+                <select name="roleId" class="luxe-control luxe-select w-100" asp-items="ViewBag.Roles"></select>
             </div>
             <div class="col-12 col-md-2">
                 <button class="btn-luxe w-100" type="submit">Filter</button>
@@ -28,51 +28,51 @@
         </form>
     </div>
 
-    <div class="p-4" style="background:hsl(var(--card)); border:1px solid hsl(var(--border)); border-radius:16px; box-shadow: var(--shadow-soft);">
+    <div class="card-admin p-4">
         <div class="table-responsive">
-            <table class="table align-middle">
+            <table class="table admin-table">
                 <thead>
                     <tr>
-                        <th>@Html.DisplayNameFor(model => model.UserName)</th>
-                        <th>@Html.DisplayNameFor(model => model.Email)</th>
+                        <th>Gebruikersnaam</th>
+                        <th>E-mail</th>
                         <th>Status</th>
-                        <th>@Html.DisplayNameFor(model => model.Roles)</th>
-                        <th style="width: 240px;"></th>
+                        <th>Rollen</th>
+                        <th style="width: 280px; text-align: right;">Acties</th>
                     </tr>
                 </thead>
                 <tbody>
                 @foreach (var item in Model)
                 {
                     <tr>
-                        <td style="font-weight:700;">@item.UserName</td>
-                        <td>@item.Email</td>
+                        <td style="font-weight: 700; color: hsl(var(--foreground));">@item.UserName</td>
+                        <td style="color: hsl(var(--muted-foreground));">@item.Email</td>
                         <td>
                             @if (item.Blocked)
                             {
-                                <span style="color:hsl(var(--muted-foreground)); font-weight:600;">Geblokkeerd</span>
+                                <span class="badge-status" style="background: hsl(var(--danger) / 0.1); color: hsl(var(--danger)); border-color: hsl(var(--danger) / 0.3);">Geblokkeerd</span>
                             }
                             else
                             {
-                                <span style="color:hsl(var(--primary)); font-weight:600;">Actief</span>
+                                <span class="badge-status" style="background: hsl(120 40% 95%); color: hsl(120 40% 30%); border-color: hsl(120 40% 80%);">Actief</span>
                             }
                         </td>
                         <td>
                             @foreach (var role in item.Roles)
                             {
-                                <span style="display:inline-block; padding: 4px 10px; border-radius:999px; border:1px solid hsl(var(--border)); background:hsl(var(--muted)); margin-right:6px; font-size:0.9rem;">@role</span>
+                                <span class="badge-status">@role</span>
                             }
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex gap-2 flex-wrap justify-content-end">
-                                <a class="btn-luxe-outline" asp-action="Roles" asp-route-id="@item.Id">Rollen</a>
-                                <a class="btn-luxe-outline" asp-action="Edit" asp-route-id="@item.Id">Bewerk</a>
+                                <a class="btn-luxe-outline btn-sm" asp-action="Edit" asp-route-id="@item.Id">Bewerk</a>
+                                <a class="btn-luxe-outline btn-sm" asp-action="Roles" asp-route-id="@item.Id">Rollen</a>
                                 @if (item.Blocked)
                                 {
-                                    <a class="btn-luxe" asp-action="BlockUnblock" asp-route-id="@item.Id">Deblokkeer</a>
+                                    <a class="btn-luxe btn-sm" asp-action="BlockUnblock" asp-route-id="@item.Id">Deblokkeer</a>
                                 }
                                 else
                                 {
-                                    <a class="btn-luxe-outline" asp-action="BlockUnblock" asp-route-id="@item.Id">Blokkeer</a>
+                                    <a class="btn-luxe-ghost btn-sm" asp-action="BlockUnblock" asp-route-id="@item.Id">Blokkeer</a>
                                 }
                             </div>
                         </td>

@@ -102,40 +102,76 @@
         border-top: 1px solid hsl(var(--border));
     }
 
-    .variant-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    .variant-title {
+        font-weight: 700;
+        margin-bottom: 1rem;
+    }
+
+    .variant-picker {
+        margin-top: 1.25rem;
+    }
+
+    .variant-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
         gap: 1rem;
-        margin-top: 1rem;
+        margin-bottom: 0.75rem;
     }
 
-    .variant-card {
-        padding: 1rem;
+    .variant-headline {
+        font-size: 0.85rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: hsl(var(--muted-foreground));
+        font-weight: 700;
+    }
+
+    .variant-help {
+        font-size: 0.95rem;
+        color: hsl(var(--muted-foreground));
+    }
+
+    .chip-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .chip {
         border: 1px solid hsl(var(--border));
-        border-radius: 14px;
-        text-align: center;
-        transition: all 0.3s ease;
         background: hsl(var(--card));
+        color: hsl(var(--foreground));
+        border-radius: var(--radius-pill);
+        padding: 10px 14px;
+        min-height: 42px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, transform 0.2s ease;
     }
 
-    .variant-card:hover {
+    .chip:hover {
         border-color: hsl(var(--primary));
-        transform: translateY(-2px);
+        color: hsl(var(--primary));
+        transform: translateY(-1px);
     }
 
-    .variant-card.available {
-        border-color: #198754;
+    .chip.is-selected {
+        background: hsl(var(--primary));
+        border-color: hsl(var(--primary));
+        color: hsl(var(--primary-foreground));
     }
 
-    .variant-card.out-of-stock {
-        opacity: 0.5;
-        background: #f8f9fa;
+    .chip.is-disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        transform: none;
     }
 
-    .variant-card.selected {
-        border-color: hsl(var(--accent));
-        border-width: 3px;
-        background: hsl(var(--muted));
+    .chip.is-disabled:hover {
+        border-color: hsl(var(--border));
+        color: hsl(var(--foreground));
+        background: hsl(var(--card));
     }
 
     .variant-selected-info {
@@ -154,8 +190,9 @@
 
     .quantity-row input[type="number"] {
         width: 90px;
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
+        border-radius: var(--radius-md);
+        border: 1px solid hsl(var(--border));
+        background: hsl(var(--card));
         padding: 0.6rem 0.75rem;
     }
 </style>
@@ -207,22 +244,22 @@
             @if (Model.Variants != null && Model.Variants.Any())
             {
                 <div class="variant-section">
-                    <h4>Selecteer Maat & Kleur</h4>
+                    <h4 class="variant-title">Selecteer maat & kleur</h4>
 
-                    <!-- Dropdowns (duidelijker voor nummer + kleur) -->
-                    <div class="row g-3 mt-1">
-                        <div class="col-12 col-md-6">
-                            <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Maat (nummer)</label>
-                            <select id="maatSelect" class="form-select">
-                                <option value="">Selecteer maat</option>
-                            </select>
+                    <div class="variant-picker">
+                        <div class="variant-head">
+                            <div class="variant-headline">Kleur</div>
+                            <div class="variant-help" id="kleurHelp">Selecteer een kleur</div>
                         </div>
-                        <div class="col-12 col-md-6">
-                            <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Kleur</label>
-                            <select id="kleurSelect" class="form-select" disabled>
-                                <option value="">Selecteer kleur</option>
-                            </select>
+                        <div class="chip-grid" id="kleurChips"></div>
+                    </div>
+
+                    <div class="variant-picker">
+                        <div class="variant-head">
+                            <div class="variant-headline">Maat</div>
+                            <div class="variant-help" id="maatHelp">Selecteer een maat</div>
                         </div>
+                        <div class="chip-grid" id="maatChips"></div>
                     </div>
 
                     <div class="variant-selected-info" id="selectedVariantInfo">
@@ -251,23 +288,33 @@
                             title="Toevoegen aan favorieten">
                         <i data-lucide="heart" style="width:20px;height:20px;"></i>
                     </button>
+
+                    <form asp-controller="Cart" asp-action="Add" method="post" style="flex:1;">
+                        <input type="hidden" id="cartVariantId" name="shoeVariantId" value="" />
+                        <input type="hidden" id="cartQuantity" name="quantity" value="1" />
+                        <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Shoes", new { id = Model.Id })" />
+                        <button type="submit"
+                                id="addToCartBtn"
+                                class="btn-luxe w-100"
+                                disabled>
+                            In Winkelwagen
+                        </button>
+                    </form>
                 }
-                <form asp-controller="Cart" asp-action="Add" method="post" style="flex:1;">
-                    <input type="hidden" id="cartVariantId" name="shoeVariantId" value="" />
-                    <input type="hidden" id="cartQuantity" name="quantity" value="1" />
-                    <input type="hidden" name="returnUrl" value="@Url.Action("Details", "Shoes", new { id = Model.Id })" />
-                    <button type="submit"
-                            id="addToCartBtn"
-                            class="btn-luxe w-100"
-                            disabled>
-                        In Winkelwagen
-                    </button>
-                </form>
+                else
+                {
+                    <a class="btn-luxe w-100" asp-controller="Account" asp-action="Login" asp-route-returnUrl="@Url.Action("Details", "Shoes", new { id = Model.Id })">
+                        Inloggen om te bestellen
+                    </a>
+                }
             </div>
 
-            <div class="d-flex justify-content-end" style="margin-top: 0.75rem;">
-                <a class="btn-luxe-outline" asp-controller="Cart" asp-action="Index">Naar winkelwagen</a>
-            </div>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <div class="d-flex justify-content-end" style="margin-top: 0.75rem;">
+                    <a class="btn-luxe-outline" asp-controller="Cart" asp-action="Index">Naar winkelwagen</a>
+                </div>
+            }
             
             @if (User.Identity?.IsAuthenticated == true)
             {
@@ -282,7 +329,7 @@
 
                     async function checkFavoriteStatus(shoeId, button) {
                         try {
-                            const response = await fetch(`https://localhost:7001/api/favorites/check/${shoeId}`, {
+                            const response = await fetch(`${window.API_BASE_URL}/api/favorites/check/${shoeId}`, {
                                 credentials: 'include'
                             });
                             
@@ -301,7 +348,7 @@
 
                     async function toggleFavorite(shoeId, button) {
                         const isFavorite = button.getAttribute('data-is-favorite') === 'true';
-                        const apiUrl = `https://localhost:7001/api/favorites/${shoeId}`;
+                        const apiUrl = `${window.API_BASE_URL}/api/favorites/${shoeId}`;
                         
                         try {
                             let response;
@@ -336,156 +383,226 @@
                             alert('Er ging iets fout bij het toevoegen/verwijderen van favoriet');
                         }
                     }
-
-                    // Variant selectie
-                    let geselecteerdeVariantId = null;
-                    let geselecteerdeVariantStock = 0;
-
-                    // Variants data (basic, zonder backend change)
-                    const varianten = [
-@foreach (var variant in (Model.Variants ?? Enumerable.Empty<BestelApp_Models.ShoeVariant>()))
-{
-<text>                        { id: @variant.Id, maat: @variant.Size, kleur: "@(((variant.Color ?? string.Empty).Replace("\"","\\\"")))", stock: @variant.Stock, beschikbaar: @variant.IsAvailable.ToString().ToLower() },</text>
-}
-                    ];
-
-                    function vulMaten() {
-                        const maatSelect = document.getElementById('maatSelect');
-                        if (!maatSelect) return;
-
-                        const uniekeMaten = [...new Set(varianten.map(v => v.maat))].sort((a, b) => a - b);
-                        uniekeMaten.forEach(maat => {
-                            const opt = document.createElement('option');
-                            opt.value = maat.toString();
-                            opt.textContent = maat.toString();
-                            maatSelect.appendChild(opt);
-                        });
-                    }
-
-                    function vulKleurenVoorMaat(maat) {
-                        const kleurSelect = document.getElementById('kleurSelect');
-                        if (!kleurSelect) return;
-
-                        kleurSelect.innerHTML = '<option value="">Selecteer kleur</option>';
-
-                        if (!maat) {
-                            kleurSelect.disabled = true;
-                            return;
-                        }
-
-                        const kleuren = varianten
-                            .filter(v => v.maat === parseInt(maat))
-                            .map(v => v.kleur);
-
-                        const uniekeKleuren = [...new Set(kleuren)].sort();
-                        uniekeKleuren.forEach(kleur => {
-                            const opt = document.createElement('option');
-                            opt.value = kleur;
-                            opt.textContent = kleur;
-                            kleurSelect.appendChild(opt);
-                        });
-
-                        kleurSelect.disabled = false;
-                    }
-
-                    function updateGeselecteerdeVariant() {
-                        const maatSelect = document.getElementById('maatSelect');
-                        const kleurSelect = document.getElementById('kleurSelect');
-                        const info = document.getElementById('selectedVariantInfo');
-                        const qtyEl = document.getElementById('quantityInput');
-                        const hint = document.getElementById('stockHint');
-                        const btn = document.getElementById('addToCartBtn');
-                        const cartVariant = document.getElementById('cartVariantId');
-                        const hidden = document.getElementById('selectedVariantId');
-
-                        const maat = maatSelect ? maatSelect.value : '';
-                        const kleur = kleurSelect ? kleurSelect.value : '';
-
-                        geselecteerdeVariantId = null;
-                        geselecteerdeVariantStock = 0;
-                        if (hidden) hidden.value = '';
-                        if (cartVariant) cartVariant.value = '';
-                        if (btn) btn.disabled = true;
-                        if (qtyEl) qtyEl.disabled = true;
-                        if (hint) hint.textContent = '';
-
-                        if (!maat || !kleur) {
-                            if (info) info.textContent = 'Selecteer een maat en kleur om toe te voegen aan de winkelwagen.';
-                            return;
-                        }
-
-                        const variant = varianten.find(v => v.maat === parseInt(maat) && v.kleur === kleur);
-                        if (!variant) {
-                            if (info) info.textContent = 'Variant niet gevonden.';
-                            return;
-                        }
-
-                        if (!variant.beschikbaar || variant.stock <= 0) {
-                            if (info) info.textContent = `Geselecteerd: Maat ${maat} - ${kleur} (uitverkocht)`;
-                            return;
-                        }
-
-                        geselecteerdeVariantId = variant.id;
-                        geselecteerdeVariantStock = variant.stock;
-                        if (hidden) hidden.value = variant.id;
-                        if (cartVariant) cartVariant.value = variant.id;
-                        if (btn) btn.disabled = false;
-
-                        if (info) info.textContent = `Geselecteerd: Maat ${maat} - ${kleur}`;
-                        if (qtyEl) {
-                            qtyEl.disabled = false;
-                            qtyEl.max = variant.stock.toString();
-                            if (parseInt(qtyEl.value || '1') > variant.stock) qtyEl.value = variant.stock.toString();
-                        }
-                        if (hint) hint.textContent = `(max ${variant.stock})`;
-                    }
-
-                    // Quantity sync naar form
-                    document.addEventListener('DOMContentLoaded', function() {
-                        // Init dropdowns
-                        vulMaten();
-                        const maatSelect = document.getElementById('maatSelect');
-                        const kleurSelect = document.getElementById('kleurSelect');
-                        if (maatSelect) {
-                            maatSelect.addEventListener('change', function() {
-                                vulKleurenVoorMaat(maatSelect.value);
-                                if (kleurSelect) kleurSelect.value = '';
-                                updateGeselecteerdeVariant();
-                            });
-                        }
-                        if (kleurSelect) {
-                            kleurSelect.addEventListener('change', function() {
-                                updateGeselecteerdeVariant();
-                            });
-                        }
-
-                        const qtyEl = document.getElementById('quantityInput');
-                        const cartQty = document.getElementById('cartQuantity');
-                        const cartVariant = document.getElementById('cartVariantId');
-
-                        if (qtyEl && cartQty) {
-                            qtyEl.addEventListener('input', function() {
-                                let qty = parseInt(qtyEl.value || '1');
-                                if (isNaN(qty) || qty < 1) qty = 1;
-                                if (geselecteerdeVariantStock > 0 && qty > geselecteerdeVariantStock) qty = geselecteerdeVariantStock;
-                                qtyEl.value = qty.toString();
-                                cartQty.value = qty.toString();
-                            });
-                        }
-
-                        // Extra safety: prevent submit zonder variant
-                        const btn = document.getElementById('addToCartBtn');
-                        if (btn) {
-                            btn.closest('form')?.addEventListener('submit', function(e) {
-                                if (!geselecteerdeVariantId || !cartVariant || !cartVariant.value) {
-                                    e.preventDefault();
-                                    alert('Selecteer eerst een maat en kleur');
-                                }
-                            });
-                        }
-                    });
                 </script>
             }
+
+            <script>
+                // Variant UX (chips) - werkt ook zonder login; CTA blijft login-gated
+                let geselecteerdeVariantId = null;
+                let geselecteerdeVariantStock = 0;
+                let geselecteerdeMaat = null;
+                let geselecteerdeKleur = null;
+
+                const varianten = [
+@foreach (var variant in (Model.Variants ?? Enumerable.Empty<BestelApp_Models.ShoeVariant>()))
+{
+<text>                    { id: @variant.Id, maat: @variant.Size, kleur: "@(((variant.Color ?? string.Empty).Replace("\"","\\\"")))", stock: @variant.Stock },</text>
+}
+                ];
+
+                function uniekeMaten() {
+                    return [...new Set(varianten.map(v => v.maat))].sort((a, b) => a - b);
+                }
+
+                function uniekeKleuren() {
+                    return [...new Set(varianten.map(v => v.kleur))].sort();
+                }
+
+                function variantVoor(maat, kleur) {
+                    return varianten.find(v => v.maat === maat && v.kleur === kleur) || null;
+                }
+
+                function heeftStock(maat, kleur) {
+                    const v = variantVoor(maat, kleur);
+                    return !!v && v.stock > 0;
+                }
+
+                function renderKleurChips() {
+                    const wrap = document.getElementById('kleurChips');
+                    if (!wrap) return;
+                    wrap.innerHTML = '';
+
+                    uniekeKleuren().forEach(kleur => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'chip';
+                        btn.textContent = kleur;
+                        btn.setAttribute('data-kleur', kleur);
+                        btn.addEventListener('click', function() {
+                            // Toggle: als zelfde kleur, deselecteer; anders selecteer nieuwe
+                            if (geselecteerdeKleur === kleur) {
+                                geselecteerdeKleur = null;
+                                geselecteerdeMaat = null; // Reset maat ook
+                            } else {
+                                geselecteerdeKleur = kleur;
+                                geselecteerdeMaat = null; // Reset maat bij kleur wijziging
+                            }
+                            renderAll();
+                        });
+                        wrap.appendChild(btn);
+                    });
+                }
+
+                function renderMaatChips() {
+                    const wrap = document.getElementById('maatChips');
+                    if (!wrap) return;
+                    wrap.innerHTML = '';
+
+                    uniekeMaten().forEach(maat => {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'chip';
+                        btn.textContent = maat.toString();
+                        btn.setAttribute('data-maat', maat.toString());
+                        btn.addEventListener('click', function() {
+                            // Alleen selecteren als er (met gekozen kleur) stock is; anders negeren
+                            if (geselecteerdeKleur && !heeftStock(maat, geselecteerdeKleur)) return;
+                            
+                            // Toggle: als zelfde maat, deselecteer; anders selecteer nieuwe
+                            if (geselecteerdeMaat === maat) {
+                                geselecteerdeMaat = null;
+                            } else {
+                                geselecteerdeMaat = maat;
+                            }
+                            renderAll();
+                        });
+                        wrap.appendChild(btn);
+                    });
+                }
+
+                function updateChipStates() {
+                    // Color chip states
+                    document.querySelectorAll('#kleurChips .chip').forEach(el => {
+                        const kleur = el.getAttribute('data-kleur');
+                        const isSel = !!kleur && kleur === geselecteerdeKleur;
+                        el.classList.toggle('is-selected', isSel);
+
+                        // If size selected, mark colors without stock as disabled (still visible)
+                        if (geselecteerdeMaat && kleur) {
+                            const disabled = !heeftStock(geselecteerdeMaat, kleur);
+                            el.classList.toggle('is-disabled', disabled);
+                            el.toggleAttribute('disabled', disabled);
+                        } else {
+                            el.classList.remove('is-disabled');
+                            el.removeAttribute('disabled');
+                        }
+                    });
+
+                    // Size chip states
+                    document.querySelectorAll('#maatChips .chip').forEach(el => {
+                        const maat = parseInt(el.getAttribute('data-maat') || '0');
+                        const isSel = !isNaN(maat) && geselecteerdeMaat === maat;
+                        el.classList.toggle('is-selected', isSel);
+
+                        if (geselecteerdeKleur) {
+                            const disabled = !heeftStock(maat, geselecteerdeKleur);
+                            el.classList.toggle('is-disabled', disabled);
+                            el.toggleAttribute('disabled', disabled);
+                        } else {
+                            el.classList.remove('is-disabled');
+                            el.removeAttribute('disabled');
+                        }
+                    });
+                }
+
+                function updateSelectionAndCta() {
+                    const info = document.getElementById('selectedVariantInfo');
+                    const qtyEl = document.getElementById('quantityInput');
+                    const hint = document.getElementById('stockHint');
+                    const hidden = document.getElementById('selectedVariantId');
+
+                    const cartVariant = document.getElementById('cartVariantId');
+                    const cartQty = document.getElementById('cartQuantity');
+                    const btn = document.getElementById('addToCartBtn');
+
+                    // Reset base
+                    geselecteerdeVariantId = null;
+                    geselecteerdeVariantStock = 0;
+                    if (hidden) hidden.value = '';
+                    if (cartVariant) cartVariant.value = '';
+                    if (btn) btn.disabled = true;
+                    if (qtyEl) qtyEl.disabled = true;
+                    if (hint) hint.textContent = '';
+
+                    // Guidance
+                    if (!geselecteerdeKleur) {
+                        if (info) info.textContent = 'Selecteer eerst een kleur.';
+                        return;
+                    }
+                    if (!geselecteerdeMaat) {
+                        if (info) info.textContent = 'Selecteer daarna een maat.';
+                        return;
+                    }
+
+                    const variant = variantVoor(geselecteerdeMaat, geselecteerdeKleur);
+                    if (!variant) {
+                        if (info) info.textContent = 'Variant niet gevonden.';
+                        return;
+                    }
+                    if (variant.stock <= 0) {
+                        if (info) info.textContent = `Geselecteerd: ${geselecteerdeKleur} / ${geselecteerdeMaat} (uitverkocht)`;
+                        return;
+                    }
+
+                    geselecteerdeVariantId = variant.id;
+                    geselecteerdeVariantStock = variant.stock;
+                    if (hidden) hidden.value = variant.id.toString();
+                    if (cartVariant) cartVariant.value = variant.id.toString();
+
+                    if (info) info.textContent = `Geselecteerd: ${geselecteerdeKleur} / ${geselecteerdeMaat}`;
+                    if (qtyEl) {
+                        qtyEl.disabled = false;
+                        qtyEl.max = variant.stock.toString();
+                        if (parseInt(qtyEl.value || '1') > variant.stock) qtyEl.value = variant.stock.toString();
+                    }
+                    if (cartQty && qtyEl) cartQty.value = qtyEl.value || '1';
+                    if (hint) hint.textContent = `(max ${variant.stock})`;
+                    if (btn) btn.disabled = false;
+                }
+
+                function renderAll() {
+                    // If selected combination invalid after change, clear size selection
+                    if (geselecteerdeKleur && geselecteerdeMaat && !heeftStock(geselecteerdeMaat, geselecteerdeKleur)) {
+                        geselecteerdeMaat = null;
+                    }
+
+                    updateChipStates();
+                    updateSelectionAndCta();
+                }
+
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Render chips once
+                    renderKleurChips();
+                    renderMaatChips();
+
+                    // Quantity sync (if cart exists)
+                    const qtyEl = document.getElementById('quantityInput');
+                    const cartQty = document.getElementById('cartQuantity');
+                    if (qtyEl && cartQty) {
+                        qtyEl.addEventListener('input', function() {
+                            let qty = parseInt(qtyEl.value || '1');
+                            if (isNaN(qty) || qty < 1) qty = 1;
+                            if (geselecteerdeVariantStock > 0 && qty > geselecteerdeVariantStock) qty = geselecteerdeVariantStock;
+                            qtyEl.value = qty.toString();
+                            cartQty.value = qty.toString();
+                        });
+                    }
+
+                    // Prevent submit without variant (if form exists)
+                    const btn = document.getElementById('addToCartBtn');
+                    const cartVariant = document.getElementById('cartVariantId');
+                    if (btn && cartVariant) {
+                        btn.closest('form')?.addEventListener('submit', function(e) {
+                            if (!geselecteerdeVariantId || !cartVariant.value) {
+                                e.preventDefault();
+                                alert('Selecteer eerst een maat en kleur');
+                            }
+                        });
+                    }
+
+                    renderAll();
+                });
+            </script>
 
             <!-- Variants Section -->
 
@@ -495,24 +612,16 @@
                 <div class="mt-4 pt-4 border-top">
                     <h5>Admin Acties</h5>
                     <div class="d-flex gap-2">
-                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">
-                            ✏️ Bewerk
-                        </a>
-                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">
-                            🗑️ Verwijder
-                        </a>
-                        <a asp-action="Index" class="btn btn-secondary">
-                            ← Terug naar Lijst
-                        </a>
+                        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn-luxe-outline">Bewerk</a>
+                        <a asp-action="Delete" asp-route-id="@Model.Id" class="btn-luxe-danger">Verwijder</a>
+                        <a asp-action="Index" class="btn-luxe-ghost">Terug</a>
                     </div>
                 </div>
             }
             else
             {
                 <div class="mt-4">
-                    <a asp-action="Index" class="btn btn-outline-secondary">
-                        ← Terug naar Schoenen
-                    </a>
+                    <a asp-action="Index" class="btn-luxe-outline">Terug naar schoenen</a>
                 </div>
             }
         </div>

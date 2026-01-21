@@ -1,5 +1,5 @@
-﻿/* Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-for details on configuring this project to bundle and minify static web assets. */
+﻿/* Minimal overrides for generated _Layout styles.
+   Belangrijk: geen hardcoded kleuren, alles via design tokens. */
 
 a.navbar-brand {
   white-space: normal;
@@ -8,30 +8,42 @@ a.navbar-brand {
 }
 
 a {
-  color: #0077cc;
+  color: hsl(var(--primary));
 }
 
+a:hover {
+  color: hsl(var(--primary-dark));
+}
+
+/* Map bootstrap primary to luxury primary (avoid default blue) */
 .btn-primary {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+  color: hsl(var(--primary-foreground));
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  border-radius: var(--radius-md);
 }
 
-.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
-  color: #fff;
-  background-color: #1b6ec2;
-  border-color: #1861ac;
+.btn-primary:hover {
+  background-color: hsl(var(--primary-dark));
+  border-color: hsl(var(--primary-dark));
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .show > .nav-link {
+  color: hsl(var(--primary-foreground));
+  background-color: hsl(var(--primary));
+  border-color: hsl(var(--primary));
 }
 
 .border-top {
-  border-top: 1px solid #e5e5e5;
+  border-top: 1px solid hsl(var(--border));
 }
 .border-bottom {
-  border-bottom: 1px solid #e5e5e5;
+  border-bottom: 1px solid hsl(var(--border));
 }
 
 .box-shadow {
-  box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+  box-shadow: var(--shadow-1);
 }
 
 button.accept-policy {

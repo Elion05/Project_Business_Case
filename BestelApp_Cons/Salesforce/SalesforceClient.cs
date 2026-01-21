@@ -128,6 +128,9 @@ namespace BestelApp_Cons.Salesforce
             var itemsDescription = string.Join("\n", bestelling.Items.Select(i =>
                 $"- {i.Brand} {i.ProductName} (Maat {i.Size}, {i.Color}) x{i.Quantity} = €{i.SubTotal}"));
 
+            // Converteer landnaam naar Salesforce-compatibele country code
+            var countryCode = ConverteerLandNaarSalesforceCode(bestelling.ShippingAddress?.Country);
+
             var salesforceData = new
             {
                 Company = bestelling.Items.FirstOrDefault()?.Brand ?? "Unknown",  // Verplicht veld in Lead
@@ -143,7 +146,7 @@ namespace BestelApp_Cons.Salesforce
                 Street = bestelling.ShippingAddress?.Address,
                 City = bestelling.ShippingAddress?.City,
                 PostalCode = bestelling.ShippingAddress?.PostalCode,
-                Country = bestelling.ShippingAddress?.Country,
+                Country = countryCode,  // Gebruik geconverteerde country code
                 LeadSource = "RabbitMQ"
             };
 
@@ -179,6 +182,81 @@ namespace BestelApp_Cons.Salesforce
 
             // Verwerk de response
             return VerwerkSalesforceResponse(response.StatusCode, responseBody);
+        }
+
+        /// <summary>
+        /// Converteer Nederlandse landnaam naar Salesforce-compatibele country code
+        /// Salesforce verwacht ISO country names (Engels) of ISO codes
+        /// </summary>
+        private string? ConverteerLandNaarSalesforceCode(string? landNaam)
+        {
+            if (string.IsNullOrWhiteSpace(landNaam))
+            {
+                return null;
+            }
+
+            // Normaliseer: verwijder spaties en converteer naar lowercase voor vergelijking
+            var genormaliseerd = landNaam.Trim();
+
+            // Mapping van Nederlandse landnamen naar Salesforce-compatibele codes
+            var landMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "België", "Belgium" },
+                { "Belgie", "Belgium" },
+                { "Nederland", "Netherlands" },
+                { "Duitsland", "Germany" },
+                { "Frankrijk", "France" },
+                { "Verenigd Koninkrijk", "United Kingdom" },
+                { "VK", "United Kingdom" },
+                { "UK", "United Kingdom" },
+                { "Spanje", "Spain" },
+                { "Italië", "Italy" },
+                { "Italie", "Italy" },
+                { "Portugal", "Portugal" },
+                { "Oostenrijk", "Austria" },
+                { "Zwitserland", "Switzerland" },
+                { "Luxemburg", "Luxembourg" },
+                { "Denemarken", "Denmark" },
+                { "Zweden", "Sweden" },
+                { "Noorwegen", "Norway" },
+                { "Finland", "Finland" },
+                { "Polen", "Poland" },
+                { "Tsjechië", "Czech Republic" },
+                { "Tsjechie", "Czech Republic" },
+                { "Hongarije", "Hungary" },
+                { "Roemenië", "Romania" },
+                { "Roemenie", "Romania" },
+                { "Griekenland", "Greece" },
+                { "Ierland", "Ireland" },
+                { "Verenigde Staten", "United States" },
+                { "VS", "United States" },
+                { "USA", "United States" },
+                { "Canada", "Canada" },
+                { "Australië", "Australia" },
+                { "Australie", "Australia" },
+                { "Nieuw-Zeeland", "New Zealand" },
+                { "Japan", "Japan" },
+                { "China", "China" },
+                { "India", "India" },
+                { "Brazilië", "Brazil" },
+                { "Brazili", "Brazil" },
+                { "Mexico", "Mexico" },
+                { "Rusland", "Russia" },
+                { "Turkije", "Turkey" },
+                { "Zuid-Afrika", "South Africa" },
+                { "Zuid Afrika", "South Africa" }
+            };
+
+            // Check of we een mapping hebben
+            if (landMapping.TryGetValue(genormaliseerd, out var salesforceCode))
+            {
+                Console.WriteLine($"🌍 Land '{landNaam}' geconverteerd naar '{salesforceCode}' voor Salesforce");
+                return salesforceCode;
+            }
+
+            // Als geen mapping gevonden, probeer het origineel (misschien is het al Engels)
+            Console.WriteLine($"⚠️ Geen mapping gevonden voor '{landNaam}', gebruik origineel");
+            return genormaliseerd;
         }
 
         /// <summary>

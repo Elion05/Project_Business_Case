@@ -14,8 +14,8 @@
     <div class="filters-shell mb-4">
         <form method="get" class="row g-3 align-items-end">
             <div class="col-12 col-md-8">
-                <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Zoeken</label>
-                <input class="form-control" name="zoek" value="@ViewBag.Zoek" placeholder="Zoek op naam of merk..." />
+                <label class="luxe-label">Zoeken</label>
+                <input class="luxe-control w-100" name="zoek" value="@ViewBag.Zoek" placeholder="Zoek op naam of merk..." />
             </div>
             <div class="col-12 col-md-4">
                 <button class="btn-luxe w-100" type="submit">Zoek</button>
@@ -25,37 +25,49 @@
 
     @if (Model != null && Model.Any())
     {
-        <div class="row g-3">
-            @foreach (var s in Model)
-            {
-                var variantCount = s.Variants?.Count ?? 0;
-                var totalStock = s.Variants?.Sum(v => v.Stock) ?? 0;
-
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="p-4" style="background: var(--gradient-card); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft); height: 100%;">
-                        <div class="d-flex align-items-start justify-content-between gap-2">
-                            <div>
-                                <div style="font-size: 0.85rem; color: hsl(var(--muted-foreground));">@((s.Category?.Name) ?? "Schoenen")</div>
-                                <div style="font-weight:700; color:hsl(var(--foreground));">@s.Name</div>
-                                <div style="color:hsl(var(--muted-foreground));">@s.Brand</div>
-                            </div>
-                            <div style="text-align:right;">
-                                <div style="font-weight:700; color:hsl(var(--foreground));">@totalStock</div>
-                                <div style="font-size:0.85rem; color:hsl(var(--muted-foreground));">stock</div>
-                            </div>
-                        </div>
-
-                        <div style="margin-top: 1rem; color:hsl(var(--muted-foreground)); font-size:0.95rem;">
-                            Varianten: <strong>@variantCount</strong>
-                        </div>
-
-                        <div class="d-grid gap-2" style="margin-top: 1.25rem;">
-                            <a class="btn-luxe" asp-action="Edit" asp-route-id="@s.Id">Voorraad aanpassen</a>
-                            <a class="btn-luxe-outline" asp-controller="Shoes" asp-action="Edit" asp-route-id="@s.Id">Product bewerken</a>
-                        </div>
-                    </div>
-                </div>
-            }
+        <div class="card-admin p-4">
+            <div class="table-responsive">
+                <table class="table admin-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Categorie</th>
+                            <th>Varianten</th>
+                            <th style="text-align: right;">Totaal Voorraad</th>
+                            <th style="width: 200px; text-align: right;">Acties</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var s in Model)
+                        {
+                            var variantCount = s.Variants?.Count ?? 0;
+                            var totalStock = s.Variants?.Sum(v => v.Stock) ?? 0;
+                            var stockBadgeClass = totalStock == 0 ? "badge-stock-danger" : totalStock < 10 ? "badge-stock-warning" : "badge-stock-success";
+                            var stockBadgeText = totalStock == 0 ? "Uitverkocht" : totalStock < 10 ? "Laag" : "Op voorraad";
+                            
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 700; color: hsl(var(--foreground)); margin-bottom: 0.25rem;">@s.Name</div>
+                                    <div style="font-size: 0.9rem; color: hsl(var(--muted-foreground));">@s.Brand</div>
+                                </td>
+                                <td style="color: hsl(var(--muted-foreground));">@(s.Category?.Name ?? "Schoenen")</td>
+                                <td>
+                                    <span class="badge-status">@variantCount varianten</span>
+                                </td>
+                                <td style="text-align: right;">
+                                    <span class="badge-stock @stockBadgeClass">@totalStock - @stockBadgeText</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="d-inline-flex gap-2">
+                                        <a class="btn-luxe btn-sm" asp-action="Edit" asp-route-id="@s.Id">Voorraad</a>
+                                        <a class="btn-luxe-outline btn-sm" asp-controller="Shoes" asp-action="Edit" asp-route-id="@s.Id">Bewerk</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         </div>
     }
     else
