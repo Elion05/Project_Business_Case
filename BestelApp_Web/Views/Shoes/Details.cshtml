@@ -429,7 +429,14 @@
                         btn.textContent = kleur;
                         btn.setAttribute('data-kleur', kleur);
                         btn.addEventListener('click', function() {
-                            geselecteerdeKleur = kleur;
+                            // Toggle: als zelfde kleur, deselecteer; anders selecteer nieuwe
+                            if (geselecteerdeKleur === kleur) {
+                                geselecteerdeKleur = null;
+                                geselecteerdeMaat = null; // Reset maat ook
+                            } else {
+                                geselecteerdeKleur = kleur;
+                                geselecteerdeMaat = null; // Reset maat bij kleur wijziging
+                            }
                             renderAll();
                         });
                         wrap.appendChild(btn);
@@ -450,7 +457,13 @@
                         btn.addEventListener('click', function() {
                             // Alleen selecteren als er (met gekozen kleur) stock is; anders negeren
                             if (geselecteerdeKleur && !heeftStock(maat, geselecteerdeKleur)) return;
-                            geselecteerdeMaat = maat;
+                            
+                            // Toggle: als zelfde maat, deselecteer; anders selecteer nieuwe
+                            if (geselecteerdeMaat === maat) {
+                                geselecteerdeMaat = null;
+                            } else {
+                                geselecteerdeMaat = maat;
+                            }
                             renderAll();
                         });
                         wrap.appendChild(btn);
