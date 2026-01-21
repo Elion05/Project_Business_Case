@@ -119,7 +119,7 @@ namespace BestelApp_Web.Controllers
 
             // Genereer SKU voor de nieuwe variant
             string sku = GenerateSku(shoe, model.Maat, model.Kleur);
-            
+
             var nieuweVariant = new ShoeVariant
             {
                 ShoeId = shoe.Id,
@@ -147,14 +147,14 @@ namespace BestelApp_Web.Controllers
             var nameClean = (shoe.Name ?? "PRODUCT").ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
             var colorClean = (color ?? "UNKNOWN").Trim().ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
             var sku = $"{brandClean}-{nameClean}-{size}-{colorClean}";
-            
+
             // Valideer dat SKU niet leeg is
             if (string.IsNullOrWhiteSpace(sku))
             {
                 // Fallback: gebruik ShoeId, size en timestamp
                 sku = $"SKU-{shoe.Id}-{size}-{DateTime.UtcNow.Ticks}";
             }
-            
+
             return sku;
         }
 
