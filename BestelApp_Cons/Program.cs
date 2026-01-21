@@ -1,4 +1,4 @@
-using System.Text;
+﻿using System.Text;
 using System.Text.Json;
 using BestelApp_Cons.Models;
 using BestelApp_Cons.Salesforce;
@@ -22,6 +22,7 @@ Console.WriteLine("📋 Configuratie laden...");
 var configuratie = new ConfigurationBuilder()
     .SetBasePath(AppDomain.CurrentDomain.BaseDirectory)
     .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables() // Hiermee kunnen we secrets uit GitHub/Environment lezen
     .Build();
 
 // ========================================
