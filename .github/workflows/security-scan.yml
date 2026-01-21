@@ -2,9 +2,9 @@ name: Security Scan
 
 on:
   push:
-    branches: [ "Abdullah", "master", "main" ]
+    branches: [ "Elion", "master", "main" ]
   pull_request:
-    branches: [ "Abdullah", "master", "main" ]
+    branches: [ "Elion", "master", "main" ]
   workflow_dispatch:
 
 jobs:
@@ -17,7 +17,7 @@ jobs:
         with:
           fetch-depth: 0 # Nodig voor Gitleaks om de geschiedenis te scannen
 
-      - name: Patch Gitleaks for Act
+      - name: Patch Gitleaks for ACT
         if: ${{ env.ACT }}
         run: |
           echo '{"repository": {"owner": {"login": "act-user"}, "name": "Project_Business_Case"}}' > event.json

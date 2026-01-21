@@ -2,9 +2,9 @@ name: Build en Test
 
 on:
   push:
-    branches: [ "main", "master", "Abdullah" ]
+    branches: [ "main", "master", "Elion" ]
   pull_request:
-    branches: [ "main", "master", "Abdullah" ]
+    branches: [ "main", "master", "Elion" ]
   workflow_dispatch:
 
 jobs:
