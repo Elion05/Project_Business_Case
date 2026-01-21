@@ -361,3 +361,12 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Data Protection Keys (bevatten encryptiesleutels - NIET pushen!)
+SharedKeys/
+DataProtectionKeys/
+
+# SQLite database bestanden (lokaal, niet pushen)
+*.db
+*.db-shm
+*.db-wal

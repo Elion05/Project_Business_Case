@@ -12,48 +12,75 @@
         <p class="catalog-subtitle">Alle orders vanuit de Backend API. Je ziet ook of ze naar RabbitMQ verstuurd zijn.</p>
     </div>
 
-    <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft);">
+    <div class="card-admin p-4">
         @if (Model != null && Model.Any())
         {
             <div class="table-responsive">
-                <table class="table align-middle">
+                <table class="table admin-table">
                     <thead>
                         <tr>
-                            <th>Order</th>
+                            <th>Order ID</th>
                             <th>Klant</th>
                             <th>Datum</th>
                             <th>Status</th>
-                            <th>Items</th>
-                            <th>Totaal</th>
+                            <th style="text-align: right;">Items</th>
+                            <th style="text-align: right;">Totaal</th>
                             <th>Queue</th>
-                            <th></th>
+                            <th style="width: 120px; text-align: right;">Acties</th>
                         </tr>
                     </thead>
                     <tbody>
                     @foreach (var o in Model.OrderByDescending(x => x.OrderDate))
                     {
+                        var statusText = o.Status.ToLower() switch
+                        {
+                            "pending" => "In behandeling",
+                            "processing" => "Wordt verwerkt",
+                            "completed" => "Voltooid",
+                            "failed" => "Mislukt",
+                            _ => o.Status
+                        };
+                        var statusBg = o.Status.ToLower() switch
+                        {
+                            "pending" => "hsl(41 52% 90%)",
+                            "processing" => "hsl(200 60% 90%)",
+                            "completed" => "hsl(120 40% 90%)",
+                            "failed" => "hsl(var(--danger) / 0.1)",
+                            _ => "hsl(var(--muted))"
+                        };
+                        var statusColor = o.Status.ToLower() switch
+                        {
+                            "pending" => "hsl(41 52% 40%)",
+                            "processing" => "hsl(200 60% 30%)",
+                            "completed" => "hsl(120 40% 30%)",
+                            "failed" => "hsl(var(--danger))",
+                            _ => "hsl(var(--foreground))"
+                        };
+                        
                         <tr>
-                            <td style="font-weight:700;">@o.OrderId</td>
+                            <td style="font-weight: 700; color: hsl(var(--foreground)); font-family: 'Courier New', monospace;">@o.OrderId</td>
                             <td>
-                                <div>@o.UserName</div>
-                                <div style="font-size:0.9rem; color:hsl(var(--muted-foreground));">@o.UserEmail</div>
+                                <div style="font-weight: 600; color: hsl(var(--foreground));">@o.UserName</div>
+                                <div style="font-size: 0.85rem; color: hsl(var(--muted-foreground));">@o.UserEmail</div>
                             </td>
-                            <td>@o.OrderDate.ToString("yyyy-MM-dd HH:mm")</td>
-                            <td>@o.Status</td>
-                            <td>@o.ItemCount</td>
-                            <td>€@o.TotalPrice.ToString("0.00")</td>
+                            <td style="color: hsl(var(--muted-foreground));">@o.OrderDate.ToString("dd-MM-yyyy HH:mm")</td>
+                            <td>
+                                <span class="badge-status" style="background: @statusBg; color: @statusColor; border-color: @statusColor;">@statusText</span>
+                            </td>
+                            <td style="text-align: right; color: hsl(var(--foreground));">@o.ItemCount</td>
+                            <td style="text-align: right; font-weight: 700; color: hsl(var(--primary));">€@o.TotalPrice.ToString("0.00")</td>
                             <td>
                                 @if (o.IsSentToQueue)
                                 {
-                                    <span style="color:hsl(var(--primary)); font-weight:600;">Verstuurd</span>
+                                    <span class="badge-status" style="background: hsl(120 40% 95%); color: hsl(120 40% 30%); border-color: hsl(120 40% 80%);">Verstuurd</span>
                                 }
                                 else
                                 {
-                                    <span style="color:hsl(var(--muted-foreground));">Niet</span>
+                                    <span class="badge-status" style="background: hsl(var(--muted)); color: hsl(var(--muted-foreground));">Niet verstuurd</span>
                                 }
                             </td>
-                            <td>
-                                <a class="btn-luxe-outline" asp-action="Details" asp-route-id="@o.Id">Details</a>
+                            <td class="text-end">
+                                <a class="btn-luxe-outline btn-sm" asp-action="Details" asp-route-id="@o.Id">Details</a>
                             </td>
                         </tr>
                     }
@@ -63,9 +90,10 @@
         }
         else
         {
-            <div class="text-center p-5">
-                <h3 style="font-family:'Playfair Display', serif;">Geen bestellingen</h3>
-                <p style="color:hsl(var(--muted-foreground)); margin:0;">Er zijn nog geen orders, of de API gaf geen data terug.</p>
+            <div class="card-luxe p-5 text-center">
+                <div style="font-size: 5rem; margin-bottom: 1rem; color: hsl(var(--muted-foreground));">📦</div>
+                <h3 style="font-family: 'Playfair Display', serif; color: hsl(var(--foreground)); margin-bottom: 0.75rem;">Geen bestellingen</h3>
+                <p style="color: hsl(var(--muted-foreground)); margin: 0;">Er zijn nog geen orders, of de API gaf geen data terug.</p>
             </div>
         }
     </div>
