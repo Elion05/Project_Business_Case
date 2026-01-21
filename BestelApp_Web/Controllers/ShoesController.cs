@@ -36,9 +36,9 @@ namespace BestelApp_Web.Controllers
             // Zoekfilter
             if (!string.IsNullOrEmpty(search))
             {
-                query = query.Where(s => 
-                    s.Name.Contains(search) || 
-                    s.Brand.Contains(search) || 
+                query = query.Where(s =>
+                    s.Name.Contains(search) ||
+                    s.Brand.Contains(search) ||
                     s.Description.Contains(search));
             }
 
@@ -147,11 +147,11 @@ namespace BestelApp_Web.Controllers
             // Verwijder navigation property validatie errors (we gebruiken alleen IDs)
             ModelState.Remove("Category");
             ModelState.Remove("Variants");
-            
+
             // Verwijder oude Size en Color velden (die zijn niet meer nodig)
             ModelState.Remove("Size");
             ModelState.Remove("Color");
-            
+
             // Verwijder alle variant-gerelateerde ModelState errors (we verwerken ze handmatig)
             var keysToRemove = ModelState.Keys.Where(k => k.StartsWith("Variants[") || k == "Shoe").ToList();
             foreach (var key in keysToRemove)
@@ -159,7 +159,7 @@ namespace BestelApp_Web.Controllers
                 ModelState.Remove(key);
                 Console.WriteLine($"🗑️ ModelState key verwijderd: {key}");
             }
-            
+
             Console.WriteLine($"🔍 ModelState.IsValid na cleanup: {ModelState.IsValid}");
 
             // Als CategoryId 0 is, probeer de eerste category te pakken
@@ -193,12 +193,12 @@ namespace BestelApp_Web.Controllers
                     ModelState.Remove(key);
                 }
             }
-            
+
             Console.WriteLine($"🔍 ModelState.IsValid na volledige cleanup: {ModelState.IsValid}");
-            
+
             // Valideer handmatig de basisvelden
-            if (string.IsNullOrWhiteSpace(shoe.Name) || 
-                string.IsNullOrWhiteSpace(shoe.Brand) || 
+            if (string.IsNullOrWhiteSpace(shoe.Name) ||
+                string.IsNullOrWhiteSpace(shoe.Brand) ||
                 string.IsNullOrWhiteSpace(shoe.Description) ||
                 shoe.CategoryId == 0 ||
                 shoe.Price <= 0)
@@ -206,11 +206,11 @@ namespace BestelApp_Web.Controllers
                 ModelState.AddModelError("", "Vul alle verplichte velden in");
                 return View(shoe);
             }
-            
+
             // VERWERK VARIANTEN EERST (VOORDAT we Shoe opslaan)
             // Dit moet gebeuren VOORDAT Model Binding de Request body heeft gelezen
             var variants = new List<ShoeVariant>();
-            
+
             // Check of Request.Form beschikbaar is
             if (!Request.HasFormContentType)
             {
@@ -218,12 +218,12 @@ namespace BestelApp_Web.Controllers
                 ModelState.AddModelError("", "Ongeldige form data");
                 return View(shoe);
             }
-            
+
             var form = Request.Form;
-            
+
             Console.WriteLine($"🔍 Form keys: {string.Join(", ", form.Keys)}");
             Console.WriteLine($"🔍 Form keys count: {form.Keys.Count}");
-            
+
             // Lees variant data uit form
             var variantIndices = new List<int>();
             Console.WriteLine($"🔍 Beginnen met zoeken naar variant indices...");
@@ -241,9 +241,9 @@ namespace BestelApp_Web.Controllers
                     }
                 }
             }
-            
+
             Console.WriteLine($"🔍 Totaal variant indices: {variantIndices.Count}");
-            
+
             if (variantIndices.Count == 0)
             {
                 Console.WriteLine($"⚠️ GEEN VARIANT INDICES GEVONDEN! Alle form keys:");
@@ -265,7 +265,7 @@ namespace BestelApp_Web.Controllers
 
                 Console.WriteLine($"🔍 Variant {index}: Size={sizeStr}, Color={color}, Stock={stockStr}");
 
-                if (int.TryParse(sizeStr, out int size) && 
+                if (int.TryParse(sizeStr, out int size) &&
                     int.TryParse(stockStr, out int stock) &&
                     !string.IsNullOrWhiteSpace(color))
                 {
@@ -273,7 +273,7 @@ namespace BestelApp_Web.Controllers
                     // Format: BRAND-NAME-SIZE-COLOR (bijv. NIKE-AIRMAX-42-ZWART)
                     string sku = GenerateSku(shoe, size, color, index);
                     Console.WriteLine($"✅ SKU automatisch gegenereerd: {sku}");
-                    
+
                     // Zorg ervoor dat SKU altijd een niet-lege waarde heeft (database NOT NULL constraint)
                     if (string.IsNullOrWhiteSpace(sku))
                     {
@@ -281,7 +281,7 @@ namespace BestelApp_Web.Controllers
                         sku = $"SKU-TEMP-{index}-{size}-{DateTime.UtcNow.Ticks}";
                         Console.WriteLine($"⚠️ SKU was nog steeds leeg, laatste fallback: {sku}");
                     }
-                    
+
                     // Maak variant aan met ShoeId = 0 (wordt later gezet na SaveChangesAsync)
                     var variant = new ShoeVariant
                     {
@@ -291,7 +291,7 @@ namespace BestelApp_Web.Controllers
                         Stock = stock,
                         SKU = sku // Altijd een niet-lege waarde (NOT NULL constraint)
                     };
-                    
+
                     Console.WriteLine($"✅ Variant aangemaakt: Size={variant.Size}, Color={variant.Color}, Stock={variant.Stock}, SKU='{variant.SKU}' (length={variant.SKU.Length})");
                     variants.Add(variant);
                 }
@@ -317,7 +317,7 @@ namespace BestelApp_Web.Controllers
                     v.SKU = GenerateSku(shoe, v.Size, v.Color);
                     Console.WriteLine($"⚠️ Variant zonder SKU gevonden, gegenereerd: {v.SKU}");
                 }
-                
+
                 // Extra controle: als SKU nog steeds leeg is, gebruik een unieke waarde
                 if (string.IsNullOrWhiteSpace(v.SKU))
                 {
@@ -325,13 +325,13 @@ namespace BestelApp_Web.Controllers
                     v.SKU = $"SKU-TEMP-{v.Size}-{DateTime.UtcNow.Ticks}";
                     Console.WriteLine($"⚠️ Variant SKU was nog steeds leeg, laatste fallback: {v.SKU}");
                 }
-                
+
                 Console.WriteLine($"🔍 Voor SaveChanges: Variant SKU='{v.SKU}' (length={v.SKU.Length}, isNullOrWhiteSpace={string.IsNullOrWhiteSpace(v.SKU)})");
             }
 
             // Zet CreatedAt timestamp
             shoe.CreatedAt = DateTime.UtcNow;
-            
+
             // Verwijder oude Size en Color velden (die zijn niet meer nodig)
             shoe.Size = null;
             shoe.Color = null;
@@ -339,7 +339,7 @@ namespace BestelApp_Web.Controllers
             // Sla Shoe op om Shoe.Id te krijgen
             _context.Add(shoe);
             await _context.SaveChangesAsync();
-            
+
             Console.WriteLine($"✅ Shoe opgeslagen met ID: {shoe.Id}");
 
             // Update ShoeId voor alle varianten (nu hebben we shoe.Id)
@@ -377,7 +377,7 @@ namespace BestelApp_Web.Controllers
                 .Include(s => s.Variants)
                 .Include(s => s.Category)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            
+
             if (shoe == null)
             {
                 return NotFound();
@@ -403,8 +403,8 @@ namespace BestelApp_Web.Controllers
             ModelState.Remove("Color");
 
             // Valideer handmatig de basisvelden
-            if (string.IsNullOrWhiteSpace(shoe.Name) || 
-                string.IsNullOrWhiteSpace(shoe.Brand) || 
+            if (string.IsNullOrWhiteSpace(shoe.Name) ||
+                string.IsNullOrWhiteSpace(shoe.Brand) ||
                 string.IsNullOrWhiteSpace(shoe.Description) ||
                 shoe.CategoryId == 0 ||
                 shoe.Price <= 0)
@@ -489,7 +489,7 @@ namespace BestelApp_Web.Controllers
                     var stockStr = form[$"Variants[{index}].Stock"].ToString() ?? "";
 
                     if (long.TryParse(variantIdStr, out long variantId) &&
-                        int.TryParse(sizeStr, out int size) && 
+                        int.TryParse(sizeStr, out int size) &&
                         int.TryParse(stockStr, out int stock) &&
                         !string.IsNullOrWhiteSpace(color))
                     {
@@ -608,14 +608,14 @@ namespace BestelApp_Web.Controllers
             var nameClean = (shoe.Name ?? "PRODUCT").ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
             var colorClean = (color ?? "UNKNOWN").Trim().ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
             var sku = $"{brandClean}-{nameClean}-{size}-{colorClean}";
-            
+
             // Valideer dat SKU niet leeg is
             if (string.IsNullOrWhiteSpace(sku))
             {
                 // Fallback: gebruik ShoeId, size en timestamp
                 sku = $"SKU-{shoe.Id}-{size}-{DateTime.UtcNow.Ticks}";
             }
-            
+
             return sku;
         }
 
