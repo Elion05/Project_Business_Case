@@ -11,13 +11,18 @@
     <PackageReference Include="RabbitMQ.Client" Version="7.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration" Version="9.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="9.0.0" />
-    <PackageReference Include="System.Text.Json" Version="9.0.0" />
+
   </ItemGroup>
 
   <ItemGroup>
     <None Update="appsettings.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BestelApp_Models\BestelApp_Models.csproj" />
+    <ProjectReference Include="..\BestelApp_Shared\BestelApp_Shared.csproj" />
   </ItemGroup>
 
 </Project>

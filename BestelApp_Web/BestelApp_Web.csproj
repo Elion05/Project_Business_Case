@@ -21,6 +21,7 @@
 	
 	<ItemGroup>
 		<ProjectReference Include="..\BestelApp_Models\BestelApp_Models.csproj" />
+		<ProjectReference Include="..\BestelApp_Shared\BestelApp_Shared.csproj" />
 	</ItemGroup>
 	
 	
