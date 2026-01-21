@@ -13,25 +13,27 @@
 
     <div class="row g-3">
         <div class="col-12 col-lg-4">
-            <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft);">
-                <div style="font-weight:700; margin-bottom:0.5rem;">Nieuwe variant toevoegen</div>
+            <div class="card-admin p-4">
+                <h3 style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: hsl(var(--foreground)); margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid hsl(var(--border));">
+                    Nieuwe variant toevoegen
+                </h3>
                 <form asp-action="AddVariant" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="SchoenId" value="@Model.SchoenId" />
 
                     <div class="mb-3">
-                        <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Maat</label>
-                        <input class="form-control" type="number" name="Maat" min="20" max="50" value="42" required />
+                        <label class="luxe-label">Maat</label>
+                        <input class="luxe-control w-100" type="number" name="Maat" min="20" max="50" value="42" required />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Kleur</label>
-                        <input class="form-control" type="text" name="Kleur" placeholder="bv. Zwart" maxlength="50" required />
+                        <label class="luxe-label">Kleur</label>
+                        <input class="luxe-control w-100" type="text" name="Kleur" placeholder="bv. Zwart" maxlength="50" required />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Stock</label>
-                        <input class="form-control" type="number" name="Stock" min="0" max="10000" value="0" required />
+                        <label class="luxe-label">Stock</label>
+                        <input class="luxe-control w-100" type="number" name="Stock" min="0" max="10000" value="0" required />
                     </div>
 
                     <button class="btn-luxe w-100" type="submit">Toevoegen</button>
@@ -40,23 +42,25 @@
         </div>
 
         <div class="col-12 col-lg-8">
-            <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft);">
-                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div class="card-admin p-4">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
                     <div>
-                        <div style="font-weight:700;">Bestaande varianten</div>
-                        <div style="color:hsl(var(--muted-foreground)); font-size:0.95rem;">Pas stock aan per maat & kleur.</div>
+                        <h3 style="font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: hsl(var(--foreground)); margin-bottom: 0.25rem;">
+                            Bestaande varianten
+                        </h3>
+                        <div style="color: hsl(var(--muted-foreground)); font-size: 0.95rem;">Pas stock aan per maat & kleur.</div>
                     </div>
                     <a class="btn-luxe-outline" asp-action="Index">Terug</a>
                 </div>
 
-                <div class="table-responsive mt-3">
-                    <table class="table align-middle">
+                <div class="table-responsive">
+                    <table class="table admin-table">
                         <thead>
                             <tr>
                                 <th>Maat</th>
                                 <th>Kleur</th>
-                                <th style="width: 170px;">Stock</th>
-                                <th style="width: 120px;"></th>
+                                <th style="width: 200px;">Stock</th>
+                                <th style="width: 120px; text-align: right;">Acties</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -64,24 +68,27 @@
                         {
                             foreach (var v in Model.Varianten)
                             {
+                                var stockBadgeClass = v.Stock == 0 ? "badge-stock-danger" : v.Stock < 10 ? "badge-stock-warning" : "badge-stock-success";
+                                
                                 <tr>
-                                    <td>@v.Maat</td>
-                                    <td>@v.Kleur</td>
+                                    <td style="font-weight: 600; color: hsl(var(--foreground));">@v.Maat</td>
+                                    <td style="color: hsl(var(--muted-foreground));">@v.Kleur</td>
                                     <td>
-                                        <form asp-action="UpdateVariant" method="post" class="d-flex gap-2">
+                                        <form asp-action="UpdateVariant" method="post" class="d-flex gap-2 align-items-center">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="SchoenId" value="@Model.SchoenId" />
                                             <input type="hidden" name="VariantId" value="@v.VariantId" />
-                                            <input class="form-control" type="number" name="NieuweStock" min="0" max="10000" value="@v.Stock" />
-                                            <button class="btn-luxe" type="submit" style="white-space:nowrap;">Opslaan</button>
+                                            <input class="luxe-control" type="number" name="NieuweStock" min="0" max="10000" value="@v.Stock" style="width: 100px;" />
+                                            <span class="badge-stock @stockBadgeClass" style="font-size: 0.75rem;">@(v.Stock == 0 ? "Uit" : v.Stock < 10 ? "Laag" : "OK")</span>
+                                            <button class="btn-luxe btn-sm" type="submit" style="white-space: nowrap;">Opslaan</button>
                                         </form>
                                     </td>
-                                    <td>
-                                        <form asp-action="DeleteVariant" method="post" onsubmit="return confirm('Variant verwijderen?');">
+                                    <td class="text-end">
+                                        <form asp-action="DeleteVariant" method="post" onsubmit="return confirm('Variant verwijderen?');" style="display: inline;">
                                             @Html.AntiForgeryToken()
                                             <input type="hidden" name="schoenId" value="@Model.SchoenId" />
                                             <input type="hidden" name="variantId" value="@v.VariantId" />
-                                            <button class="btn-luxe-outline" type="submit">Verwijder</button>
+                                            <button class="btn-luxe-ghost btn-sm" type="submit">Verwijder</button>
                                         </form>
                                     </td>
                                 </tr>
@@ -90,7 +97,7 @@
                         else
                         {
                             <tr>
-                                <td colspan="4" style="color:hsl(var(--muted-foreground));">Nog geen varianten. Voeg er links een toe.</td>
+                                <td colspan="4" style="color: hsl(var(--muted-foreground)); text-align: center; padding: 2rem;">Nog geen varianten. Voeg er links een toe.</td>
                             </tr>
                         }
                         </tbody>

@@ -56,7 +56,7 @@ namespace BestelApp_Web.Services
         /// <summary>
         /// Voeg item toe aan cart
         /// </summary>
-        public async Task<bool> AddToCartAsync(long shoeVariantId, int quantity = 1)
+        public async Task<CartAddResult> AddToCartAsync(long shoeVariantId, int quantity = 1)
         {
             try
             {
@@ -68,18 +68,40 @@ namespace BestelApp_Web.Services
                 var response = await _httpClient.PostAsync("/api/cart/items", content);
                 if (response.IsSuccessStatusCode)
                 {
-                    return true;
+                    // API geeft cartItemCount terug
+                    try
+                    {
+                        var body = await response.Content.ReadFromJsonAsync<CartAddResult>();
+                        if (body != null)
+                        {
+                            body.Gelukt = true;
+                            return body;
+                        }
+                    }
+                    catch
+                    {
+                        // negeer parse fouten, we geven generiek success terug
+                    }
+
+                    return new CartAddResult { Gelukt = true, Bericht = "Item toegevoegd aan cart" };
                 }
 
                 var errorBody = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Cart add mislukt: {StatusCode} - {Body}", response.StatusCode, errorBody);
-                return false;
+                return new CartAddResult { Gelukt = false, Bericht = "Cart add mislukt" };
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fout bij toevoegen aan cart");
-                return false;
+                return new CartAddResult { Gelukt = false, Bericht = "Fout bij toevoegen aan cart" };
             }
+        }
+
+        public class CartAddResult
+        {
+            public bool Gelukt { get; set; } = false;
+            public string Bericht { get; set; } = string.Empty;
+            public int CartItemCount { get; set; } = 0;
         }
 
         /// <summary>

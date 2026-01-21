@@ -5,178 +5,113 @@
 }
 
 <style>
-    .checkout-container {
-        max-width: 1200px;
+    .checkout-wrap {
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 2rem 1rem;
+        padding: 0 1rem 2rem;
     }
 
-    .page-header {
-        background: var(--gradient-hero);
-        color: hsl(var(--primary-foreground));
-        padding: 2rem 0;
-        margin-bottom: 2rem;
-    }
-
-    @@media (min-width: 768px) {
-        .page-header {
-            padding: 3rem 0;
-        }
-    }
-
-    .section-title {
-        font-size: 1.75rem;
+    .checkout-card-title {
+        font-family: 'Inter', sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: hsl(var(--muted-foreground));
         font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-
-    @@media (min-width: 768px) {
-        .section-title {
-            font-size: 2.5rem;
-        }
-    }
-
-    .checkout-card {
-        background: hsl(var(--card));
-        border-radius: 12px;
-        padding: 2rem;
-        box-shadow: var(--shadow-card);
-        margin-bottom: 2rem;
-    }
-
-    .card-title {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 1.5rem;
-        padding-bottom: 1rem;
-        border-bottom: 2px solid #e9ecef;
-    }
-
-    .form-label {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.5rem;
-    }
-
-    .form-control {
-        border-radius: 8px;
-        border: 1px solid #dee2e6;
-        padding: 0.75rem;
-    }
-
-    .form-control:focus {
-        border-color: #ff6b35;
-        box-shadow: 0 0 0 0.2rem rgba(255, 107, 53, 0.25);
+        margin-bottom: 1rem;
     }
 
     .order-summary-item {
         display: flex;
+        gap: 12px;
         align-items: center;
-        padding: 1rem;
-        border-bottom: 1px solid #e9ecef;
+        padding: 12px 0;
+        border-bottom: 1px solid hsl(var(--border));
     }
 
     .order-item-image {
-        width: 60px;
-        height: 60px;
+        width: 64px;
+        height: 64px;
+        border-radius: 14px;
         object-fit: cover;
-        border-radius: 8px;
-        margin-right: 1rem;
-    }
-
-    .order-item-info {
-        flex: 1;
+        border: 1px solid hsl(var(--border));
+        background: hsl(var(--muted));
     }
 
     .order-item-name {
-        font-weight: 600;
-        color: #2c3e50;
-        margin-bottom: 0.25rem;
+        font-weight: 800;
+        color: hsl(var(--foreground));
+        margin-bottom: 2px;
     }
 
     .order-item-details {
-        font-size: 0.875rem;
-        color: #6c757d;
+        font-size: 0.9rem;
+        color: hsl(var(--muted-foreground));
     }
 
     .order-item-price {
-        font-weight: 600;
-        color: #2c3e50;
+        font-weight: 800;
+        color: hsl(var(--foreground));
+        white-space: nowrap;
     }
 
     .summary-row {
         display: flex;
         justify-content: space-between;
-        padding: 0.75rem 0;
+        padding: 10px 0;
+        border-bottom: 1px solid hsl(var(--border));
+        color: hsl(var(--muted-foreground));
     }
 
     .summary-row.total {
-        border-top: 2px solid #2c3e50;
-        margin-top: 1rem;
-        padding-top: 1rem;
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #2c3e50;
-    }
-
-    .place-order-btn {
-        width: 100%;
-        padding: 1rem;
-        background: hsl(var(--accent));
-        color: hsl(var(--accent-foreground));
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        font-size: 1.1rem;
-        cursor: pointer;
-        transition: background 0.3s ease;
-        margin-top: 1.5rem;
-    }
-
-    .place-order-btn:hover {
-        background: hsl(var(--accent-dark));
+        border-bottom: none;
+        border-top: 1px solid hsl(var(--border));
+        margin-top: 12px;
+        padding-top: 12px;
+        font-size: 1.15rem;
+        font-weight: 900;
+        color: hsl(var(--foreground));
     }
 
     .secure-badge {
         text-align: center;
-        color: #6c757d;
-        font-size: 0.875rem;
-        margin-top: 1rem;
+        color: hsl(var(--muted-foreground));
+        font-size: 0.9rem;
+        margin-top: 12px;
     }
 </style>
 
-<!-- Header -->
-<div class="page-header">
-    <div class="container">
-        <div class="section-title">🛒 Checkout</div>
-        <p class="mb-0">Vul je gegevens in om de bestelling af te ronden</p>
+<div class="container" style="padding-top: var(--space-32); max-width: 1100px;">
+    <div class="catalog-hero" style="margin-bottom: var(--space-24);">
+        <div class="catalog-kicker">Laatste stap</div>
+        <h1 class="catalog-title">Checkout</h1>
+        <p class="catalog-subtitle">Controleer je levering en rond je bestelling rustig af.</p>
     </div>
 </div>
 
-<div class="checkout-container">
+<div class="checkout-wrap">
     <form asp-action="PlaceOrder" method="post">
         <div class="row">
             <!-- Links: Adresgegevens -->
             <div class="col-lg-7">
-                <div class="checkout-card">
-                    <h2 class="card-title">📍 Leveradres</h2>
+                <div class="card-luxe p-4">
+                    <div class="checkout-card-title">Leveradres</div>
                     
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Voornaam</label>
-                            <input type="text" class="form-control" value="@Model.FirstName" readonly />
+                            <label class="luxe-label">Voornaam</label>
+                            <input type="text" class="luxe-control w-100" value="@Model.FirstName" readonly />
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label class="form-label">Achternaam</label>
-                            <input type="text" class="form-control" value="@Model.LastName" readonly />
+                            <label class="luxe-label">Achternaam</label>
+                            <input type="text" class="luxe-control w-100" value="@Model.LastName" readonly />
                         </div>
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Adres *</label>
+                        <label class="luxe-label">Adres *</label>
                         <input type="text" 
-                               class="form-control" 
+                               class="luxe-control w-100" 
                                name="Address" 
                                value="@Model.Address" 
                                placeholder="Straat en huisnummer"
@@ -185,18 +120,18 @@
 
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label">Postcode *</label>
+                            <label class="luxe-label">Postcode *</label>
                             <input type="text" 
-                                   class="form-control" 
+                                   class="luxe-control w-100" 
                                    name="PostalCode" 
                                    value="@Model.PostalCode" 
                                    placeholder="1000 AB"
                                    required />
                         </div>
                         <div class="col-md-8 mb-3">
-                            <label class="form-label">Plaats *</label>
+                            <label class="luxe-label">Plaats *</label>
                             <input type="text" 
-                                   class="form-control" 
+                                   class="luxe-control w-100" 
                                    name="City" 
                                    value="@Model.City" 
                                    placeholder="Amsterdam"
@@ -205,8 +140,8 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Land *</label>
-                        <select class="form-control" name="Country" required>
+                        <label class="luxe-label">Land *</label>
+                        <select class="luxe-control w-100" name="Country" required>
                             <option value="">Selecteer land</option>
                             <option value="Nederland" selected="@(Model.Country == "Nederland" ? "selected" : null)">Nederland</option>
                             <option value="België" selected="@(Model.Country == "België" ? "selected" : null)">België</option>
@@ -215,18 +150,18 @@
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">E-mail</label>
-                        <input type="email" class="form-control" value="@Model.Email" readonly />
+                        <label class="luxe-label">E-mail</label>
+                        <input type="email" class="luxe-control w-100" value="@Model.Email" readonly />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Telefoonnummer</label>
-                        <input type="tel" class="form-control" value="@Model.PhoneNumber" readonly />
+                        <label class="luxe-label">Telefoonnummer</label>
+                        <input type="tel" class="luxe-control w-100" value="@Model.PhoneNumber" readonly />
                     </div>
 
                     <div class="mb-3">
-                        <label class="form-label">Opmerkingen (optioneel)</label>
-                        <textarea class="form-control" 
+                        <label class="luxe-label">Opmerkingen (optioneel)</label>
+                        <textarea class="luxe-control w-100" style="height:auto; padding-top: 12px; padding-bottom: 12px;"
                                   name="Notes" 
                                   rows="3" 
                                   placeholder="Bijv. bezorginstructies"></textarea>
@@ -236,8 +171,8 @@
 
             <!-- Rechts: Bestelling Overzicht -->
             <div class="col-lg-5">
-                <div class="checkout-card">
-                    <h2 class="card-title">📦 Bestelling Overzicht</h2>
+                <div class="card-luxe p-4">
+                    <div class="checkout-card-title">Bestelling</div>
 
                     @if (Model.Cart != null && Model.Cart.Items != null)
                     {
@@ -249,11 +184,9 @@
                                      class="order-item-image"
                                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2260%22 height=%2260%22%3E%3Crect fill=%22%23f8f9fa%22 width=%2260%22 height=%2260%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 dy=%22.3em%22 font-size=%2220%22%3E👟%3C/text%3E%3C/svg%3E'" />
                                 
-                                <div class="order-item-info">
+                                <div style="flex:1;">
                                     <div class="order-item-name">@item.ShoeVariant.Shoe.Name</div>
-                                    <div class="order-item-details">
-                                        Maat: @item.ShoeVariant.Size | Kleur: @item.ShoeVariant.Color | Aantal: @item.Quantity
-                                    </div>
+                                    <div class="order-item-details">Maat @item.ShoeVariant.Size · @item.ShoeVariant.Color · Aantal @item.Quantity</div>
                                 </div>
                                 
                                 <div class="order-item-price">
@@ -277,8 +210,8 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="place-order-btn">
-                            🔒 Bestelling Plaatsen
+                        <button type="submit" class="btn-luxe w-100 mt-3">
+                            Bestelling plaatsen
                         </button>
 
                         <div class="secure-badge">

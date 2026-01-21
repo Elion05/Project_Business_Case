@@ -7,7 +7,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace BestelApp_Web.Controllers
 {
-    [Authorize] // Alle acties vereisen ingelogde gebruiker
     public class ShoesController : Controller
     {
         private readonly ApplicationDbContext _context;

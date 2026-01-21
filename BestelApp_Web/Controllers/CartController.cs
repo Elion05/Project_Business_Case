@@ -33,10 +33,16 @@ namespace BestelApp_Web.Controllers
         {
             try
             {
-                var success = await _cartApiService.AddToCartAsync(shoeVariantId, quantity);
-                if (success)
+                var result = await _cartApiService.AddToCartAsync(shoeVariantId, quantity);
+                if (result.Gelukt)
                 {
-                    TempData["SuccessBericht"] = "Product toegevoegd aan winkelwagen";
+                    // Trigger een subtiele animatie op de cart badge (in navbar) na toevoegen
+                    TempData["CartPulse"] = "1";
+
+                    // Als count 0 blijft, dan is er iets mis (debug)
+                    TempData["SuccessBericht"] = result.CartItemCount > 0
+                        ? $"Product toegevoegd aan winkelwagen (items: {result.CartItemCount})"
+                        : "Product toegevoegd aan winkelwagen";
                 }
                 else
                 {
