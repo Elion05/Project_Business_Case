@@ -1,4 +1,5 @@
 using RabbitMQ.Client;
+using BestelApp_Shared;
 using System.Text;
 using System.Text.Json;
 using BestelApp_Models;
@@ -145,8 +146,12 @@ namespace BestelApp_API.Services
                 _logger.LogInformation("Order message JSON aangemaakt:");
                 _logger.LogInformation("{Json}", jsonBericht);
 
+                // Encrypt payload
+                var encryptedMessage = EncryptionHelper.Encrypt(jsonBericht);
+                _logger.LogInformation("Message encrypted: {Encrypted}", encryptedMessage);
+
                 // Converteer naar bytes voor verzending
-                var body = Encoding.UTF8.GetBytes(jsonBericht);
+                var body = Encoding.UTF8.GetBytes(encryptedMessage);
 
                 // Maak PERSISTENT message properties met MessageId en CorrelationId
                 var properties = new BasicProperties

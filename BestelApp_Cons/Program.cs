@@ -1,4 +1,5 @@
 using RabbitMQ.Client;
+using BestelApp_Shared;
 using RabbitMQ.Client.Events;
 using System.Text;
 using System.Text.Json;
@@ -124,9 +125,24 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
     {
         // STAP 1: Deserialiseer JSON message
         byte[] body = eventArgs.Body.ToArray();
-        string berichtTekst = Encoding.UTF8.GetString(body);
+        string encryptedTekst = Encoding.UTF8.GetString(body);
 
-        Console.WriteLine("📄 JSON Message:");
+        Console.WriteLine("🔐 Encrypted Message:");
+        Console.WriteLine(encryptedTekst);
+
+        string berichtTekst;
+        try 
+        {
+             berichtTekst = EncryptionHelper.Decrypt(encryptedTekst);
+        }
+        catch (Exception ex)
+        {
+             Console.WriteLine($"✗ Decryptie gefaald: {ex.Message}");
+             // Fallback: misschien was het onversleuteld?
+             berichtTekst = encryptedTekst; 
+        }
+
+        Console.WriteLine("📄 Decrypted JSON Message:");
         Console.WriteLine(berichtTekst);
         Console.WriteLine("───────────────────────────────────────");
 
