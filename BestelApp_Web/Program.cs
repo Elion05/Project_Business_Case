@@ -1,10 +1,19 @@
 using BestelApp_Models;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Razor;
 using Microsoft.EntityFrameworkCore;
 using BestelApp_Web.Services;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Shared DataProtection keys (zodat Web + API dezelfde Identity cookie kunnen lezen)
+var gedeeldeKeysPad = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "SharedKeys"));
+Directory.CreateDirectory(gedeeldeKeysPad);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(gedeeldeKeysPad))
+    .SetApplicationName("BestelApp");
 
 //ApplicationDbContext toevoegen voor Entity Framework met connection string
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -34,6 +43,7 @@ builder.Services.AddIdentity<Users, IdentityRole>(options =>
 //Cookie instellingen voor login
 builder.Services.ConfigureApplicationCookie(options =>
 {
+    options.Cookie.Name = ".AspNetCore.Identity.Application";
     options.LoginPath = "/Account/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/Account/AccessDenied";
@@ -42,7 +52,30 @@ builder.Services.ConfigureApplicationCookie(options =>
 });
 
 // Backend API Service toevoegen (vervangt directe RabbitMQ connectie)
-builder.Services.AddHttpClient<OrderApiService>();
+// Configureer HttpClient met cookie forwarding voor authentication
+builder.Services.AddHttpClient<OrderApiService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        UseCookies = true,
+        CookieContainer = new System.Net.CookieContainer()
+    });
+
+builder.Services.AddHttpClient<FavoritesApiService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        UseCookies = true,
+        CookieContainer = new System.Net.CookieContainer()
+    });
+
+builder.Services.AddHttpClient<CartApiService>()
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
+    {
+        UseCookies = true,
+        CookieContainer = new System.Net.CookieContainer()
+    });
+
+// HttpContextAccessor voor services die user context nodig hebben
+builder.Services.AddHttpContextAccessor();
 
 // Services toevoegen voor Controllers en Views
 builder.Services.AddControllersWithViews();

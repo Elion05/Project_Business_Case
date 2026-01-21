@@ -1,0 +1,150 @@
+@{
+    ViewData["Title"] = "Bestelling Bevestigd";
+}
+
+<style>
+    .confirmation-container {
+        max-width: 800px;
+        margin: 4rem auto;
+        padding: 3rem;
+        text-align: center;
+    }
+
+    .success-icon {
+        font-size: 5rem;
+        margin-bottom: 2rem;
+        animation: scaleIn 0.5s ease;
+    }
+
+    @@keyframes scaleIn {
+        from {
+            transform: scale(0);
+        }
+        to {
+            transform: scale(1);
+        }
+    }
+
+    .confirmation-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #198754;
+        margin-bottom: 1rem;
+    }
+
+    .confirmation-subtitle {
+        font-size: 1.25rem;
+        color: #6c757d;
+        margin-bottom: 2rem;
+    }
+
+    .order-id-box {
+        background: #f8f9fa;
+        border: 2px dashed #198754;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .order-id-label {
+        font-size: 0.875rem;
+        color: #6c757d;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .order-id-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        font-family: monospace;
+    }
+
+    .info-box {
+        background: white;
+        border-radius: 12px;
+        padding: 2rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        text-align: left;
+        margin-bottom: 2rem;
+    }
+
+    .info-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .info-item {
+        display: flex;
+        align-items: start;
+        margin-bottom: 1rem;
+    }
+
+    .info-icon {
+        font-size: 1.5rem;
+        margin-right: 1rem;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .btn-large {
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        border-radius: 8px;
+    }
+</style>
+
+<div class="confirmation-container">
+    <div class="success-icon">✅</div>
+    <h1 class="confirmation-title">Bestelling Geplaatst!</h1>
+    <p class="confirmation-subtitle">Bedankt voor je bestelling. We hebben je order ontvangen en verwerken deze zo snel mogelijk.</p>
+
+    <div class="order-id-box">
+        <div class="order-id-label">Bestelnummer</div>
+        <div class="order-id-value">@ViewBag.OrderId</div>
+    </div>
+
+    <div class="info-box">
+        <h3 class="info-title">📋 Wat gebeurt er nu?</h3>
+        
+        <div class="info-item">
+            <div class="info-icon">1️⃣</div>
+            <div>
+                <strong>Bestelling verwerkt</strong><br/>
+                Je bestelling wordt automatisch verwerkt via RabbitMQ en geregistreerd in Salesforce.
+            </div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-icon">2️⃣</div>
+            <div>
+                <strong>Bevestigingsmail</strong><br/>
+                Je ontvangt binnen enkele minuten een bevestigingsmail met de orderdetails.
+            </div>
+        </div>
+
+        <div class="info-item">
+            <div class="info-icon">3️⃣</div>
+            <div>
+                <strong>Verzending</strong><br/>
+                Je bestelling wordt binnen 2-3 werkdagen verzonden naar het opgegeven adres.
+            </div>
+        </div>
+    </div>
+
+    <div class="action-buttons">
+        <a asp-controller="Profile" asp-action="Orders" class="btn btn-primary btn-large">
+            📦 Bekijk Mijn Bestellingen
+        </a>
+        <a asp-controller="Shoes" asp-action="Index" class="btn btn-outline-secondary btn-large">
+            🛍️ Verder Winkelen
+        </a>
+    </div>
+</div>

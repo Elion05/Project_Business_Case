@@ -30,6 +30,7 @@ namespace BestelApp_Models
         public DbSet<CartItem> CartItems { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Favorite> Favorites { get; set; }
 
         // OnConfiguring voor design-time (migrations)
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -116,6 +117,25 @@ namespace BestelApp_Models
             // Index voor snelle lookup van OrderId
             builder.Entity<Order>()
                 .HasIndex(o => o.OrderId)
+                .IsUnique();
+
+            // Configureer Favorite → User relatie
+            builder.Entity<Favorite>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // Als user verwijderd, verwijder favorieten ook
+
+            // Configureer Favorite → Shoe relatie
+            builder.Entity<Favorite>()
+                .HasOne(f => f.Shoe)
+                .WithMany()
+                .HasForeignKey(f => f.ShoeId)
+                .OnDelete(DeleteBehavior.Restrict); // Bescherm Shoe tegen verwijdering
+
+            // Unieke constraint: 1 user kan 1 product maar 1x favorieten
+            builder.Entity<Favorite>()
+                .HasIndex(f => new { f.UserId, f.ShoeId })
                 .IsUnique();
         }
     }

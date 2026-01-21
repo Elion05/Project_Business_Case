@@ -1,31 +1,324 @@
+/* =========================================================
+   BestelApp UI Theme (premium, minimal)
+   - Fonts: Inter + Playfair Display
+   - Kleuren: charcoal + gold accent
+   - Shadows/gradients: soft, luxe
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+:root {
+  /* Premium palette (cream / beige / warm brown / muted gold) */
+  /* Background: #FAF6EF */
+  --background: 38 41% 96%;
+  /* Text: near-black brown (#24160D) */
+  --foreground: 23 46% 10%;
+
+  /* Card: warm off-white (#FFFDF9) */
+  --card: 40 60% 99%;
+  --card-foreground: 23 46% 10%;
+
+  /* Primary brand brown (#8B5A2B-like) */
+  --primary: 26 53% 36%;
+  --primary-foreground: 40 60% 99%;
+
+  /* Secondary: light beige */
+  --secondary: 35 33% 92%;
+  --secondary-foreground: 23 46% 10%;
+
+  --muted: 35 22% 94%;
+  --muted-foreground: 25 18% 34%;
+
+  /* Accent: muted gold (#C9A24E-like) */
+  --accent: 41 52% 55%;
+  --accent-foreground: 23 46% 10%;
+  /* Hover darken for primary buttons */
+  --primary-dark: 25 58% 30%;
+
+  --border: 32 18% 85%;
+  --input: 32 18% 85%;
+  --ring: 41 52% 55%;
+
+  --radius: 0.5rem;
+
+  /* Softer hero block */
+  --gradient-hero: linear-gradient(135deg, hsl(35 33% 92%) 0%, hsl(38 41% 96%) 100%);
+  --gradient-gold: linear-gradient(135deg, hsl(41 52% 55%) 0%, hsl(32 40% 70%) 100%);
+  --gradient-card: linear-gradient(180deg, hsl(40 60% 99%) 0%, hsl(35 22% 96%) 100%);
+
+  --shadow-soft: 0 6px 24px -10px hsl(23 46% 10% / 0.18);
+  --shadow-card: 0 12px 34px -18px hsl(23 46% 10% / 0.22);
+  --shadow-hover: 0 20px 46px -22px hsl(23 46% 10% / 0.28);
+}
+
 html {
   font-size: 14px;
-}
-
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
   position: relative;
   min-height: 100%;
 }
 
+@media (min-width: 768px) {
+  html { font-size: 16px; }
+}
+
 body {
   margin-bottom: 60px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: 'Inter', sans-serif;
 }
 
-.form-floating > .form-control-plaintext::placeholder, .form-floating > .form-control::placeholder {
-  color: var(--bs-secondary-color);
-  text-align: end;
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
 }
 
-.form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
-  text-align: start;
+/* =========================
+   Utilities
+   ========================= */
+.text-gradient {
+  background: var(--gradient-gold);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.bg-hero {
+  background: var(--gradient-hero);
+}
+
+.shadow-card {
+  box-shadow: var(--shadow-card);
+}
+
+.shadow-hover:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
+}
+
+.rounded-luxe {
+  border-radius: 12px;
+}
+
+/* =========================
+   Premium layout blocks (hero + filter shell)
+   ========================= */
+.catalog-hero {
+  background: var(--gradient-hero);
+  border-radius: 16px;
+  padding: 3.25rem 1.5rem;
+  text-align: center;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid hsl(var(--border));
+}
+
+@media (min-width: 768px) {
+  .catalog-hero { padding: 4.25rem 2rem; }
+}
+
+.catalog-kicker {
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+  margin-bottom: 0.75rem;
+}
+
+.catalog-title {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: hsl(var(--foreground));
+  margin-bottom: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .catalog-title { font-size: 3.2rem; }
+}
+
+.catalog-subtitle {
+  max-width: 52ch;
+  margin: 0 auto;
+  color: hsl(var(--muted-foreground));
+  font-size: 1rem;
+}
+
+.filters-shell {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .filters-shell { padding: 1.25rem; }
+}
+
+/* =========================
+   Premium buttons (single system)
+   ========================= */
+.btn-luxe {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border: 1px solid hsl(var(--primary));
+  border-radius: 14px;
+  padding: 0.85rem 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.btn-luxe:hover {
+  background: hsl(var(--primary-dark));
+  border-color: hsl(var(--primary-dark));
+  color: hsl(var(--primary-foreground));
+}
+
+.btn-luxe:active {
+  transform: translateY(1px);
+}
+
+.btn-luxe-outline {
+  background: transparent;
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary));
+  border-radius: 14px;
+  padding: 0.85rem 1.1rem;
+  font-weight: 600;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-luxe-outline:hover {
+  background: hsla(26, 53%, 36%, 0.08);
+  color: hsl(var(--primary-dark));
+  border-color: hsl(var(--primary-dark));
+}
+
+/* Icon button for navbar/actions */
+.luxe-icon-btn {
+  border-color: hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+}
+
+.luxe-icon-btn:hover {
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+}
+
+.luxe-badge {
+  background: hsl(var(--accent));
+  color: hsl(var(--foreground));
+}
+
+/* =========================
+   Navbar (fixed, luxe)
+   ========================= */
+.luxe-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1050;
+  transition: all 0.35s ease;
+  background: transparent;
+}
+
+.luxe-navbar.is-scrolled {
+  background: hsla(38, 41%, 96%, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid hsl(var(--border));
+  box-shadow: var(--shadow-soft);
+}
+
+.luxe-navbar .navbar-brand {
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.luxe-navbar .nav-link {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: hsl(var(--foreground));
+  transition: color 0.25s ease;
+}
+
+.luxe-navbar .nav-link:hover {
+  color: hsl(var(--accent));
+}
+
+.luxe-search {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  border-radius: 999px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 280px;
+  box-shadow: var(--shadow-soft);
+}
+
+.luxe-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+  font-size: 0.95rem;
+}
+
+.luxe-icon-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-soft);
+  transition: all 0.25s ease;
+  color: hsl(var(--foreground));
+}
+
+.luxe-icon-btn:hover {
+  border-color: hsl(var(--accent));
+  color: hsl(var(--accent));
+  transform: translateY(-1px);
+}
+
+/* Badge (cart count) */
+.luxe-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  font-size: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================
+   Page container spacing (fixed navbar)
+   ========================= */
+.luxe-page {
+  padding-top: 92px;
+}
+
+/* =========================
+   Form focus override (bootstrap)
+   ========================= */
+.btn:focus,
+.btn:active:focus,
+.btn-link.nav-link:focus,
+.form-control:focus,
+.form-check-input:focus,
+.form-select:focus {
+  box-shadow: 0 0 0 0.25rem hsla(41, 52%, 55%, 0.22);
+  border-color: hsl(var(--primary));
 }

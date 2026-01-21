@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using BestelApp_Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BestelApp_Web.Controllers
 {
@@ -22,9 +23,70 @@ namespace BestelApp_Web.Controllers
         private DbSet<Shoe> Shoes => _context.Set<Shoe>();
 
         // GET: Shoes
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, long? categoryId, string? gender, string? sortBy)
         {
-            return View(await Shoes.ToListAsync());
+            var query = Shoes.Include(s => s.Category).AsQueryable();
+
+            // Categorieën voor filter UI
+            ViewBag.Categorieen = await _context.Categories
+                .OrderBy(c => c.Name)
+                .Select(c => new { c.Id, c.Name })
+                .ToListAsync();
+
+            // Zoekfilter
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(s => 
+                    s.Name.Contains(search) || 
+                    s.Brand.Contains(search) || 
+                    s.Description.Contains(search));
+            }
+
+            // Categoriefilter
+            if (categoryId.HasValue && categoryId.Value > 0)
+            {
+                query = query.Where(s => s.CategoryId == categoryId.Value);
+            }
+
+            // Gender filter
+            if (!string.IsNullOrEmpty(gender) && gender != "Alles")
+            {
+                query = query.Where(s => s.Gender == gender);
+            }
+
+            // Sorteren
+            switch (sortBy?.ToLower())
+            {
+                case "prijs-laag":
+                    query = query.OrderBy(s => s.Price);
+                    break;
+                case "prijs-hoog":
+                    query = query.OrderByDescending(s => s.Price);
+                    break;
+                case "naam-az":
+                    query = query.OrderBy(s => s.Name);
+                    break;
+                case "naam-za":
+                    query = query.OrderByDescending(s => s.Name);
+                    break;
+                case "nieuwste":
+                    query = query.OrderByDescending(s => s.CreatedAt);
+                    break;
+                case "oudste":
+                    query = query.OrderBy(s => s.CreatedAt);
+                    break;
+                default:
+                    query = query.OrderByDescending(s => s.CreatedAt); // Standaard: nieuwste eerst
+                    break;
+            }
+
+            // ViewBag voor filters
+            ViewBag.Search = search;
+            ViewBag.CategoryId = categoryId;
+            ViewBag.Gender = gender ?? "Alles";
+            ViewBag.SortBy = sortBy ?? "nieuwste";
+
+            return View(await query.ToListAsync());
         }
 
         // GET: Shoes/Details/5
@@ -36,6 +98,8 @@ namespace BestelApp_Web.Controllers
             }
 
             var shoe = await Shoes
+                .Include(s => s.Variants)
+                .Include(s => s.Category)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (shoe == null)
             {

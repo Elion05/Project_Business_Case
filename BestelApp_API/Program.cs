@@ -1,9 +1,18 @@
 using BestelApp_API.Services;
 using BestelApp_Models;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Shared DataProtection keys (zodat Web + API dezelfde Identity cookie kunnen lezen)
+var gedeeldeKeysPad = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, "..", "SharedKeys"));
+Directory.CreateDirectory(gedeeldeKeysPad);
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(gedeeldeKeysPad))
+    .SetApplicationName("BestelApp");
 
 // ApplicationDbContext toevoegen
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -13,6 +22,32 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 builder.Services.AddIdentity<Users, IdentityRole>()
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+// Zorg dat API geen redirect doet naar /Account/Login (API heeft die route niet)
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Cookie.Name = ".AspNetCore.Identity.Application";
+    options.Events.OnRedirectToLogin = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            return Task.CompletedTask;
+        }
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        if (context.Request.Path.StartsWithSegments("/api"))
+        {
+            context.Response.StatusCode = StatusCodes.Status403Forbidden;
+            return Task.CompletedTask;
+        }
+        context.Response.Redirect(context.RedirectUri);
+        return Task.CompletedTask;
+    };
+});
 
 // Authentication/Authorization
 builder.Services.AddAuthentication();
@@ -33,9 +68,11 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowWebApp", policy =>
     {
-        policy.WithOrigins("https://localhost:5001", "http://localhost:5000") // WebApp URL's
+        policy.WithOrigins("https://localhost:5001", "http://localhost:5002") // WebApp URL's
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              // Nodig omdat we cookies/Identity gebruiken vanuit de WebApp (credentials: include)
+              .AllowCredentials();
     });
 });
 

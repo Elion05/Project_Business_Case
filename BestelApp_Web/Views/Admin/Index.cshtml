@@ -1,0 +1,57 @@
+@{
+    ViewData["Title"] = "Admin";
+}
+
+<div class="container" style="max-width: 1100px; padding-top: 2rem;">
+    <div class="catalog-hero" style="margin-bottom: 1.5rem;">
+        <div class="catalog-kicker">Beheer</div>
+        <h1 class="catalog-title">Admin Dashboard</h1>
+        <p class="catalog-subtitle">Beheer producten, voorraad, gebruikers en bestellingen.</p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-md-4">
+            <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft); height: 100%;">
+                <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">Producten</h3>
+                <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">Nieuwe schoen toevoegen of bestaande aanpassen.</p>
+                <div class="d-grid gap-2">
+                    <a class="btn-luxe" asp-controller="Shoes" asp-action="Create">Product toevoegen</a>
+                    <a class="btn-luxe-outline" asp-controller="Shoes" asp-action="Index">Producten bekijken</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft); height: 100%;">
+                <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">Voorraad</h3>
+                <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">Stock per maat & kleur beheren (varianten).</p>
+                <div class="d-grid">
+                    <a class="btn-luxe" asp-controller="AdminStock" asp-action="Index">Voorraad beheren</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-4">
+            <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft); height: 100%;">
+                <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 0.5rem;">Gebruikers</h3>
+                <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1rem;">Rollen, blokkeren, en gegevens aanpassen.</p>
+                <div class="d-grid">
+                    <a class="btn-luxe" asp-controller="Users" asp-action="Index">Gebruikers beheren</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft);">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 0.25rem;">Bestellingen</h3>
+                        <p style="color: hsl(var(--muted-foreground)); margin: 0;">Alle orders bekijken en (optioneel) doorsturen naar RabbitMQ.</p>
+                    </div>
+                    <a class="btn-luxe" asp-controller="AdminOrders" asp-action="Index">Bestellingen bekijken</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

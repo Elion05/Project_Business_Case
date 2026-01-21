@@ -1,0 +1,75 @@
+@using BestelApp_Web.Controllers
+@model AdminGebruikerEditViewModel
+
+@{
+    ViewData["Title"] = "Gebruiker bewerken";
+}
+
+<div class="container" style="max-width: 900px; padding-top: 2rem;">
+    <div class="catalog-hero" style="margin-bottom: 1.5rem;">
+        <div class="catalog-kicker">Gebruikers</div>
+        <h1 class="catalog-title">Gebruiker bewerken</h1>
+        <p class="catalog-subtitle">@Model.UserName</p>
+    </div>
+
+    <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft);">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+
+            <div class="row g-3">
+                <div class="col-12 col-md-6">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Gebruikersnaam (read-only)</label>
+                    <input class="form-control" asp-for="UserName" readonly />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">E-mail</label>
+                    <input class="form-control" asp-for="Email" />
+                    <span asp-validation-for="Email" class="text-danger"></span>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Voornaam</label>
+                    <input class="form-control" asp-for="FirstName" />
+                </div>
+                <div class="col-12 col-md-6">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Achternaam</label>
+                    <input class="form-control" asp-for="LastName" />
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Telefoon</label>
+                    <input class="form-control" asp-for="PhoneNumber" />
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Adres</label>
+                    <input class="form-control" asp-for="Address" />
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Stad</label>
+                    <input class="form-control" asp-for="City" />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Postcode</label>
+                    <input class="form-control" asp-for="PostalCode" />
+                </div>
+                <div class="col-12 col-md-4">
+                    <label class="form-label" style="font-weight:600; color:hsl(var(--muted-foreground));">Land</label>
+                    <input class="form-control" asp-for="Country" />
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 justify-content-end mt-4">
+                <a class="btn-luxe-outline" asp-action="Index">Terug</a>
+                <button class="btn-luxe" type="submit">Opslaan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
