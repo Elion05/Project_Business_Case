@@ -57,21 +57,24 @@ builder.Services.AddHttpClient<OrderApiService>()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         UseCookies = true,
-        CookieContainer = new System.Net.CookieContainer()
+        CookieContainer = new System.Net.CookieContainer(),
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
     });
 
 builder.Services.AddHttpClient<FavoritesApiService>()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         UseCookies = true,
-        CookieContainer = new System.Net.CookieContainer()
+        CookieContainer = new System.Net.CookieContainer(),
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
     });
 
 builder.Services.AddHttpClient<CartApiService>()
     .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler
     {
         UseCookies = true,
-        CookieContainer = new System.Net.CookieContainer()
+        CookieContainer = new System.Net.CookieContainer(),
+        ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
     });
 
 // HttpContextAccessor voor services die user context nodig hebben

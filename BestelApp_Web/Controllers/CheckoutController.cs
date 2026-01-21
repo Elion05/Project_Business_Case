@@ -32,7 +32,11 @@ namespace BestelApp_Web.Controllers
             _logger = logger;
             _httpContextAccessor = httpContextAccessor;
 
-            _httpClient = new HttpClient();
+            var handler = new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
+            };
+            _httpClient = new HttpClient(handler);
             var apiBaseUrl = _configuration["BackendApi:BaseUrl"] ?? "https://localhost:7001";
             _httpClient.BaseAddress = new Uri(apiBaseUrl);
         }
