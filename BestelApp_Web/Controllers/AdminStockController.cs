@@ -117,12 +117,16 @@ namespace BestelApp_Web.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Genereer SKU voor de nieuwe variant
+            string sku = GenerateSku(shoe, model.Maat, model.Kleur);
+            
             var nieuweVariant = new ShoeVariant
             {
                 ShoeId = shoe.Id,
                 Size = model.Maat,
                 Color = model.Kleur,
-                Stock = model.Stock
+                Stock = model.Stock,
+                SKU = sku // Altijd een niet-lege waarde (NOT NULL constraint)
             };
 
             _context.ShoeVariants.Add(nieuweVariant);
@@ -130,6 +134,28 @@ namespace BestelApp_Web.Controllers
 
             TempData["SuccessBericht"] = "Nieuwe variant toegevoegd.";
             return RedirectToAction(nameof(Edit), new { id = model.SchoenId });
+        }
+
+        /// <summary>
+        /// Genereert een SKU voor een schoen variant
+        /// Format: BRAND-NAME-SIZE-COLOR (bijv. NIKE-AIRMAX-42-ZWART)
+        /// </summary>
+        private string GenerateSku(Shoe shoe, int size, string color)
+        {
+            // Genereer SKU: BRAND-NAME-SIZE-COLOR
+            var brandClean = (shoe.Brand ?? "UNKNOWN").ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
+            var nameClean = (shoe.Name ?? "PRODUCT").ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
+            var colorClean = (color ?? "UNKNOWN").Trim().ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
+            var sku = $"{brandClean}-{nameClean}-{size}-{colorClean}";
+            
+            // Valideer dat SKU niet leeg is
+            if (string.IsNullOrWhiteSpace(sku))
+            {
+                // Fallback: gebruik ShoeId, size en timestamp
+                sku = $"SKU-{shoe.Id}-{size}-{DateTime.UtcNow.Ticks}";
+            }
+            
+            return sku;
         }
 
         // POST: AdminStock/DeleteVariant

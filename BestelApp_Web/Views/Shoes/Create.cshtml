@@ -138,21 +138,18 @@
                         <span asp-validation-for="ImageUrl" class="text-danger"></span>
                     </div>
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label asp-for="Size" class="form-label">Maat (optioneel)</label>
-                                <input asp-for="Size" type="number" class="form-control" placeholder="42" />
-                                <span asp-validation-for="Size" class="text-danger"></span>
-                            </div>
+                    <!-- Varianten Sectie -->
+                    <div class="form-group mb-4">
+                        <label class="form-label">Varianten (Maat, Kleur, Voorraad) *</label>
+                        <p class="text-muted small mb-3">Voeg minimaal één variant toe met maat, kleur en voorraad</p>
+                        
+                        <div id="variantsContainer">
+                            <!-- Varianten worden hier dynamisch toegevoegd -->
                         </div>
-                        <div class="col-md-6">
-                            <div class="form-group mb-3">
-                                <label asp-for="Color" class="form-label">Kleur (optioneel)</label>
-                                <input asp-for="Color" class="form-control" placeholder="Zwart" />
-                                <span asp-validation-for="Color" class="text-danger"></span>
-                            </div>
-                        </div>
+                        
+                        <button type="button" id="addVariantBtn" class="btn-luxe-outline mt-2">
+                            + Variant Toevoegen
+                        </button>
                     </div>
 
                     <div class="form-check mb-4">
@@ -176,4 +173,88 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        let variantCounter = 0;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const container = document.getElementById('variantsContainer');
+            const addBtn = document.getElementById('addVariantBtn');
+            
+            // Voeg eerste variant toe
+            addVariantRow();
+            
+            addBtn.addEventListener('click', function() {
+                addVariantRow();
+            });
+            
+            function addVariantRow() {
+                const row = document.createElement('div');
+                row.className = 'variant-row mb-3 p-3 border rounded';
+                row.setAttribute('data-variant-index', variantCounter);
+                
+                row.innerHTML = `
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Maat *</label>
+                            <input type="number" name="Variants[${variantCounter}].Size" class="form-control" min="20" max="50" required placeholder="42" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Kleur *</label>
+                            <input type="text" name="Variants[${variantCounter}].Color" class="form-control" maxlength="50" required placeholder="Zwart" />
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Voorraad *</label>
+                            <input type="number" name="Variants[${variantCounter}].Stock" class="form-control" min="0" required placeholder="10" />
+                        </div>
+                        <div class="col-md-1 d-flex align-items-end">
+                            <button type="button" class="btn btn-danger btn-sm remove-variant-btn" title="Verwijder variant">
+                                ×
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                container.appendChild(row);
+                variantCounter++;
+                
+                // Verwijder knop functionaliteit
+                row.querySelector('.remove-variant-btn').addEventListener('click', function() {
+                    if (container.children.length > 1) {
+                        row.remove();
+                    } else {
+                        alert('Je moet minimaal één variant hebben');
+                    }
+                });
+            }
+            
+            // Valideer formulier voordat het wordt verzonden
+            document.querySelector('form').addEventListener('submit', function(e) {
+                const variants = container.querySelectorAll('.variant-row');
+                if (variants.length === 0) {
+                    e.preventDefault();
+                    alert('Voeg minimaal één variant toe (maat, kleur, voorraad)');
+                    return false;
+                }
+                
+                // Valideer dat alle variant velden zijn ingevuld
+                let isValid = true;
+                variants.forEach(row => {
+                    const size = row.querySelector('input[name*=".Size"]').value;
+                    const color = row.querySelector('input[name*=".Color"]').value;
+                    const stock = row.querySelector('input[name*=".Stock"]').value;
+                    
+                    if (!size || !color || !stock) {
+                        isValid = false;
+                    }
+                });
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    alert('Vul alle verplichte velden in voor elke variant');
+                    return false;
+                }
+            });
+        });
+    </script>
 }
