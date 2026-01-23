@@ -37,6 +37,12 @@ namespace BestelApp_API.Controllers
                 return Unauthorized(new { message = "User niet ingelogd" });
             }
 
+            // Check of user daadwerkelijk bestaat (voorkomt FK errors bij oude tokens)
+            if (!await _context.AppUsers.AnyAsync(u => u.Id == userId))
+            {
+                return Unauthorized(new { message = "User niet gevonden. Log opnieuw in." });
+            }
+
             // BELANGRIJK:
             // We retourneren hier GEEN EF entities, omdat die navigation properties object-cycles kunnen maken:
             // Cart -> Items -> Cart -> Items -> ...
@@ -128,6 +134,12 @@ namespace BestelApp_API.Controllers
             if (string.IsNullOrEmpty(userId))
             {
                 return Unauthorized(new { message = "User niet ingelogd" });
+            }
+
+            // Check of user daadwerkelijk bestaat
+            if (!await _context.AppUsers.AnyAsync(u => u.Id == userId))
+            {
+                return Unauthorized(new { message = "User niet gevonden. Log opnieuw in." });
             }
 
             // Valideer ShoeVariant

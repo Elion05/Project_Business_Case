@@ -135,7 +135,7 @@ namespace BestelApp_Cons.Salesforce
             // Maak/Update Order (bestelling) - ALLEEN Order, geen Lead meer
             Console.WriteLine("───────────────────────────────────────");
             Console.WriteLine("📦 Order aanmaken/bijwerken in Salesforce...");
-            
+
             // Converteer status naar Salesforce Order Status
             var salesforceStatus = bestelling.Status.ToLower() switch
             {
@@ -158,14 +158,14 @@ namespace BestelApp_Cons.Salesforce
                                   $"Totaal: €{bestelling.TotalPrice} ({bestelling.TotalQuantity} items)\n" +
                                   $"Verzendadres: {bestelling.ShippingAddress?.FullAddress}\n" +
                                   $"\nItems:\n{itemsDescription}";
-            
+
             if (!string.IsNullOrWhiteSpace(bestelling.Notes))
             {
                 orderDescription += $"\n\nNotities: {bestelling.Notes}";
             }
 
             var accountId = _configuratie["Salesforce:DefaultAccountId"];
-            
+
             // WAARSCHUWING: AccountId is meestal VERPLICHT voor Order object
             if (string.IsNullOrEmpty(accountId))
             {
@@ -176,7 +176,7 @@ namespace BestelApp_Cons.Salesforce
                 Console.WriteLine("   }");
                 Console.WriteLine("⚠️ Order wordt toch geprobeerd aan te maken, maar kan falen...");
             }
-            
+
             // Order data met alle beschikbare informatie
             var orderData = new Dictionary<string, object>
             {
@@ -218,10 +218,10 @@ namespace BestelApp_Cons.Salesforce
             postOrderRequest.Content = orderContent;
 
             Console.WriteLine($"🔗 POST URL: {postOrderUrl}");
-            
+
             var orderResponse = await _httpClient.SendAsync(postOrderRequest);
             var orderResponseBody = await orderResponse.Content.ReadAsStringAsync();
-            
+
             Console.WriteLine($"📥 POST Response Status: {orderResponse.StatusCode}");
             Console.WriteLine($"📄 POST Response Body: {orderResponseBody}");
 
@@ -245,7 +245,7 @@ namespace BestelApp_Cons.Salesforce
             {
                 Console.WriteLine($"❌ Order fout: {orderResponse.StatusCode}");
                 Console.WriteLine($"📄 Error details: {orderResponseBody}");
-                
+
                 // Als het een 400 Bad Request is, kan het zijn dat AccountId ontbreekt
                 if (orderResponse.StatusCode == HttpStatusCode.BadRequest)
                 {
@@ -253,7 +253,7 @@ namespace BestelApp_Cons.Salesforce
                     Console.WriteLine("⚠️ Controleer in Salesforce welke velden verplicht zijn voor het Order object");
                     Console.WriteLine("⚠️ Voeg 'DefaultAccountId' toe aan appsettings.json in de Salesforce sectie");
                 }
-                
+
                 // Als het een 404 is, probeer dan direct POST (zonder UPSERT)
                 if (orderResponse.StatusCode == HttpStatusCode.NotFound)
                 {

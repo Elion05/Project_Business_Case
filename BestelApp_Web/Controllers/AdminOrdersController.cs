@@ -62,7 +62,7 @@ namespace BestelApp_Web.Controllers
                 // Status filter
                 if (!string.IsNullOrWhiteSpace(status) && status != "Alles")
                 {
-                    gefilterdeOrders = gefilterdeOrders.Where(o => 
+                    gefilterdeOrders = gefilterdeOrders.Where(o =>
                         o.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
                 }
 
@@ -98,8 +98,8 @@ namespace BestelApp_Web.Controllers
                 ViewBag.TotaalOrders = gefilterdeOrders.Count();
                 ViewBag.TotaalOmzet = gefilterdeOrders.Sum(o => o.TotalPrice);
                 ViewBag.TotaalItems = gefilterdeOrders.Sum(o => o.TotalQuantity);
-                ViewBag.GemiddeldeOrderWaarde = ViewBag.TotaalOrders > 0 
-                    ? Math.Round((decimal)ViewBag.TotaalOmzet / (int)ViewBag.TotaalOrders, 2) 
+                ViewBag.GemiddeldeOrderWaarde = ViewBag.TotaalOrders > 0
+                    ? Math.Round((decimal)ViewBag.TotaalOmzet / (int)ViewBag.TotaalOrders, 2)
                     : 0;
 
                 return View(gefilterdeOrders.ToList());
@@ -176,7 +176,7 @@ namespace BestelApp_Web.Controllers
 
                 if (!string.IsNullOrWhiteSpace(status) && status != "Alles")
                 {
-                    gefilterdeOrders = gefilterdeOrders.Where(o => 
+                    gefilterdeOrders = gefilterdeOrders.Where(o =>
                         o.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
                 }
 
