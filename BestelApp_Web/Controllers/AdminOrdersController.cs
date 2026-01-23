@@ -30,7 +30,7 @@ namespace BestelApp_Web.Controllers
         }
 
         // GET: AdminOrders
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? zoek, string? status, string? datumFilter, bool? queueStatus)
         {
             try
             {
@@ -46,7 +46,63 @@ namespace BestelApp_Web.Controllers
                 var orders = JsonSerializer.Deserialize<List<AdminOrderListItemViewModel>>(json,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<AdminOrderListItemViewModel>();
 
-                return View(orders);
+                // FILTERS TOEPASSEN
+                var gefilterdeOrders = orders.AsEnumerable();
+
+                // Zoekfilter (OrderId, klant naam, email)
+                if (!string.IsNullOrWhiteSpace(zoek))
+                {
+                    var zoekLower = zoek.ToLower();
+                    gefilterdeOrders = gefilterdeOrders.Where(o =>
+                        o.OrderId.ToLower().Contains(zoekLower) ||
+                        o.UserName.ToLower().Contains(zoekLower) ||
+                        o.UserEmail.ToLower().Contains(zoekLower));
+                }
+
+                // Status filter
+                if (!string.IsNullOrWhiteSpace(status) && status != "Alles")
+                {
+                    gefilterdeOrders = gefilterdeOrders.Where(o => 
+                        o.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
+                }
+
+                // Datum filter
+                if (!string.IsNullOrWhiteSpace(datumFilter))
+                {
+                    var vandaag = DateTime.Today;
+                    gefilterdeOrders = datumFilter.ToLower() switch
+                    {
+                        "vandaag" => gefilterdeOrders.Where(o => o.OrderDate.Date == vandaag),
+                        "deze week" => gefilterdeOrders.Where(o => o.OrderDate >= vandaag.AddDays(-(int)vandaag.DayOfWeek)),
+                        "deze maand" => gefilterdeOrders.Where(o => o.OrderDate.Year == vandaag.Year && o.OrderDate.Month == vandaag.Month),
+                        _ => gefilterdeOrders
+                    };
+                }
+
+                // Queue status filter
+                if (queueStatus.HasValue)
+                {
+                    gefilterdeOrders = gefilterdeOrders.Where(o => o.IsSentToQueue == queueStatus.Value);
+                }
+
+                // Sorteer op datum (nieuwste eerst)
+                gefilterdeOrders = gefilterdeOrders.OrderByDescending(o => o.OrderDate);
+
+                // ViewBag voor filters
+                ViewBag.Zoek = zoek ?? string.Empty;
+                ViewBag.Status = status ?? "Alles";
+                ViewBag.DatumFilter = datumFilter ?? "Alles";
+                ViewBag.QueueStatus = queueStatus;
+
+                // Statistieken berekenen
+                ViewBag.TotaalOrders = gefilterdeOrders.Count();
+                ViewBag.TotaalOmzet = gefilterdeOrders.Sum(o => o.TotalPrice);
+                ViewBag.TotaalItems = gefilterdeOrders.Sum(o => o.TotalQuantity);
+                ViewBag.GemiddeldeOrderWaarde = ViewBag.TotaalOrders > 0 
+                    ? Math.Round((decimal)ViewBag.TotaalOmzet / (int)ViewBag.TotaalOrders, 2) 
+                    : 0;
+
+                return View(gefilterdeOrders.ToList());
             }
             catch (Exception ex)
             {
@@ -85,6 +141,94 @@ namespace BestelApp_Web.Controllers
             {
                 _logger.LogError(ex, "Fout bij ophalen order detail");
                 TempData["FoutBericht"] = "Er ging iets fout.";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        // GET: AdminOrders/Export
+        public async Task<IActionResult> Export(string? zoek, string? status, string? datumFilter, bool? queueStatus)
+        {
+            try
+            {
+                ForwardCookies();
+                var response = await _httpClient.GetAsync("/api/orders/all");
+                if (!response.IsSuccessStatusCode)
+                {
+                    TempData["FoutBericht"] = "Kon orders niet ophalen voor export.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                var orders = JsonSerializer.Deserialize<List<AdminOrderListItemViewModel>>(json,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<AdminOrderListItemViewModel>();
+
+                // Pas dezelfde filters toe als Index
+                var gefilterdeOrders = orders.AsEnumerable();
+
+                if (!string.IsNullOrWhiteSpace(zoek))
+                {
+                    var zoekLower = zoek.ToLower();
+                    gefilterdeOrders = gefilterdeOrders.Where(o =>
+                        o.OrderId.ToLower().Contains(zoekLower) ||
+                        o.UserName.ToLower().Contains(zoekLower) ||
+                        o.UserEmail.ToLower().Contains(zoekLower));
+                }
+
+                if (!string.IsNullOrWhiteSpace(status) && status != "Alles")
+                {
+                    gefilterdeOrders = gefilterdeOrders.Where(o => 
+                        o.Status.Equals(status, StringComparison.OrdinalIgnoreCase));
+                }
+
+                if (!string.IsNullOrWhiteSpace(datumFilter))
+                {
+                    var vandaag = DateTime.Today;
+                    gefilterdeOrders = datumFilter.ToLower() switch
+                    {
+                        "vandaag" => gefilterdeOrders.Where(o => o.OrderDate.Date == vandaag),
+                        "deze week" => gefilterdeOrders.Where(o => o.OrderDate >= vandaag.AddDays(-(int)vandaag.DayOfWeek)),
+                        "deze maand" => gefilterdeOrders.Where(o => o.OrderDate.Year == vandaag.Year && o.OrderDate.Month == vandaag.Month),
+                        _ => gefilterdeOrders
+                    };
+                }
+
+                if (queueStatus.HasValue)
+                {
+                    gefilterdeOrders = gefilterdeOrders.Where(o => o.IsSentToQueue == queueStatus.Value);
+                }
+
+                gefilterdeOrders = gefilterdeOrders.OrderByDescending(o => o.OrderDate);
+
+                // Maak CSV
+                var csv = new System.Text.StringBuilder();
+                csv.AppendLine("Order ID,Klant Naam,Klant Email,Datum,Status,Items,Totaal (€),Queue Status");
+
+                foreach (var order in gefilterdeOrders)
+                {
+                    var statusText = order.Status.ToLower() switch
+                    {
+                        "pending" => "In behandeling",
+                        "processing" => "Wordt verwerkt",
+                        "shipped" => "Verzonden",
+                        "delivered" => "Afgeleverd",
+                        "completed" => "Voltooid",
+                        "cancelled" => "Geannuleerd",
+                        "failed" => "Mislukt",
+                        _ => order.Status
+                    };
+
+                    csv.AppendLine($"{order.OrderId},{order.UserName},{order.UserEmail},{order.OrderDate:yyyy-MM-dd HH:mm},{statusText},{order.ItemCount},{order.TotalPrice:F2},{(order.IsSentToQueue ? "Verstuurd" : "Niet verstuurd")}");
+                }
+
+                var bytes = System.Text.Encoding.UTF8.GetBytes(csv.ToString());
+                var fileName = $"orders_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+                return File(bytes, "text/csv", fileName);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fout bij exporteren orders");
+                TempData["FoutBericht"] = "Er ging iets fout bij het exporteren.";
                 return RedirectToAction(nameof(Index));
             }
         }

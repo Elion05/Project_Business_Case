@@ -64,7 +64,7 @@ namespace BestelApp_Web.Services
                 var request = new { shoeVariantId, quantity };
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                
+
                 var response = await _httpClient.PostAsync("/api/cart/items", content);
                 if (response.IsSuccessStatusCode)
                 {
@@ -115,7 +115,7 @@ namespace BestelApp_Web.Services
                 var request = new { quantity };
                 var json = JsonSerializer.Serialize(request);
                 var content = new StringContent(json, Encoding.UTF8, "application/json");
-                
+
                 var response = await _httpClient.PutAsync($"/api/cart/items/{itemId}", content);
                 return response.IsSuccessStatusCode;
             }

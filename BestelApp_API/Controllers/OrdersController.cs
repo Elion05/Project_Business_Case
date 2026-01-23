@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using BestelApp_Models;
 using BestelApp_API.Services;
 using System.Security.Claims;
+using Microsoft.Extensions.Configuration;
 
 namespace BestelApp_API.Controllers
 {
@@ -19,15 +20,18 @@ namespace BestelApp_API.Controllers
         private readonly ApplicationDbContext _context;
         private readonly RabbitMQService _rabbitMQService;
         private readonly ILogger<OrdersController> _logger;
+        private readonly IConfiguration _configuration;
 
         public OrdersController(
             ApplicationDbContext context,
             RabbitMQService rabbitMQService,
-            ILogger<OrdersController> logger)
+            ILogger<OrdersController> logger,
+            IConfiguration configuration)
         {
             _context = context;
             _rabbitMQService = rabbitMQService;
             _logger = logger;
+            _configuration = configuration;
         }
 
         // ====================
@@ -476,6 +480,99 @@ namespace BestelApp_API.Controllers
         }
 
         /// <summary>
+        /// POST api/orders/webhook/salesforce
+        /// Webhook endpoint voor Salesforce om order status te updaten
+        /// Vereist API key authenticatie via header "X-Webhook-Key"
+        /// </summary>
+        [HttpPost("webhook/salesforce")]
+        [AllowAnonymous] // Geen Identity auth, maar API key verificatie
+        public async Task<ActionResult> SalesforceWebhook([FromBody] SalesforceWebhookRequest request)
+        {
+            try
+            {
+                // Verifieer API key
+                var apiKey = Request.Headers["X-Webhook-Key"].ToString();
+                var expectedApiKey = _configuration["Webhooks:Salesforce:ApiKey"];
+                var webhookEnabled = _configuration.GetValue<bool>("Webhooks:Salesforce:Enabled", true);
+
+                if (!webhookEnabled)
+                {
+                    _logger.LogWarning("Salesforce webhook ontvangen maar webhooks zijn uitgeschakeld");
+                    return StatusCode(503, new { message = "Webhooks zijn uitgeschakeld" });
+                }
+
+                if (string.IsNullOrEmpty(apiKey) || apiKey != expectedApiKey)
+                {
+                    _logger.LogWarning("Ongeldige API key voor Salesforce webhook: {ApiKey}", apiKey);
+                    return Unauthorized(new { message = "Ongeldige API key" });
+                }
+
+                // Valideer request
+                if (request == null || string.IsNullOrWhiteSpace(request.OrderId))
+                {
+                    return BadRequest(new { message = "OrderId is verplicht" });
+                }
+
+                if (string.IsNullOrWhiteSpace(request.Status))
+                {
+                    return BadRequest(new { message = "Status is verplicht" });
+                }
+
+                // Valideer status waarde
+                var geldigeStatussen = new[] { "Pending", "Processing", "Shipped", "Delivered", "Cancelled", "Failed" };
+                if (!geldigeStatussen.Contains(request.Status, StringComparer.OrdinalIgnoreCase))
+                {
+                    return BadRequest(new { 
+                        message = $"Ongeldige status. Geldige statussen: {string.Join(", ", geldigeStatussen)}",
+                        receivedStatus = request.Status
+                    });
+                }
+
+                // Zoek order op OrderId (niet database ID)
+                var order = await _context.Orders
+                    .FirstOrDefaultAsync(o => o.OrderId == request.OrderId);
+
+                if (order == null)
+                {
+                    _logger.LogWarning("Order niet gevonden voor webhook: {OrderId}", request.OrderId);
+                    return NotFound(new { message = $"Order met OrderId '{request.OrderId}' niet gevonden" });
+                }
+
+                // Update status
+                var oudeStatus = order.Status;
+                order.Status = request.Status;
+
+                // Optioneel: update timestamp als er een timestamp wordt meegestuurd
+                if (request.UpdatedAt.HasValue)
+                {
+                    // We kunnen een apart veld toevoegen voor status update tijd, maar voor nu gebruiken we OrderDate
+                    // In de toekomst kunnen we een StatusUpdatedAt veld toevoegen aan Order model
+                }
+
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "✅ Salesforce webhook: Order {OrderId} status geüpdatet van '{OudeStatus}' naar '{NieuweStatus}'",
+                    order.OrderId, oudeStatus, request.Status);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Status succesvol geüpdatet",
+                    orderId = order.OrderId,
+                    oldStatus = oudeStatus,
+                    newStatus = order.Status,
+                    updatedAt = DateTime.UtcNow
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fout bij verwerken Salesforce webhook voor OrderId: {OrderId}", request?.OrderId);
+                return StatusCode(500, new { message = "Er ging iets fout bij het verwerken van de webhook" });
+            }
+        }
+
+        /// <summary>
         /// GET api/orders/health
         /// Health check endpoint
         /// </summary>
@@ -496,6 +593,32 @@ namespace BestelApp_API.Controllers
     public class UpdateStatusRequest
     {
         public string Status { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Webhook request model voor Salesforce status updates
+    /// </summary>
+    public class SalesforceWebhookRequest
+    {
+        /// <summary>
+        /// Order ID (bijv. "ORDER-20260121114147-8476")
+        /// </summary>
+        public string OrderId { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Nieuwe status (Pending, Processing, Shipped, Delivered, Cancelled, Failed)
+        /// </summary>
+        public string Status { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Optionele timestamp wanneer status is geüpdatet in Salesforce
+        /// </summary>
+        public DateTime? UpdatedAt { get; set; }
+
+        /// <summary>
+        /// Optionele notities/opmerkingen van Salesforce
+        /// </summary>
+        public string? Notes { get; set; }
     }
 
     /// <summary>
