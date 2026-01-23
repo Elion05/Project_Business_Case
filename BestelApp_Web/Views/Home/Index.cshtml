@@ -2,39 +2,6 @@
     ViewData["Title"] = "Home";
 }
 
-<style>
-    .feature-card {
-        background: hsl(var(--card));
-        border-radius: 16px;
-        padding: 2rem;
-        border: 1px solid hsl(var(--border));
-        box-shadow: var(--shadow-soft);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        height: 100%;
-    }
-
-    .feature-card:hover {
-        transform: translateY(-3px);
-        box-shadow: var(--shadow-hover);
-    }
-
-    .feature-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-
-    .feature-title {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: hsl(var(--foreground));
-        margin-bottom: 0.75rem;
-    }
-
-    .feature-text {
-        color: hsl(var(--muted-foreground));
-        line-height: 1.6;
-    }
-</style>
 
 <!-- Hero (premium, leesbaar) -->
 <div class="container" style="padding-top: 2rem;">
@@ -67,35 +34,3 @@
     </div>
 </div>
 
-<!-- Features Section -->
-<div class="container">
-    <div class="row g-4">
-        <div class="col-md-4">
-            <div class="feature-card">
-                <div class="feature-icon">🐰</div>
-                <h3 class="feature-title">RabbitMQ</h3>
-                <p class="feature-text">
-                    Bestellingen worden via RabbitMQ verwerkt voor betrouwbare message delivery en real-time order processing.
-                </p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <div class="feature-icon">☁️</div>
-                <h3 class="feature-title">Salesforce</h3>
-                <p class="feature-text">
-                    Automatische synchronisatie met Salesforce voor real-time order tracking en klantbeheer.
-                </p>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="feature-card">
-                <div class="feature-icon">🔐</div>
-                <h3 class="feature-title">Veilige Authenticatie</h3>
-                <p class="feature-text">
-                    Veilige authenticatie en autorisatie met ASP.NET Core Identity voor een betrouwbare gebruikerservaring.
-                </p>
-            </div>
-        </div>
-    </div>
-</div>

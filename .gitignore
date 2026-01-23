@@ -361,6 +361,10 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Backup files
+project_backups/
+backups/
+cron.log
 
 # Data Protection Keys (bevatten encryptiesleutels - NIET pushen!)
 SharedKeys/

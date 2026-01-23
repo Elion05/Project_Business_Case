@@ -61,18 +61,6 @@
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Shoes" asp-action="Index">Schoenen</a>
                         </li>
-                        
-                        <!-- Categorieën Dropdown -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Categorieën
-                            </a>
-                            <ul class="dropdown-menu" aria-labelledby="navbarDropdown" id="categoriesDropdown">
-                                <li><a class="dropdown-item" asp-controller="Shoes" asp-action="Index">Alle Schoenen</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <!-- Kategoriler JavaScript ile gelir -->
-                            </ul>
-                        </li>
                     </ul>
 
                     <!-- Zoekbalk zit in de Shoes filter bar (niet dubbel in navbar) -->
@@ -112,89 +100,6 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    
-    <!-- Laad categorieën in navbar -->
-    <script>
-        // Laad categorieën wanneer pagina geladen is
-        document.addEventListener('DOMContentLoaded', function() {
-            laadCategorieen();
-        });
-
-        async function laadCategorieen() {
-            try {
-                const response = await fetch(`${window.API_BASE_URL}/api/category`);
-                if (response.ok) {
-                    const categorieen = await response.json();
-                    const dropdown = document.getElementById('categoriesDropdown');
-                    
-                    // Voeg categorieën toe aan dropdown
-                    categorieen.forEach(cat => {
-                        const li = document.createElement('li');
-                        const a = document.createElement('a');
-                        a.className = 'dropdown-item';
-                        a.href = '/Shoes?categoryId=' + cat.id;
-                        a.textContent = cat.name + ' (' + cat.productCount + ')';
-                        li.appendChild(a);
-                        dropdown.appendChild(li);
-                    });
-                }
-            } catch (error) {
-                console.error('Fout bij laden categorieën:', error);
-            }
-        }
-
-        // Laad cart count als user ingelogd is
-        @if (User.Identity?.IsAuthenticated == true)
-        {
-            <text>
-            // Als er net iets is toegevoegd, laten we de badge even pulsen
-            @if (TempData["CartPulse"] != null)
-            {
-                <text>sessionStorage.setItem('cart_pulse', '1');</text>
-            }
-
-            async function laadCartCount() {
-                try {
-                    const response = await fetch(`${window.API_BASE_URL}/api/cart`, {
-                        credentials: 'include'
-                    });
-                    if (response.ok) {
-                        const cart = await response.json();
-                        const cartBadgeEl = document.getElementById('cart-badge');
-                        const cartLinkEl = document.getElementById('cart-link');
-
-                        const totalItems = cart?.totalItems ?? 0;
-                        const vorige = parseInt(sessionStorage.getItem('cart_prev_count') || '0');
-                        sessionStorage.setItem('cart_prev_count', totalItems.toString());
-
-                        if (cartLinkEl) {
-                            cartLinkEl.title = totalItems > 0 ? `Winkelwagen (${totalItems})` : 'Winkelwagen';
-                        }
-
-                        if (cartBadgeEl && totalItems > 0) {
-                            cartBadgeEl.style.display = 'inline';
-
-                            // Pulse als count stijgt OF als CartPulse flag gezet is
-                            const forcePulse = sessionStorage.getItem('cart_pulse') === '1';
-                            if (forcePulse || totalItems > vorige) {
-                                cartBadgeEl.classList.remove('is-pulse');
-                                // reflow om animatie opnieuw te starten
-                                void cartBadgeEl.offsetWidth;
-                                cartBadgeEl.classList.add('is-pulse');
-                                sessionStorage.removeItem('cart_pulse');
-                            }
-                        } else if (cartBadgeEl) {
-                            cartBadgeEl.style.display = 'none';
-                        }
-                    }
-                } catch (error) {
-                    console.error('Fout bij laden cart count:', error);
-                }
-            }
-            laadCartCount();
-            </text>
-        }
-    </script>
     
     @await RenderSectionAsync("Scripts", required: false)
 </body>

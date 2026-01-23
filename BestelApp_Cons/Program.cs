@@ -90,11 +90,26 @@ await channel.QueueDeclareAsync(
     autoDelete: false,     // Blijft bestaan zonder consumers
     arguments: queueArgs); // Met DLQ configuratie
 
+// Check queue status
+var queueInfo = await channel.QueueDeclarePassiveAsync(queueNaam);
+Console.WriteLine($"📊 Queue Status:");
+Console.WriteLine($"   Messages in queue: {queueInfo.MessageCount}");
+Console.WriteLine($"   Consumers: {queueInfo.ConsumerCount}");
+
 Console.WriteLine("\n✅ Consumer is klaar!");
 Console.WriteLine($"👂 Luisteren naar: {queueNaam}");
 Console.WriteLine($"💀 Dead Letter Queue: {deadLetterQueueNaam}");
 Console.WriteLine($"🔄 Cache duur: 24 uur");
 Console.WriteLine("═══════════════════════════════════════\n");
+
+if (queueInfo.MessageCount > 0)
+{
+    Console.WriteLine($"⚠️ Er zijn {queueInfo.MessageCount} bericht(en) in de queue die verwerkt zullen worden!");
+}
+else
+{
+    Console.WriteLine($"ℹ️ Queue is leeg - wachtend op nieuwe orders...");
+}
 
 // Statistieken
 var totalProcessed = 0;
@@ -118,6 +133,7 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
     Console.WriteLine($"   CorrelationId: {correlationId}");
     Console.WriteLine($"   DeliveryTag: {eventArgs.DeliveryTag}");
     Console.WriteLine($"   Timestamp: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+    Console.WriteLine($"   Body Length: {eventArgs.Body.Length} bytes");
     Console.WriteLine("───────────────────────────────────────");
 
     totalProcessed++;

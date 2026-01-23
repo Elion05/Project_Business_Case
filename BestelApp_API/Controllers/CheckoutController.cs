@@ -168,6 +168,8 @@ namespace BestelApp_API.Controllers
                 var orderForRabbitMQ = await _context.Orders
                     .Include(o => o.User)
                     .Include(o => o.Items)
+                        .ThenInclude(i => i.ShoeVariant)
+                            .ThenInclude(sv => sv.Shoe)
                     .FirstOrDefaultAsync(o => o.OrderId == order.OrderId);
 
                 if (orderForRabbitMQ == null)
