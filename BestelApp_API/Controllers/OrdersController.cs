@@ -21,14 +21,14 @@ namespace BestelApp_API.Controllers
         private readonly RabbitMQService _rabbitMQService;
         private readonly ILogger<OrdersController> _logger;
         private readonly IConfiguration _configuration;
-        private readonly SalesforceStatusService? _salesforceStatusService;
+        private readonly SalesforceStatusService _salesforceStatusService;
 
         public OrdersController(
             ApplicationDbContext context,
             RabbitMQService rabbitMQService,
             ILogger<OrdersController> logger,
             IConfiguration configuration,
-            SalesforceStatusService? salesforceStatusService = null)
+            SalesforceStatusService salesforceStatusService)
         {
             _context = context;
             _rabbitMQService = rabbitMQService;
@@ -474,26 +474,24 @@ namespace BestelApp_API.Controllers
 
                 _logger.LogInformation("Order {OrderId} status geüpdatet naar {Status} door admin", order.OrderId, request.Status);
 
-                // Update ook in Salesforce (als service beschikbaar is)
-                if (_salesforceStatusService != null)
+                // Update ook in Salesforce
+                try
                 {
-                    try
+                    _logger.LogInformation("🔄 Verstuur status update naar Salesforce voor Order {OrderId}", order.OrderId);
+                    var salesforceSucces = await _salesforceStatusService.UpdateOrderStatusAsync(order.OrderId, request.Status);
+                    if (salesforceSucces)
                     {
-                        var salesforceSucces = await _salesforceStatusService.UpdateOrderStatusAsync(order.OrderId, request.Status);
-                        if (salesforceSucces)
-                        {
-                            _logger.LogInformation("✅ Order status ook geüpdatet in Salesforce: {OrderId}", order.OrderId);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("⚠️ Order status update in Salesforce gefaald: {OrderId}", order.OrderId);
-                        }
+                        _logger.LogInformation("✅ Order status succesvol geüpdatet in Salesforce: {OrderId} -> {Status}", order.OrderId, request.Status);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        _logger.LogError(ex, "⚠️ Fout bij updaten order status in Salesforce: {OrderId}", order.OrderId);
-                        // Fout in Salesforce is niet kritiek - order is al geüpdatet in database
+                        _logger.LogWarning("⚠️ Order status update in Salesforce gefaald voor Order {OrderId}. Status lokaal geüpdatet, maar niet in Salesforce.", order.OrderId);
                     }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "❌ Fout bij updaten order status in Salesforce: {OrderId}. Status lokaal geüpdatet, maar niet in Salesforce.", order.OrderId);
+                    // Fout in Salesforce is niet kritiek - order is al geüpdatet in database
                 }
 
                 return Ok(new { message = "Status geüpdatet", orderId = order.OrderId, newStatus = order.Status });

@@ -69,7 +69,12 @@ namespace BestelApp_API.Services
                 };
 
                 // Zoek Order in Salesforce via SOQL query
-                var soqlQuery = $"SELECT Id, Status, Description FROM Order WHERE Description LIKE '%Order Number: {orderNumber}%' LIMIT 1";
+                // Probeer eerst op Description (meest betrouwbaar omdat we dit altijd vullen)
+                // Escape single quotes in orderNumber voor veiligheid
+                var escapedOrderNumber = orderNumber.Replace("'", "''");
+                
+                // Query 1: Zoek op Description met Order Number
+                var soqlQuery = $"SELECT Id, Status, Description FROM Order WHERE Description LIKE '%Order Number: {escapedOrderNumber}%' OR Description LIKE '%{escapedOrderNumber}%' LIMIT 1";
                 var encodedQuery = Uri.EscapeDataString(soqlQuery);
                 var queryUrl = $"{instanceUrl}/services/data/{apiVersion}/query?q={encodedQuery}";
 
@@ -77,6 +82,7 @@ namespace BestelApp_API.Services
                 queryRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
 
                 _logger.LogInformation("🔍 Zoek Order in Salesforce: {OrderNumber}", orderNumber);
+                _logger.LogInformation("📄 SOQL Query: {Query}", soqlQuery);
 
                 var queryResponse = await _httpClient.SendAsync(queryRequest);
                 var queryResponseBody = await queryResponse.Content.ReadAsStringAsync();
@@ -93,12 +99,13 @@ namespace BestelApp_API.Services
 
                 if (records.GetArrayLength() == 0)
                 {
-                    _logger.LogWarning("⚠️ Order niet gevonden in Salesforce: {OrderNumber}", orderNumber);
+                    _logger.LogWarning("⚠️ Order niet gevonden in Salesforce via Description query: {OrderNumber}", orderNumber);
+                    _logger.LogWarning("ℹ️  Probeer handmatig te zoeken in Salesforce op Order Number: {OrderNumber}", orderNumber);
                     return false;
                 }
 
                 var orderId = records[0].GetProperty("Id").GetString();
-                _logger.LogInformation("✅ Order gevonden in Salesforce: {OrderId}", orderId);
+                _logger.LogInformation("✅ Order gevonden in Salesforce: {OrderId} (OrderNumber: {OrderNumber})", orderId, orderNumber);
 
                 // Update Order status
                 var updateData = new Dictionary<string, object>

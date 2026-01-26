@@ -315,13 +315,10 @@ namespace BestelApp_Cons.Salesforce
                 { "EffectiveDate", bestelling.OrderDate.ToString("yyyy-MM-dd") }
             };
 
-            // Probeer TotalAmount mee te sturen (kan read-only zijn, maar proberen waard)
-            // Als het niet werkt, wordt het genegeerd door Salesforce
-            // In de meeste Salesforce orgs wordt TotalAmount automatisch berekend op basis van Order Products
-            orderData["TotalAmount"] = bestelling.TotalPrice;
-            Console.WriteLine($"💰 TotalAmount toegevoegd: €{bestelling.TotalPrice}");
-            Console.WriteLine($"ℹ️  Als TotalAmount read-only is, wordt het genegeerd door Salesforce");
-            Console.WriteLine($"ℹ️  TotalAmount wordt meestal automatisch berekend op basis van Order Products");
+            // TotalAmount is read-only in Salesforce - wordt NIET meegestuurd
+            // TotalAmount wordt automatisch berekend op basis van Order Products (die we later aanmaken)
+            Console.WriteLine($"ℹ️  TotalAmount wordt niet meegestuurd (read-only in Salesforce)");
+            Console.WriteLine($"ℹ️  TotalAmount wordt automatisch berekend op basis van Order Products");
 
             // Voeg Description toe met alle order informatie inclusief Order Number en Total
             // Dit is het enige veld waar we alle details kunnen opslaan
@@ -341,6 +338,38 @@ namespace BestelApp_Cons.Salesforce
                 Console.WriteLine("❌ AccountId ontbreekt - Order kan falen als AccountId verplicht is!");
             }
 
+            // Voeg ShippingAddress velden toe
+            if (bestelling.ShippingAddress != null)
+            {
+                if (!string.IsNullOrWhiteSpace(bestelling.ShippingAddress.Address))
+                {
+                    orderData["ShippingStreet"] = bestelling.ShippingAddress.Address;
+                    Console.WriteLine($"📍 ShippingStreet toegevoegd: {bestelling.ShippingAddress.Address}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(bestelling.ShippingAddress.City))
+                {
+                    orderData["ShippingCity"] = bestelling.ShippingAddress.City;
+                    Console.WriteLine($"📍 ShippingCity toegevoegd: {bestelling.ShippingAddress.City}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(bestelling.ShippingAddress.PostalCode))
+                {
+                    orderData["ShippingPostalCode"] = bestelling.ShippingAddress.PostalCode;
+                    Console.WriteLine($"📍 ShippingPostalCode toegevoegd: {bestelling.ShippingAddress.PostalCode}");
+                }
+
+                if (!string.IsNullOrWhiteSpace(bestelling.ShippingAddress.Country))
+                {
+                    var countryCode = ConverteerLandNaarSalesforceCode(bestelling.ShippingAddress.Country);
+                    if (!string.IsNullOrWhiteSpace(countryCode))
+                    {
+                        orderData["ShippingCountry"] = countryCode;
+                        Console.WriteLine($"📍 ShippingCountry toegevoegd: {countryCode}");
+                    }
+                }
+            }
+
             var orderJson = JsonSerializer.Serialize(orderData);
             var orderContent = new StringContent(orderJson, Encoding.UTF8, "application/json");
 
@@ -350,7 +379,8 @@ namespace BestelApp_Cons.Salesforce
             Console.WriteLine($"📦 Items: {bestelling.TotalQuantity}");
             Console.WriteLine($"📄 Order Data (zonder read-only velden): {orderJson}");
             Console.WriteLine($"ℹ️  OrderNumber en TotalAmount worden niet meegestuurd (read-only in Salesforce)");
-            Console.WriteLine($"ℹ️  Deze informatie staat in de Description veld");
+            Console.WriteLine($"ℹ️  TotalAmount wordt automatisch berekend op basis van Order Products");
+            Console.WriteLine($"ℹ️  Order informatie staat ook in de Description veld");
 
             // Gebruik direct POST om nieuwe Order aan te maken (UPSERT werkt mogelijk niet met OrderNumber)
             var postOrderUrl = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Order";
@@ -448,6 +478,108 @@ namespace BestelApp_Cons.Salesforce
         }
 
         /// <summary>
+        /// Zoek of maak een Product aan in Salesforce
+        /// Zoekt eerst op ProductCode (SKU), als niet gevonden wordt Product aangemaakt
+        /// </summary>
+        private async Task<string?> ZoekOfMaakProductAanAsync(OrderItemMessage item, string accessToken, string instanceUrl, string apiVersion)
+        {
+            try
+            {
+                // Genereer SKU voor dit item (als we die hebben)
+                // Format: {Brand}-{ProductName}-{Size}-{Color}
+                var brandClean = (item.Brand ?? "UNKNOWN").ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
+                var nameClean = (item.ProductName ?? "PRODUCT").ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
+                var colorClean = (item.Color ?? "UNKNOWN").Trim().ToUpper().Replace(" ", "-").Replace("/", "-").Replace("\\", "-");
+                var productCode = $"{brandClean}-{nameClean}-{item.Size}-{colorClean}";
+
+                // Product naam voor Salesforce
+                var productName = $"{item.Brand} {item.ProductName} - Maat {item.Size}, {item.Color}";
+                var productDescription = $"Product van BestelApp\nMerk: {item.Brand}\nProduct: {item.ProductName}\nMaat: {item.Size}\nKleur: {item.Color}";
+
+                // Zoek eerst of Product al bestaat op basis van ProductCode
+                var soqlQuery = $"SELECT Id, Name, ProductCode FROM Product2 WHERE ProductCode = '{productCode.Replace("'", "''")}' LIMIT 1";
+                var encodedQuery = Uri.EscapeDataString(soqlQuery);
+                var queryUrl = $"{instanceUrl}/services/data/{apiVersion}/query?q={encodedQuery}";
+
+                var queryRequest = new HttpRequestMessage(HttpMethod.Get, queryUrl);
+                queryRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+                Console.WriteLine($"🔍 Zoek Product in Salesforce: {productCode}");
+
+                var queryResponse = await _httpClient.SendAsync(queryRequest);
+                var queryResponseBody = await queryResponse.Content.ReadAsStringAsync();
+
+                if (queryResponse.IsSuccessStatusCode)
+                {
+                    var queryJson = JsonDocument.Parse(queryResponseBody);
+                    var records = queryJson.RootElement.GetProperty("records");
+
+                    if (records.GetArrayLength() > 0)
+                    {
+                        var productId = records[0].GetProperty("Id").GetString();
+                        Console.WriteLine($"✅ Product gevonden in Salesforce: {productId} ({productCode})");
+                        return productId;
+                    }
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Query gefaald: {queryResponse.StatusCode} - {queryResponseBody}");
+                }
+
+                // Product niet gevonden - maak nieuw Product aan
+                var autoCreate = _configuratie["Salesforce:AutoCreateProducts"] ?? "true";
+                if (autoCreate.ToLower() != "true")
+                {
+                    Console.WriteLine($"ℹ️  AutoCreateProducts is uitgeschakeld - Product niet aangemaakt: {productCode}");
+                    return null;
+                }
+
+                Console.WriteLine($"📦 Product niet gevonden - maak nieuw Product aan: {productCode}");
+
+                var productData = new Dictionary<string, object>
+                {
+                    { "Name", productName },
+                    { "ProductCode", productCode },
+                    { "IsActive", true },
+                    { "Description", productDescription }
+                };
+
+                var productJson = JsonSerializer.Serialize(productData);
+                var productContent = new StringContent(productJson, Encoding.UTF8, "application/json");
+
+                var createProductUrl = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Product2";
+                var createProductRequest = new HttpRequestMessage(HttpMethod.Post, createProductUrl);
+                createProductRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
+                createProductRequest.Content = productContent;
+
+                Console.WriteLine($"📤 Maak Product aan in Salesforce: {productName}");
+                Console.WriteLine($"📄 Product Data: {productJson}");
+
+                var createResponse = await _httpClient.SendAsync(createProductRequest);
+                var createResponseBody = await createResponse.Content.ReadAsStringAsync();
+
+                if (createResponse.IsSuccessStatusCode)
+                {
+                    var responseJson = JsonDocument.Parse(createResponseBody);
+                    var productId = responseJson.RootElement.GetProperty("id").GetString();
+                    Console.WriteLine($"✅ Product succesvol aangemaakt in Salesforce: {productId} ({productCode})");
+                    return productId;
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Fout bij aanmaken Product: {createResponse.StatusCode}");
+                    Console.WriteLine($"📄 Error: {createResponseBody}");
+                    return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Fout bij zoeken/aanmaken Product: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Maak Order Products aan in Salesforce om het bedrag te berekenen
         /// Order Products zijn nodig zodat TotalAmount automatisch wordt berekend
         /// </summary>
@@ -466,26 +598,30 @@ namespace BestelApp_Cons.Salesforce
                 {
                     try
                     {
+                        // Zoek of maak Product aan in Salesforce
+                        var product2Id = await ZoekOfMaakProductAanAsync(item, accessToken, instanceUrl, apiVersion);
+                        
+                        if (string.IsNullOrEmpty(product2Id))
+                        {
+                            Console.WriteLine($"⚠️ Kon geen Product2Id verkrijgen voor item: {item.Brand} {item.ProductName}");
+                            Console.WriteLine($"⚠️ Order Product wordt overgeslagen - TotalAmount kan niet worden berekend");
+                            continue;
+                        }
+
                         // Order Product data
-                        // Let op: Product2Id is meestal VERPLICHT in Salesforce
-                        // Als je geen Product2Id hebt, kan je een generic product aanmaken in Salesforce
+                        // ListPrice is verplicht in Salesforce - gebruik dezelfde prijs als UnitPrice
                         var orderProductData = new Dictionary<string, object>
                         {
                             { "OrderId", orderSalesforceId },
+                            { "Product2Id", product2Id },
                             { "Quantity", item.Quantity },
-                            { "UnitPrice", item.Price } // Prijs per stuk
+                            { "UnitPrice", item.Price }, // Prijs per stuk voor deze order
+                            { "ListPrice", item.Price }  // ListPrice is verplicht - gebruik dezelfde prijs
                         };
 
                         // Optioneel: Product naam in Description
                         var productDescription = $"{item.Brand} {item.ProductName} - Maat {item.Size}, Kleur {item.Color}";
                         orderProductData["Description"] = productDescription;
-
-                        // Product2Id is meestal verplicht - als je een generic product hebt, voeg het hier toe
-                        // var genericProductId = _configuratie["Salesforce:GenericProductId"];
-                        // if (!string.IsNullOrEmpty(genericProductId))
-                        // {
-                        //     orderProductData["Product2Id"] = genericProductId;
-                        // }
 
                         var productJson = JsonSerializer.Serialize(orderProductData);
                         var productContent = new StringContent(productJson, Encoding.UTF8, "application/json");
@@ -580,6 +716,7 @@ namespace BestelApp_Cons.Salesforce
                     { "FirstName", firstName },
                     { "Email", bestelling.UserEmail },
                     { "Company", $"BestelApp Klant - {bestelling.OrderId}" },
+                    { "LeadSource", "BestelApp Web" },
                     { "Description", leadDescription }
                 };
 
