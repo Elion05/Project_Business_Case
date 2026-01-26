@@ -1,6 +1,7 @@
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -56,17 +57,21 @@ namespace BestelApp_API.Services
                 }
 
                 // Converteer status naar Salesforce Order Status
+                // Salesforce ondersteunt: Draft, Activated (en mogelijk Closed, Cancelled)
+                // We gebruiken alleen Draft en Activated omdat die altijd beschikbaar zijn
                 var salesforceStatus = nieuweStatus.ToLower() switch
                 {
                     "pending" => "Draft",
                     "processing" => "Activated",
                     "shipped" => "Activated",
-                    "delivered" => "Closed",
-                    "completed" => "Closed",
-                    "cancelled" => "Cancelled",
-                    "failed" => "Cancelled",
-                    _ => nieuweStatus
+                    "delivered" => "Activated", // Gebruik Activated in plaats van Closed (mogelijk niet beschikbaar)
+                    "completed" => "Activated", // Gebruik Activated in plaats van Closed (mogelijk niet beschikbaar)
+                    "cancelled" => "Draft", // Gebruik Draft als fallback (Cancelled mogelijk niet beschikbaar)
+                    "failed" => "Draft", // Gebruik Draft als fallback
+                    _ => "Draft" // Default naar Draft
                 };
+                
+                _logger.LogInformation("📋 Status mapping: {BestelAppStatus} -> {SalesforceStatus}", nieuweStatus, salesforceStatus);
 
                 // Zoek Order in Salesforce via SOQL query
                 // Probeer eerst op Description (meest betrouwbaar omdat we dit altijd vullen)
@@ -105,13 +110,36 @@ namespace BestelApp_API.Services
                 }
 
                 var orderId = records[0].GetProperty("Id").GetString();
+                var currentDescription = records[0].TryGetProperty("Description", out var descElement) 
+                    ? descElement.GetString() ?? "" 
+                    : "";
+                
                 _logger.LogInformation("✅ Order gevonden in Salesforce: {OrderId} (OrderNumber: {OrderNumber})", orderId, orderNumber);
 
-                // Update Order status
+                // Update Description met nieuwe status
+                var updatedDescription = currentDescription;
+                if (!string.IsNullOrEmpty(currentDescription))
+                {
+                    // Vervang oude status in Description met nieuwe status
+                    // Zoek naar "Status: ..." en vervang met nieuwe status
+                    var statusPattern = new Regex(@"Status:\s*[^\n]+", RegexOptions.IgnoreCase);
+                    // Behoud de originele status tekst (kan hoofdletters hebben)
+                    var bestelAppStatusText = nieuweStatus;
+                    updatedDescription = statusPattern.Replace(currentDescription, $"Status: {bestelAppStatusText}");
+                    _logger.LogInformation("📝 Description geüpdatet met nieuwe status: {Status}", bestelAppStatusText);
+                }
+
+                // Update Order status en Description
                 var updateData = new Dictionary<string, object>
                 {
                     { "Status", salesforceStatus }
                 };
+                
+                // Voeg Description toe als deze is geüpdatet
+                if (!string.IsNullOrEmpty(updatedDescription) && updatedDescription != currentDescription)
+                {
+                    updateData["Description"] = updatedDescription;
+                }
 
                 var updateJson = JsonSerializer.Serialize(updateData);
                 var updateContent = new StringContent(updateJson, Encoding.UTF8, "application/json");

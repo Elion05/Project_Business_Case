@@ -265,17 +265,21 @@ namespace BestelApp_Cons.Salesforce
             Console.WriteLine("📦 Order aanmaken/bijwerken in Salesforce...");
             
             // Converteer status naar Salesforce Order Status
+            // Salesforce ondersteunt: Draft, Activated (en mogelijk Closed, Cancelled)
+            // We gebruiken alleen Draft en Activated omdat die altijd beschikbaar zijn
             var salesforceStatus = bestelling.Status.ToLower() switch
             {
                 "pending" => "Draft",
                 "processing" => "Activated",
                 "shipped" => "Activated",
-                "delivered" => "Closed",
-                "completed" => "Closed",
-                "cancelled" => "Cancelled",
-                "failed" => "Cancelled",
-                _ => "Draft"
+                "delivered" => "Activated", // Gebruik Activated in plaats van Closed (mogelijk niet beschikbaar)
+                "completed" => "Activated", // Gebruik Activated in plaats van Closed (mogelijk niet beschikbaar)
+                "cancelled" => "Draft", // Gebruik Draft als fallback (Cancelled mogelijk niet beschikbaar)
+                "failed" => "Draft", // Gebruik Draft als fallback
+                _ => "Draft" // Default naar Draft
             };
+            
+            Console.WriteLine($"📋 Status mapping: {bestelling.Status} -> {salesforceStatus}");
 
             // Maak items beschrijving voor Description veld (als beschikbaar)
             var itemsDescription = string.Join("\n", bestelling.Items.Select(i =>
