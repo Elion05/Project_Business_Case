@@ -59,6 +59,9 @@ builder.Services.AddControllers();
 // RabbitMQ Service registreren
 builder.Services.AddSingleton<RabbitMQService>();
 
+// Salesforce Status Service registreren
+builder.Services.AddScoped<SalesforceStatusService>();
+
 // Swagger/OpenAPI configuratie
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

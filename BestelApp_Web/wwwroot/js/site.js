@@ -23,6 +23,67 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // =========================
+// Cart Badge Update
+// =========================
+document.addEventListener("DOMContentLoaded", function () {
+    const cartBadge = document.getElementById("cart-badge");
+    if (!cartBadge) return;
+
+    // Functie om cart count op te halen en badge bij te werken
+    async function updateCartBadge() {
+        try {
+            const apiBaseUrl = window.API_BASE_URL || 'https://localhost:7001';
+            const response = await fetch(`${apiBaseUrl}/api/cart`, {
+                method: 'GET',
+                credentials: 'include', // Cookies meesturen voor authenticatie
+                headers: {
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const cart = await response.json();
+                const itemCount = cart.totalItems || 0;
+
+                if (itemCount > 0) {
+                    cartBadge.style.display = 'block';
+                    cartBadge.setAttribute('aria-hidden', 'false');
+                    // Optioneel: toon aantal items in badge
+                    // cartBadge.textContent = itemCount > 9 ? '9+' : itemCount.toString();
+                } else {
+                    cartBadge.style.display = 'none';
+                    cartBadge.setAttribute('aria-hidden', 'true');
+                }
+            } else {
+                // Als niet ingelogd of andere fout, verberg badge
+                cartBadge.style.display = 'none';
+                cartBadge.setAttribute('aria-hidden', 'true');
+            }
+        } catch (error) {
+            // Bij fout, verberg badge (stil falen)
+            cartBadge.style.display = 'none';
+            cartBadge.setAttribute('aria-hidden', 'true');
+        }
+    }
+
+    // Update badge bij pagina load
+    updateCartBadge();
+
+    // Update badge ook na navigatie (voor SPA-achtig gedrag)
+    // Luister naar clicks op cart link om badge te updaten
+    const cartLink = document.getElementById("cart-link");
+    if (cartLink) {
+        cartLink.addEventListener("click", function() {
+            // Kleine delay zodat cart pagina geladen is
+            setTimeout(updateCartBadge, 500);
+        });
+    }
+
+    // Maak functie globaal beschikbaar voor andere scripts
+    window.updateCartBadge = updateCartBadge;
+});
+
+// =========================
 // Luxury dropdown (custom) + filter bar helpers
 // =========================
 document.addEventListener("DOMContentLoaded", function () {

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Configuration;
 using BestelApp_Cons.Models;
 using BestelApp_Cons.Salesforce;
 using BestelApp_Cons.Services;
+using BestelApp_Shared;
 
 Console.WriteLine("═══════════════════════════════════════");
 Console.WriteLine("  🐰 BestelApp RabbitMQ Consumer");
@@ -137,18 +138,44 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
 
     try
     {
-        // STAP 1: Deserialiseer JSON message
+        // STAP 1: Deserialiseer JSON message (probeer eerst te decrypteren als het versleuteld is)
         byte[] body = eventArgs.Body.ToArray();
         string berichtTekst = Encoding.UTF8.GetString(body);
 
-        Console.WriteLine("📄 JSON Message:");
-        Console.WriteLine(berichtTekst);
+        Console.WriteLine("📄 Raw Message (eerste 100 karakters):");
+        Console.WriteLine(berichtTekst.Length > 100 ? berichtTekst.Substring(0, 100) + "..." : berichtTekst);
         Console.WriteLine("───────────────────────────────────────");
+
+        // Probeer eerst te decrypteren (voor oude versleutelde berichten)
+        string gedecrypteerdeTekst = berichtTekst;
+        try
+        {
+            // Als het bericht base64 encoded encrypted data lijkt, probeer te decrypteren
+            if (berichtTekst.Length > 100 && !berichtTekst.TrimStart().StartsWith("{"))
+            {
+                Console.WriteLine("🔓 Probeer bericht te decrypteren (mogelijk oude versleutelde bericht)...");
+                gedecrypteerdeTekst = EncryptionHelper.Decrypt(berichtTekst);
+                if (gedecrypteerdeTekst != berichtTekst)
+                {
+                    Console.WriteLine("✓ Decryptie succesvol!");
+                }
+                else
+                {
+                    Console.WriteLine("ℹ️  Bericht was niet versleuteld, gebruik origineel");
+                }
+            }
+        }
+        catch (Exception decryptEx)
+        {
+            Console.WriteLine($"⚠️  Decryptie niet nodig of gefaald: {decryptEx.Message}");
+            Console.WriteLine("ℹ️  Probeer als plain JSON...");
+            // Blijf originele tekst gebruiken
+        }
 
         OrderMessage? order = null;
         try
         {
-            order = JsonSerializer.Deserialize<OrderMessage>(berichtTekst);
+            order = JsonSerializer.Deserialize<OrderMessage>(gedecrypteerdeTekst);
             if (order != null)
             {
                 Console.WriteLine("✓ JSON deserialisatie succesvol");
@@ -189,6 +216,9 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
         // STAP 2: Valideer verplichte velden
         Console.WriteLine("───────────────────────────────────────");
         Console.WriteLine("🔍 Validatie van verplichte velden...");
+        Console.WriteLine($"   Order ID: {order.OrderId}");
+        Console.WriteLine($"   User Email: {order.UserEmail}");
+        Console.WriteLine($"   Items Count: {order.Items?.Count ?? 0}");
 
         var validationResult = OrderValidator.ValidateOrder(order);
 
@@ -199,6 +229,15 @@ consumer.ReceivedAsync += async (sender, eventArgs) =>
             {
                 Console.WriteLine($"  - {error}");
             }
+            Console.WriteLine($"📋 Order details voor debugging:");
+            Console.WriteLine($"   OrderId: {order.OrderId ?? "(null)"}");
+            Console.WriteLine($"   UserId: {order.UserId ?? "(null)"}");
+            Console.WriteLine($"   UserName: {order.UserName ?? "(null)"}");
+            Console.WriteLine($"   UserEmail: {order.UserEmail ?? "(null)"}");
+            Console.WriteLine($"   TotalPrice: {order.TotalPrice}");
+            Console.WriteLine($"   TotalQuantity: {order.TotalQuantity}");
+            Console.WriteLine($"   Items: {order.Items?.Count ?? 0}");
+            Console.WriteLine($"   ShippingAddress: {(order.ShippingAddress != null ? "Aanwezig" : "NULL")}");
             Console.WriteLine("❌ PERMANENTE FOUT → NACK (requeue=FALSE) → DLQ");
 
             await ((AsyncEventingBasicConsumer)sender).Channel.BasicNackAsync(

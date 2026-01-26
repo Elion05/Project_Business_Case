@@ -6,6 +6,19 @@
 }
 
 <div class="container" style="max-width: 1100px; padding-top: 2rem;">
+    @if (TempData["SuccessBericht"] != null)
+    {
+        <div class="alert alert-success" role="alert" style="margin-bottom: 1.5rem; padding: 1rem; background: hsl(120 40% 95%); border: 1px solid hsl(120 40% 70%); border-radius: 8px; color: hsl(120 40% 20%);">
+            ✅ @TempData["SuccessBericht"]
+        </div>
+    }
+    @if (TempData["FoutBericht"] != null)
+    {
+        <div class="alert alert-danger" role="alert" style="margin-bottom: 1.5rem; padding: 1rem; background: hsl(var(--danger) / 0.1); border: 1px solid hsl(var(--danger)); border-radius: 8px; color: hsl(var(--danger));">
+            ❌ @TempData["FoutBericht"]
+        </div>
+    }
+
     <div class="catalog-hero" style="margin-bottom: 1.5rem;">
         <div class="catalog-kicker">Bestelling</div>
         <h1 class="catalog-title">@Model.OrderId</h1>
@@ -16,7 +29,7 @@
         <div class="col-12 col-lg-4">
             <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft);">
                 <div style="font-weight:700; margin-bottom: 0.75rem;">Samenvatting</div>
-                <div style="color:hsl(var(--muted-foreground));">Status</div>
+                <div style="color:hsl(var(--muted-foreground)); margin-bottom: 0.5rem;">Status</div>
                 @{
                     var statusText = Model.Status.ToLower() switch
                     {
@@ -52,15 +65,41 @@
                         _ => "hsl(var(--foreground))"
                     };
                 }
-                <div style="margin-bottom: 0.75rem;">
+                <div style="margin-bottom: 1rem;">
                     <span class="badge-status" style="background: @statusBg; color: @statusColor; border-color: @statusColor; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600;">@statusText</span>
                 </div>
 
-                <div style="color:hsl(var(--muted-foreground));">Totaal</div>
+                <!-- Status Update Form -->
+                <form asp-action="UpdateStatus" method="post" style="margin-bottom: 1rem;">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    <label class="luxe-label" style="margin-bottom: 0.5rem; display: block;">Status wijzigen</label>
+                    <select name="status" class="luxe-control luxe-select w-100" style="margin-bottom: 0.5rem;">
+                        <option value="Pending" selected="@(Model.Status == "Pending")">In behandeling</option>
+                        <option value="Processing" selected="@(Model.Status == "Processing")">Wordt verwerkt</option>
+                        <option value="Shipped" selected="@(Model.Status == "Shipped")">Verzonden</option>
+                        <option value="Delivered" selected="@(Model.Status == "Delivered")">Afgeleverd</option>
+                        <option value="Completed" selected="@(Model.Status == "Completed")">Voltooid</option>
+                        <option value="Cancelled" selected="@(Model.Status == "Cancelled")">Geannuleerd</option>
+                        <option value="Failed" selected="@(Model.Status == "Failed")">Mislukt</option>
+                    </select>
+                    <button class="btn-luxe w-100" type="submit">Status updaten</button>
+                    <div style="font-size: 0.875rem; color: hsl(var(--muted-foreground)); margin-top: 0.5rem;">
+                        ℹ️ Status wordt ook geüpdatet in Salesforce
+                    </div>
+                </form>
+
+                <div style="color:hsl(var(--muted-foreground));">Order Number</div>
+                <div style="font-weight:700; margin-bottom: 0.75rem; font-family: monospace; font-size: 0.9rem;">@Model.OrderId</div>
+
+                <div style="color:hsl(var(--muted-foreground));">Totaal Bedrag</div>
                 <div style="font-weight:700; margin-bottom: 0.75rem;">€@Model.TotalPrice.ToString("0.00")</div>
 
-                <div style="color:hsl(var(--muted-foreground));">Aantal</div>
-                <div style="font-weight:700; margin-bottom: 0.75rem;">@Model.TotalQuantity</div>
+                <div style="color:hsl(var(--muted-foreground));">Aantal Items</div>
+                <div style="font-weight:700; margin-bottom: 0.75rem;">@Model.TotalQuantity items</div>
+
+                <div style="color:hsl(var(--muted-foreground));">Aantal Producten</div>
+                <div style="font-weight:700; margin-bottom: 0.75rem;">@(Model.Items?.Count ?? 0) verschillende producten</div>
 
                 <div style="color:hsl(var(--muted-foreground));">RabbitMQ</div>
                 @if (Model.IsSentToQueue)
@@ -99,6 +138,19 @@
 
         <div class="col-12 col-lg-8">
             <div class="p-4" style="background: hsl(var(--card)); border: 1px solid hsl(var(--border)); border-radius: 16px; box-shadow: var(--shadow-soft);">
+                <div style="font-weight:700; margin-bottom: 0.75rem;">Order Samenvatting</div>
+                <div style="background: hsl(var(--muted) / 0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; font-size: 0.9rem; line-height: 1.6;">
+                    <div style="margin-bottom: 0.5rem;"><strong>Klant:</strong> @Model.UserName (@Model.UserEmail)</div>
+                    <div style="margin-bottom: 0.5rem;"><strong>Status:</strong> @Model.Status</div>
+                    <div style="margin-bottom: 0.5rem;"><strong>Totaal:</strong> €@Model.TotalPrice.ToString("0.00") (@Model.TotalQuantity items)</div>
+                    <div style="margin-bottom: 0.5rem;"><strong>Verzendadres:</strong> @(Model.ShippingAddress?.ShippingAddress ?? "-"), @(Model.ShippingAddress?.ShippingPostalCode ?? "") @(Model.ShippingAddress?.ShippingCity ?? ""), @(Model.ShippingAddress?.ShippingCountry ?? "")</div>
+                    <div style="margin-bottom: 0.5rem;"><strong>Order Datum:</strong> @Model.OrderDate.ToString("yyyy-MM-dd HH:mm")</div>
+                    @if (Model.IsSentToQueue && Model.SentToQueueAt.HasValue)
+                    {
+                        <div><strong>Verstuurd naar RabbitMQ:</strong> @Model.SentToQueueAt.Value.ToString("yyyy-MM-dd HH:mm")</div>
+                    }
+                </div>
+
                 <div style="font-weight:700; margin-bottom: 0.75rem;">Items</div>
 
                 <div class="table-responsive">

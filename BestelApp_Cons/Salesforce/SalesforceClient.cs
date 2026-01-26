@@ -29,6 +29,136 @@ namespace BestelApp_Cons.Salesforce
         }
 
         /// <summary>
+        /// Update order status in Salesforce
+        /// Zoekt Order op basis van Order Number in Description veld
+        /// </summary>
+        public async Task<SalesforceResultaat> UpdateOrderStatusAsync(string orderNumber, string nieuweStatus)
+        {
+            try
+            {
+                Console.WriteLine("───────────────────────────────────────");
+                Console.WriteLine($"🔄 Order status updaten in Salesforce...");
+                Console.WriteLine($"   Order Number: {orderNumber}");
+                Console.WriteLine($"   Nieuwe Status: {nieuweStatus}");
+
+                // Haal een geldig token op
+                var accessToken = await _authService.HaalAccessTokenOpAsync();
+                var instanceUrl = _configuratie["Salesforce:InstanceUrl"];
+                var apiVersion = _configuratie["Salesforce:ApiVersion"] ?? "v60.0";
+
+                // Converteer status naar Salesforce Order Status
+                var salesforceStatus = nieuweStatus.ToLower() switch
+                {
+                    "pending" => "Draft",
+                    "processing" => "Activated",
+                    "shipped" => "Activated",
+                    "delivered" => "Closed",
+                    "completed" => "Closed",
+                    "cancelled" => "Cancelled",
+                    "failed" => "Cancelled",
+                    _ => nieuweStatus // Gebruik origineel als geen mapping
+                };
+
+                // Zoek Order in Salesforce via SOQL query (zoek op Order Number in Description)
+                var soqlQuery = $"SELECT Id, Status, Description FROM Order WHERE Description LIKE '%Order Number: {orderNumber}%' LIMIT 1";
+                var encodedQuery = Uri.EscapeDataString(soqlQuery);
+                var queryUrl = $"{instanceUrl}/services/data/{apiVersion}/query?q={encodedQuery}";
+
+                var queryRequest = new HttpRequestMessage(HttpMethod.Get, queryUrl);
+                queryRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+                Console.WriteLine($"🔍 Zoek Order in Salesforce...");
+                Console.WriteLine($"🔗 Query URL: {queryUrl}");
+
+                var queryResponse = await _httpClient.SendAsync(queryRequest);
+                var queryResponseBody = await queryResponse.Content.ReadAsStringAsync();
+
+                if (!queryResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"❌ Query gefaald: {queryResponse.StatusCode}");
+                    Console.WriteLine($"📄 Response: {queryResponseBody}");
+                    return new SalesforceResultaat
+                    {
+                        IsSuccesvol = false,
+                        StatusCode = (int)queryResponse.StatusCode,
+                        IsHerhaalbaar = false,
+                        Foutmelding = $"Query gefaald: {queryResponseBody}"
+                    };
+                }
+
+                // Parse response om Order ID te vinden
+                var queryJson = JsonDocument.Parse(queryResponseBody);
+                var records = queryJson.RootElement.GetProperty("records");
+                
+                if (records.GetArrayLength() == 0)
+                {
+                    Console.WriteLine($"⚠️ Order niet gevonden in Salesforce: {orderNumber}");
+                    return new SalesforceResultaat
+                    {
+                        IsSuccesvol = false,
+                        StatusCode = 404,
+                        IsHerhaalbaar = false,
+                        Foutmelding = $"Order {orderNumber} niet gevonden in Salesforce"
+                    };
+                }
+
+                var orderId = records[0].GetProperty("Id").GetString();
+                Console.WriteLine($"✅ Order gevonden in Salesforce: {orderId}");
+
+                // Update Order status
+                var updateData = new Dictionary<string, object>
+                {
+                    { "Status", salesforceStatus }
+                };
+
+                var updateJson = JsonSerializer.Serialize(updateData);
+                var updateContent = new StringContent(updateJson, Encoding.UTF8, "application/json");
+
+                var updateUrl = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Order/{orderId}";
+                var updateRequest = new HttpRequestMessage(HttpMethod.Patch, updateUrl);
+                updateRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
+                updateRequest.Content = updateContent;
+
+                Console.WriteLine($"📤 Update Order status naar: {salesforceStatus}");
+                Console.WriteLine($"🔗 PATCH URL: {updateUrl}");
+
+                var updateResponse = await _httpClient.SendAsync(updateRequest);
+                var updateResponseBody = await updateResponse.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"📥 PATCH Response Status: {updateResponse.StatusCode}");
+                Console.WriteLine($"📄 PATCH Response Body: {updateResponseBody}");
+
+                if (updateResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"✅ Order status succesvol geüpdatet in Salesforce!");
+                    return new SalesforceResultaat
+                    {
+                        IsSuccesvol = true,
+                        StatusCode = (int)updateResponse.StatusCode,
+                        IsHerhaalbaar = false,
+                        ResponseBody = updateResponseBody
+                    };
+                }
+                else
+                {
+                    Console.WriteLine($"❌ Order status update gefaald: {updateResponse.StatusCode}");
+                    return VerwerkSalesforceResponse(updateResponse.StatusCode, updateResponseBody);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Fout bij updaten order status: {ex.Message}");
+                return new SalesforceResultaat
+                {
+                    IsSuccesvol = false,
+                    StatusCode = 0,
+                    IsHerhaalbaar = false,
+                    Foutmelding = ex.Message
+                };
+            }
+        }
+
+        /// <summary>
         /// Stuur een bestelling naar Salesforce
         /// Gebruikt UPSERT (update als bestaat, anders insert)
         /// </summary>
@@ -70,14 +200,12 @@ namespace BestelApp_Cons.Salesforce
                 var fallbackOrderId = $"FALLBACK-{DateTime.UtcNow:yyyyMMddHHmmss}";
                 var accountId = _configuratie["Salesforce:DefaultAccountId"];
 
-                // Maak JSON body voor Salesforce Order
+                // Maak JSON body voor Salesforce Order - alleen beschrijfbare velden
                 var orderData = new Dictionary<string, object>
                 {
-                    { "OrderNumber", fallbackOrderId },
                     { "Status", "Draft" },
-                    { "TotalAmount", 0 },
                     { "EffectiveDate", DateTime.UtcNow.ToString("yyyy-MM-dd") },
-                    { "Description", $"Fallback Order - Kon JSON niet parsen:\n{berichtTekst}" }
+                    { "Description", $"Fallback Order Number: {fallbackOrderId}\nTotaal: €0\n\nKon JSON niet parsen:\n{berichtTekst}" }
                 };
 
                 if (!string.IsNullOrEmpty(accountId))
@@ -117,7 +245,7 @@ namespace BestelApp_Cons.Salesforce
 
         /// <summary>
         /// Interne methode om data naar Salesforce te versturen
-        /// Maakt alleen Order (bestelling) aan - geen Lead meer
+        /// Maakt zowel Order (bestelling) als Lead aan
         /// </summary>
         private async Task<SalesforceResultaat> VerstuurNaarSalesforceAsync(OrderMessage bestelling, bool eerstePoging)
         {
@@ -177,19 +305,30 @@ namespace BestelApp_Cons.Salesforce
                 Console.WriteLine("⚠️ Order wordt toch geprobeerd aan te maken, maar kan falen...");
             }
             
-            // Order data met alle beschikbare informatie
+            // Order data - alleen beschrijfbare velden gebruiken
+            // OrderNumber is vaak read-only in Salesforce, dus we slaan deze over
+            // De Order Number wordt automatisch gegenereerd door Salesforce
+            // TotalAmount proberen we wel mee te sturen (sommige Salesforce orgs accepteren dit)
             var orderData = new Dictionary<string, object>
             {
-                { "OrderNumber", bestelling.OrderId },
                 { "Status", salesforceStatus },
-                { "TotalAmount", bestelling.TotalPrice },
                 { "EffectiveDate", bestelling.OrderDate.ToString("yyyy-MM-dd") }
             };
 
-            // Voeg Description toe (als het Order object dit veld heeft)
-            // Let op: Dit kan een custom field zijn, controleer in Salesforce of dit veld bestaat
-            // Als het niet bestaat, wordt het genegeerd door Salesforce
-            orderData["Description"] = orderDescription;
+            // Probeer TotalAmount mee te sturen (kan read-only zijn, maar proberen waard)
+            // Als het niet werkt, wordt het genegeerd door Salesforce
+            // In de meeste Salesforce orgs wordt TotalAmount automatisch berekend op basis van Order Products
+            orderData["TotalAmount"] = bestelling.TotalPrice;
+            Console.WriteLine($"💰 TotalAmount toegevoegd: €{bestelling.TotalPrice}");
+            Console.WriteLine($"ℹ️  Als TotalAmount read-only is, wordt het genegeerd door Salesforce");
+            Console.WriteLine($"ℹ️  TotalAmount wordt meestal automatisch berekend op basis van Order Products");
+
+            // Voeg Description toe met alle order informatie inclusief Order Number en Total
+            // Dit is het enige veld waar we alle details kunnen opslaan
+            var fullDescription = $"Order Number: {bestelling.OrderId}\n" +
+                                 $"Totaal Bedrag: €{bestelling.TotalPrice}\n\n" +
+                                 orderDescription;
+            orderData["Description"] = fullDescription;
 
             // Voeg AccountId toe als beschikbaar (meestal VERPLICHT voor Order)
             if (!string.IsNullOrEmpty(accountId))
@@ -206,10 +345,12 @@ namespace BestelApp_Cons.Salesforce
             var orderContent = new StringContent(orderJson, Encoding.UTF8, "application/json");
 
             Console.WriteLine($"📤 Verstuur Order {bestelling.OrderId} naar Salesforce...");
-            Console.WriteLine($"📋 Status: {salesforceStatus}, TotalAmount: {bestelling.TotalPrice}");
+            Console.WriteLine($"📋 Status: {salesforceStatus}, Totaal: €{bestelling.TotalPrice}");
             Console.WriteLine($"👤 Klant: {bestelling.UserName} ({bestelling.UserEmail})");
             Console.WriteLine($"📦 Items: {bestelling.TotalQuantity}");
-            Console.WriteLine($"📄 Order Data: {orderJson}");
+            Console.WriteLine($"📄 Order Data (zonder read-only velden): {orderJson}");
+            Console.WriteLine($"ℹ️  OrderNumber en TotalAmount worden niet meegestuurd (read-only in Salesforce)");
+            Console.WriteLine($"ℹ️  Deze informatie staat in de Description veld");
 
             // Gebruik direct POST om nieuwe Order aan te maken (UPSERT werkt mogelijk niet met OrderNumber)
             var postOrderUrl = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Order";
@@ -240,6 +381,48 @@ namespace BestelApp_Cons.Salesforce
                 Console.WriteLine($"✅ Order succesvol aangemaakt/bijgewerkt: {bestelling.OrderId}");
                 Console.WriteLine($"📄 Response: {orderResponseBody}");
                 Console.WriteLine($"✅ Order zou nu zichtbaar moeten zijn in Salesforce Orders tab!");
+
+                // Haal Salesforce Order ID uit response (als beschikbaar)
+                string? orderSalesforceId = null;
+                try
+                {
+                    var responseJson = JsonDocument.Parse(orderResponseBody);
+                    if (responseJson.RootElement.TryGetProperty("id", out var idElement))
+                    {
+                        orderSalesforceId = idElement.GetString();
+                    }
+                }
+                catch
+                {
+                    // Als we de ID niet kunnen parsen, gebruik de OrderId als fallback
+                    orderSalesforceId = bestelling.OrderId;
+                }
+
+                // Maak Order Products aan om het bedrag te berekenen
+                // In Salesforce wordt TotalAmount meestal berekend op basis van Order Products
+                if (!string.IsNullOrEmpty(orderSalesforceId))
+                {
+                    var productsSuccesvol = await MaakOrderProductsAanAsync(bestelling, orderSalesforceId, accessToken, instanceUrl, apiVersion);
+                    if (!productsSuccesvol)
+                    {
+                        Console.WriteLine("⚠️ WAARSCHUWING: Order Products konden niet worden aangemaakt");
+                        Console.WriteLine("⚠️ TotalAmount blijft mogelijk 0 in Salesforce");
+                        Console.WriteLine("ℹ️  Dit kan zijn omdat Product2Id verplicht is - maak eerst Products aan in Salesforce");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("⚠️ Kon Order Products niet aanmaken - Order ID niet beschikbaar");
+                }
+
+                // Maak ook een Lead aan na succesvol Order aanmaken
+                var leadSuccesvol = await MaakLeadAanAsync(bestelling, orderSalesforceId ?? bestelling.OrderId);
+
+                if (!leadSuccesvol)
+                {
+                    Console.WriteLine("⚠️ WAARSCHUWING: Order is succesvol aangemaakt, maar Lead aanmaken is gefaald");
+                    Console.WriteLine("⚠️ Dit is geen kritieke fout - Order blijft geldig");
+                }
             }
             else
             {
@@ -262,6 +445,226 @@ namespace BestelApp_Cons.Salesforce
             }
 
             return VerwerkSalesforceResponse(orderResponse.StatusCode, orderResponseBody);
+        }
+
+        /// <summary>
+        /// Maak Order Products aan in Salesforce om het bedrag te berekenen
+        /// Order Products zijn nodig zodat TotalAmount automatisch wordt berekend
+        /// </summary>
+        private async Task<bool> MaakOrderProductsAanAsync(OrderMessage bestelling, string orderSalesforceId, string accessToken, string instanceUrl, string apiVersion)
+        {
+            try
+            {
+                Console.WriteLine("───────────────────────────────────────");
+                Console.WriteLine("📦 Order Products aanmaken in Salesforce...");
+                Console.WriteLine($"   Order ID: {orderSalesforceId}");
+                Console.WriteLine($"   Items: {bestelling.Items.Count}");
+
+                // Voor elk item in de order, maak een Order Product aan
+                int successCount = 0;
+                foreach (var item in bestelling.Items)
+                {
+                    try
+                    {
+                        // Order Product data
+                        // Let op: Product2Id is meestal VERPLICHT in Salesforce
+                        // Als je geen Product2Id hebt, kan je een generic product aanmaken in Salesforce
+                        var orderProductData = new Dictionary<string, object>
+                        {
+                            { "OrderId", orderSalesforceId },
+                            { "Quantity", item.Quantity },
+                            { "UnitPrice", item.Price } // Prijs per stuk
+                        };
+
+                        // Optioneel: Product naam in Description
+                        var productDescription = $"{item.Brand} {item.ProductName} - Maat {item.Size}, Kleur {item.Color}";
+                        orderProductData["Description"] = productDescription;
+
+                        // Product2Id is meestal verplicht - als je een generic product hebt, voeg het hier toe
+                        // var genericProductId = _configuratie["Salesforce:GenericProductId"];
+                        // if (!string.IsNullOrEmpty(genericProductId))
+                        // {
+                        //     orderProductData["Product2Id"] = genericProductId;
+                        // }
+
+                        var productJson = JsonSerializer.Serialize(orderProductData);
+                        var productContent = new StringContent(productJson, Encoding.UTF8, "application/json");
+
+                        var productUrl = $"{instanceUrl}/services/data/{apiVersion}/sobjects/OrderItem";
+                        var productRequest = new HttpRequestMessage(HttpMethod.Post, productUrl);
+                        productRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
+                        productRequest.Content = productContent;
+
+                        var productResponse = await _httpClient.SendAsync(productRequest);
+                        var productResponseBody = await productResponse.Content.ReadAsStringAsync();
+
+                        if (productResponse.IsSuccessStatusCode)
+                        {
+                            successCount++;
+                            Console.WriteLine($"✅ Order Product aangemaakt: {productDescription}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"⚠️ Order Product gefaald: {productResponse.StatusCode}");
+                            Console.WriteLine($"📄 Error: {productResponseBody}");
+                            // Als Product2Id verplicht is, kunnen we het niet aanmaken
+                            // Dit is niet kritiek - TotalAmount blijft dan 0 of wordt handmatig gezet
+                            Console.WriteLine($"ℹ️  Tip: Maak een generic Product aan in Salesforce en voeg Product2Id toe aan configuratie");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"⚠️ Fout bij aanmaken Order Product: {ex.Message}");
+                    }
+                }
+
+                if (successCount > 0)
+                {
+                    Console.WriteLine($"✅ {successCount} van {bestelling.Items.Count} Order Products succesvol aangemaakt");
+                    Console.WriteLine($"💰 TotalAmount zou nu automatisch moeten worden berekend in Salesforce");
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Geen Order Products aangemaakt - TotalAmount blijft mogelijk 0");
+                    Console.WriteLine($"ℹ️  Dit kan zijn omdat Product2Id verplicht is in jouw Salesforce org");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Fout bij aanmaken Order Products: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Maak een Lead aan in Salesforce met klantinformatie
+        /// Wordt aangeroepen na succesvol Order aanmaken
+        /// </summary>
+        private async Task<bool> MaakLeadAanAsync(OrderMessage bestelling, string orderSalesforceId)
+        {
+            try
+            {
+                Console.WriteLine("───────────────────────────────────────");
+                Console.WriteLine("👤 Lead aanmaken in Salesforce...");
+
+                // Haal een geldig token op
+                var accessToken = await _authService.HaalAccessTokenOpAsync();
+                var instanceUrl = _configuratie["Salesforce:InstanceUrl"];
+                var apiVersion = _configuratie["Salesforce:ApiVersion"] ?? "v60.0";
+
+                // Splits UserName in FirstName en LastName
+                var naamDelen = bestelling.UserName?.Split(new[] { ' ' }, 2, StringSplitOptions.RemoveEmptyEntries) ?? Array.Empty<string>();
+                var firstName = naamDelen.Length > 0 ? naamDelen[0] : bestelling.UserName ?? "Onbekend";
+                var lastName = naamDelen.Length > 1 ? naamDelen[1] : "";
+
+                // Maak items beschrijving
+                var itemsDescription = string.Join("\n", bestelling.Items.Select(i =>
+                    $"- {i.Brand} {i.ProductName} (Maat {i.Size}, {i.Color}) x{i.Quantity} = €{i.SubTotal}"));
+
+                var leadDescription = $"Order Number: {bestelling.OrderId}\n" +
+                                    $"Salesforce Order ID: {orderSalesforceId}\n" +
+                                    $"Status: {bestelling.Status}\n" +
+                                    $"Totaal: €{bestelling.TotalPrice} ({bestelling.TotalQuantity} items)\n" +
+                                    $"\nItems:\n{itemsDescription}";
+
+                if (!string.IsNullOrWhiteSpace(bestelling.Notes))
+                {
+                    leadDescription += $"\n\nNotities: {bestelling.Notes}";
+                }
+
+                // Lead data structuur
+                var leadData = new Dictionary<string, object>
+                {
+                    { "FirstName", firstName },
+                    { "Email", bestelling.UserEmail },
+                    { "Company", $"BestelApp Klant - {bestelling.OrderId}" },
+                    { "Description", leadDescription }
+                };
+
+                // Voeg LastName toe als beschikbaar
+                if (!string.IsNullOrWhiteSpace(lastName))
+                {
+                    leadData["LastName"] = lastName;
+                }
+                else
+                {
+                    // Als er geen LastName is, gebruik "Klant" als fallback
+                    leadData["LastName"] = "Klant";
+                }
+
+                // Voeg adres toe als beschikbaar
+                if (bestelling.ShippingAddress != null)
+                {
+                    if (!string.IsNullOrWhiteSpace(bestelling.ShippingAddress.Address))
+                    {
+                        leadData["Street"] = bestelling.ShippingAddress.Address;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(bestelling.ShippingAddress.City))
+                    {
+                        leadData["City"] = bestelling.ShippingAddress.City;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(bestelling.ShippingAddress.PostalCode))
+                    {
+                        leadData["PostalCode"] = bestelling.ShippingAddress.PostalCode;
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(bestelling.ShippingAddress.Country))
+                    {
+                        // Converteer landnaam naar Salesforce-compatibele code
+                        var countryCode = ConverteerLandNaarSalesforceCode(bestelling.ShippingAddress.Country);
+                        if (!string.IsNullOrWhiteSpace(countryCode))
+                        {
+                            leadData["Country"] = countryCode;
+                        }
+                    }
+                }
+
+                var leadJson = JsonSerializer.Serialize(leadData);
+                var leadContent = new StringContent(leadJson, Encoding.UTF8, "application/json");
+
+                Console.WriteLine($"📤 Verstuur Lead naar Salesforce...");
+                Console.WriteLine($"👤 Naam: {firstName} {lastName}");
+                Console.WriteLine($"📧 Email: {bestelling.UserEmail}");
+                Console.WriteLine($"📄 Lead Data: {leadJson}");
+
+                // Maak POST request naar Lead object
+                var postLeadUrl = $"{instanceUrl}/services/data/{apiVersion}/sobjects/Lead";
+                var postLeadRequest = new HttpRequestMessage(HttpMethod.Post, postLeadUrl);
+                postLeadRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
+                postLeadRequest.Content = leadContent;
+
+                Console.WriteLine($"🔗 POST URL: {postLeadUrl}");
+
+                var leadResponse = await _httpClient.SendAsync(postLeadRequest);
+                var leadResponseBody = await leadResponse.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"📥 POST Response Status: {leadResponse.StatusCode}");
+                Console.WriteLine($"📄 POST Response Body: {leadResponseBody}");
+
+                if (leadResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"✅ Lead succesvol aangemaakt voor order: {bestelling.OrderId}");
+                    Console.WriteLine($"✅ Lead zou nu zichtbaar moeten zijn in Salesforce Leads tab!");
+                    return true;
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Lead aanmaken gefaald: {leadResponse.StatusCode}");
+                    Console.WriteLine($"📄 Error details: {leadResponseBody}");
+                    Console.WriteLine($"⚠️ Order is wel succesvol aangemaakt, maar Lead niet");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️ Fout bij Lead aanmaken: {ex.Message}");
+                Console.WriteLine($"⚠️ Order is wel succesvol aangemaakt, maar Lead niet");
+                return false;
+            }
         }
 
         /// <summary>

@@ -262,6 +262,49 @@ namespace BestelApp_Web.Controllers
             return RedirectToAction(nameof(Details), new { id });
         }
 
+        // POST: AdminOrders/UpdateStatus/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStatus(long id, string status)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(status))
+                {
+                    TempData["FoutBericht"] = "Status is verplicht.";
+                    return RedirectToAction(nameof(Details), new { id });
+                }
+
+                ForwardCookies();
+                var content = new StringContent(
+                    System.Text.Json.JsonSerializer.Serialize(new { status }),
+                    System.Text.Encoding.UTF8,
+                    "application/json");
+
+                var response = await _httpClient.PutAsync($"/api/orders/{id}/status", content);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseBody = await response.Content.ReadAsStringAsync();
+                    TempData["SuccessBericht"] = $"Order status succesvol geüpdatet naar: {status}";
+                    _logger.LogInformation("Order {OrderId} status geüpdatet naar {Status}", id, status);
+                }
+                else
+                {
+                    var body = await response.Content.ReadAsStringAsync();
+                    TempData["FoutBericht"] = $"Kon status niet updaten. ({response.StatusCode})";
+                    _logger.LogError("Order status update failed: {Status} - {Body}", response.StatusCode, body);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Fout bij updaten order status");
+                TempData["FoutBericht"] = "Er ging iets fout bij het updaten van de status.";
+            }
+
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
         private void ForwardCookies()
         {
             var httpContext = _httpContextAccessor.HttpContext;

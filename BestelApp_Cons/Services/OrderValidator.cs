@@ -165,19 +165,27 @@ namespace BestelApp_Cons.Services
         }
 
         /// <summary>
-        /// Simpele email validatie
+        /// Simpele email validatie - soepelere validatie voor test emails
         /// </summary>
         private static bool IsValidEmail(string email)
         {
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
-            }
-            catch
-            {
+            if (string.IsNullOrWhiteSpace(email))
                 return false;
-            }
+
+            // Basis validatie: moet @ bevatten en minstens 1 karakter voor en na @
+            if (!email.Contains("@"))
+                return false;
+
+            var parts = email.Split('@');
+            if (parts.Length != 2)
+                return false;
+
+            if (string.IsNullOrWhiteSpace(parts[0]) || string.IsNullOrWhiteSpace(parts[1]))
+                return false;
+
+            // Als het een test email is zonder TLD (bijv. "test@gmail"), accepteren we het
+            // Dit is soepeler dan MailAddress validatie
+            return true;
         }
     }
 
